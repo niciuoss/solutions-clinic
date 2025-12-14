@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: solutions-clinic
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:solutions_clinic}
+    username: ${POSTGRES_USER:solutions_clinic}
+    password: ${POSTGRES_PASSWORD:solutions_clinic}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+security:
+  token:
+    secret: ${SECURITY_TOKEN_SECRET:}
+  jwt:
+    issuer: ${SECURITY_JWT_ISSUER:solutions-clinic}
+    audience: ${SECURITY_JWT_AUDIENCE:}
+    jwk-set-uri: ${SECURITY_JWT_JWK_SET_URI:}
