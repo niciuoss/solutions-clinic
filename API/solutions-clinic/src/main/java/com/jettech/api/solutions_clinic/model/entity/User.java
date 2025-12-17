@@ -17,12 +17,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    private String name;
+    private String firstName;
+    private String lastName;
 
     @Column(unique = true, nullable = false)
     @Email( message = "O campo [email] deve ser um email válido" )
     private String email;
 
+    @Column(nullable = false)
     private String password;
 
     @CreationTimestamp

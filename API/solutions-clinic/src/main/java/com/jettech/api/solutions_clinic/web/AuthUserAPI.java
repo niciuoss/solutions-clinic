@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Validated
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/v1/auth")
 @Tag(name = "Autenticação", description = "Endpoint para autenticação de usuários")
 public interface AuthUserAPI {
 

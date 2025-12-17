@@ -25,7 +25,8 @@ public class DefaultCreateUserUseCase implements CreateUserUseCase {
         var password = this.passwordEncoder.encode(in.password());
 
         final User user = new User();
-        user.setName(in.name());
+        user.setFirstName(in.firstName());
+        user.setLastName(in.lastName());
         user.setEmail(in.email());
         user.setPassword(password);
 
