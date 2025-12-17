@@ -1,8 +1,0 @@
-package com.api.clinica.solutions_clinic.exception;
-
-public class BusinessRuleException extends RuntimeException{
-
-    public BusinessRuleException(String message){
-        super(message);
-    }
-}
