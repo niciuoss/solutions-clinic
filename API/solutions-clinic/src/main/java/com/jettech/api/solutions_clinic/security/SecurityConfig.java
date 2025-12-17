@@ -49,6 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/users").permitAll()
                             .requestMatchers("/auth/**").permitAll()
+                            .requestMatchers("/v1/auth/**").permitAll()
                             .requestMatchers(
                                     "/swagger-ui.html",
                                     "/swagger-ui/**",
@@ -76,6 +77,15 @@ public class SecurityConfig {
             if (!StringUtils.hasText(hmacSecret)) {
                 throw new IllegalStateException("Defina `security.jwt.jwk-set-uri` (Auth0/OIDC) ou `security.token.secret` (HS256) para habilitar autenticação JWT.");
             }
+            
+            // Valida que o secret tem pelo menos 256 bits (32 caracteres)
+            if (hmacSecret.length() < 32) {
+                throw new IllegalStateException(
+                    "O `security.token.secret` deve ter pelo menos 32 caracteres (256 bits) para HS256. " +
+                    "Tamanho atual: " + hmacSecret.length() + " caracteres."
+                );
+            }
+            
             SecretKey secretKey = new SecretKeySpec(hmacSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
             decoder = NimbusJwtDecoder.withSecretKey(secretKey).macAlgorithm(MacAlgorithm.HS256).build();
         }

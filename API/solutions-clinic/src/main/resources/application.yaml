@@ -15,7 +15,7 @@ spring:
 
 security:
   token:
-    secret: ${SECURITY_TOKEN_SECRET:}
+    secret: ${SECURITY_TOKEN_SECRET:my-super-secret-key-for-development-only-min-32-chars}
   jwt:
     issuer: ${SECURITY_JWT_ISSUER:solutions-clinic}
     audience: ${SECURITY_JWT_AUDIENCE:}

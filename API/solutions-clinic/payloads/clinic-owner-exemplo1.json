@@ -1,0 +1,13 @@
+{
+  "firstName": "João",
+  "lastName": "Silva",
+  "email": "joao.silva@clinicamedica.com.br",
+  "password": "senhaSegura123",
+  "name": "Clínica Médica São Paulo",
+  "cnpj": "12345678000190",
+  "planType": "Premium",
+  "address": "Rua das Flores, 123, Centro, São Paulo - SP",
+  "phone": "(11) 98765-4321",
+  "subdomain": "clinicamedica-sp"
+}
+
