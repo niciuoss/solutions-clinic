@@ -45,3 +45,14 @@ export interface SetPasswordRequest {
   password: string;
   confirmPassword: string;
 }
+
+// ===== AUTENTICAÇÃO =====
+export interface AuthUserRequest {
+  email: string;
+  password: string;
+}
+
+export interface AuthUserResponse {
+  access_token: string;
+  expires_in: number;
+}

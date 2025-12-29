@@ -1,65 +1,79 @@
-'use server'
+'use server';
 
-import api from '@/lib/api';
-import { API_ROUTES, STORAGE_KEYS } from '@/config/constants';
-import type { 
-  LoginRequest, 
-  AuthResponse, 
-  SetPasswordRequest,
-  ApiResponse 
-} from '@/types';
-import { cookies } from 'next/headers';
+import { setAuthToken, removeAuthToken, apiRequest, getUserIdFromToken } from './_helpers';
+import type { AuthUserRequest, AuthUserResponse } from '@/types';
 
-export async function loginAction(data: LoginRequest): Promise<AuthResponse> {
+/**
+ * Realiza o login do usuário e salva o token nos cookies
+ */
+export async function loginAction(email: string, password: string) {
   try {
-    const response = await api.post<ApiResponse<AuthResponse>>(
-      API_ROUTES.AUTH.LOGIN,
-      data
-    );
-    
-    const { accessToken, refreshToken, user } = response.data.data;
-    
-    // Salvar nos cookies (mais seguro que localStorage para tokens)
-    cookies().set('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60, // 1 hora
+    if (!email || !password) {
+      return {
+        success: false,
+        error: 'Email e senha são obrigatórios',
+      };
+    }
+
+    const response = await apiRequest<AuthUserResponse>('/auth/sign-in', {
+      method: 'POST',
+      body: { email, password } as AuthUserRequest,
+      requireAuth: false,
     });
-    
-    cookies().set('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 dias
-    });
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao fazer login');
+
+    // Salva o token nos cookies
+    await setAuthToken(response.access_token, response.expires_in);
+
+    return {
+      success: true,
+      token: response.access_token,
+      expiresIn: response.expires_in,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao fazer login',
+    };
   }
 }
 
-export async function setPasswordAction(data: SetPasswordRequest): Promise<void> {
+/**
+ * Realiza o logout removendo o token dos cookies
+ */
+export async function logoutAction() {
   try {
-    await api.post<ApiResponse<void>>('/users/set-password', data);
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao definir senha');
+    await removeAuthToken();
+    return {
+      success: true,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao fazer logout',
+    };
   }
 }
 
-export async function logoutAction(): Promise<void> {
-  cookies().delete('accessToken');
-  cookies().delete('refreshToken');
-}
-
-export async function getStoredUserAction() {
-  // Implementar lógica para pegar usuário do token/cookie
-  // Pode decodificar JWT ou fazer request para /me
-  return null;
-}
-
-export async function isAuthenticatedAction(): Promise<boolean> {
-  const token = cookies().get('accessToken');
-  return !!token;
+/**
+ * Obtém o ID do usuário atual do token
+ */
+export async function getCurrentUserIdAction() {
+  try {
+    const userId = await getUserIdFromToken();
+    if (!userId) {
+      return {
+        success: false,
+        error: 'Usuário não autenticado',
+      };
+    }
+    return {
+      success: true,
+      data: userId,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao obter ID do usuário',
+    };
+  }
 }
