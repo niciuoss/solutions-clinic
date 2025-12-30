@@ -2,6 +2,7 @@ package com.jettech.api.solutions_clinic.model.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -19,6 +20,15 @@ public class User {
 
     private String firstName;
     private String lastName;
+    private String phone;
+
+    @Column(unique = true)
+    @Pattern(regexp = "\\d{11}", message = "O campo [cpf] deve conter exatamente 11 dígitos")
+    private String cpf;
+
+    @Column(nullable = false, length = 10)
+    @Pattern(regexp = "^\\d{2}/\\d{2}/\\d{4}$", message = "O campo [birthDate] deve ser uma data válida no formato DD/MM/YYYY")
+    private String birthDate;
 
     @Column(unique = true, nullable = false)
     @Email( message = "O campo [email] deve ser um email válido" )
