@@ -1,0 +1,128 @@
+package com.jettech.api.solutions_clinic.model.usecase.appointment;
+
+import com.jettech.api.solutions_clinic.model.entity.Appointment;
+import com.jettech.api.solutions_clinic.model.repository.AppointmentRepository;
+import com.jettech.api.solutions_clinic.model.repository.TenantRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import javax.naming.AuthenticationException;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+public class DefaultGetAppointmentsByTenantUseCase implements GetAppointmentsByTenantUseCase {
+
+    private final AppointmentRepository appointmentRepository;
+    private final TenantRepository tenantRepository;
+
+    @Override
+    public List<AppointmentResponse> execute(GetAppointmentsByTenantRequest request) throws AuthenticationException {
+        // Validar se o tenant existe
+        tenantRepository.findById(request.tenantId())
+                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+
+        List<Appointment> appointments;
+
+        // Aplicar filtros
+        if (request.date() != null && request.status() != null) {
+            // Filtrar por data E status
+            LocalDateTime startOfDay = request.date().atStartOfDay();
+            LocalDateTime endOfDay = request.date().atTime(LocalTime.MAX);
+            appointments = appointmentRepository.findByTenantIdAndScheduledAtBetweenAndStatus(
+                    request.tenantId(),
+                    startOfDay,
+                    endOfDay,
+                    request.status()
+            );
+        } else if (request.date() != null) {
+            // Filtrar apenas por data
+            LocalDateTime startOfDay = request.date().atStartOfDay();
+            LocalDateTime endOfDay = request.date().atTime(LocalTime.MAX);
+            appointments = appointmentRepository.findByTenantIdAndScheduledAtBetween(
+                    request.tenantId(),
+                    startOfDay,
+                    endOfDay
+            );
+        } else if (request.status() != null) {
+            // Filtrar apenas por status
+            appointments = appointmentRepository.findByTenantIdAndStatus(
+                    request.tenantId(),
+                    request.status()
+            );
+        } else {
+            // Sem filtros, retornar todos
+            appointments = appointmentRepository.findByTenantId(request.tenantId());
+        }
+
+        // Aplicar ordenação
+        appointments = applyOrdering(appointments, request.orderBy());
+
+        return appointments.stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    private List<Appointment> applyOrdering(List<Appointment> appointments, String orderBy) {
+        if (orderBy == null || orderBy.isEmpty()) {
+            // Ordenação padrão: por data agendada (mais recente primeiro)
+            return appointments.stream()
+                    .sorted(Comparator.comparing(Appointment::getScheduledAt).reversed())
+                    .collect(Collectors.toList());
+        }
+
+        return switch (orderBy.toLowerCase()) {
+            case "scheduledat", "scheduled_at" -> appointments.stream()
+                    .sorted(Comparator.comparing(Appointment::getScheduledAt))
+                    .collect(Collectors.toList());
+            case "scheduledat_desc", "scheduled_at_desc" -> appointments.stream()
+                    .sorted(Comparator.comparing(Appointment::getScheduledAt).reversed())
+                    .collect(Collectors.toList());
+            case "createdat", "created_at" -> appointments.stream()
+                    .sorted(Comparator.comparing(Appointment::getCreatedAt))
+                    .collect(Collectors.toList());
+            case "createdat_desc", "created_at_desc" -> appointments.stream()
+                    .sorted(Comparator.comparing(Appointment::getCreatedAt).reversed())
+                    .collect(Collectors.toList());
+            case "patientname", "patient_name" -> appointments.stream()
+                    .sorted(Comparator.comparing(a -> a.getPatient().getFirstName()))
+                    .collect(Collectors.toList());
+            case "professionalname", "professional_name" -> appointments.stream()
+                    .sorted(Comparator.comparing(a -> a.getProfessional().getUser().getFirstName()))
+                    .collect(Collectors.toList());
+            default -> appointments.stream()
+                    .sorted(Comparator.comparing(Appointment::getScheduledAt).reversed())
+                    .collect(Collectors.toList());
+        };
+    }
+
+    private AppointmentResponse toResponse(Appointment appointment) {
+        return new AppointmentResponse(
+                appointment.getId(),
+                appointment.getTenant().getId(),
+                appointment.getPatient().getId(),
+                appointment.getProfessional().getId(),
+                appointment.getRoom() != null ? appointment.getRoom().getId() : null,
+                appointment.getScheduledAt(),
+                appointment.getDurationMinutes(),
+                appointment.getStatus(),
+                appointment.getObservations(),
+                appointment.getCancelledAt(),
+                appointment.getStartedAt(),
+                appointment.getFinishedAt(),
+                appointment.getDurationActualMinutes(),
+                appointment.getTotalValue(),
+                appointment.getPaymentMethod(),
+                appointment.getPaymentStatus(),
+                appointment.getPaidAt(),
+                appointment.getCreatedBy().getId(),
+                appointment.getCreatedAt(),
+                appointment.getUpdatedAt()
+        );
+    }
+}

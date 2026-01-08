@@ -1,0 +1,30 @@
+package com.jettech.api.solutions_clinic.model.usecase.appointment;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.UUID;
+
+public record UpdateAppointmentRequest(
+    @NotNull(message = "O campo [id] é obrigatório")
+    UUID id,
+    
+    UUID patientId,
+    
+    UUID professionalId,
+    
+    UUID roomId,
+    
+    LocalDateTime scheduledAt,
+    
+    @Min(value = 15, message = "O campo [durationMinutes] deve ser no mínimo 15 minutos")
+    Integer durationMinutes,
+    
+    String observations,
+    
+    @Min(value = 0, message = "O campo [totalValue] deve ser maior ou igual a zero")
+    BigDecimal totalValue
+) {
+}
