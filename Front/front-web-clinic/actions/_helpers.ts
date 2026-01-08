@@ -1,8 +1,8 @@
-// Helpers para as Server Actions
+'use server';
 
 import { cookies } from 'next/headers';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
 
 export interface ApiError {
   message: string;
@@ -14,7 +14,7 @@ export interface ApiError {
  */
 export async function getAuthToken(): Promise<string | null> {
   const cookieStore = await cookies();
-  return cookieStore.get('auth-token')?.value || null;
+  return cookieStore.get('accessToken')?.value || null;
 }
 
 /**
@@ -25,16 +25,61 @@ export async function getUserIdFromToken(): Promise<string | null> {
   if (!token) return null;
 
   try {
-    // Decodifica o JWT (sem verificar assinatura, apenas para ler o subject)
+    // Decodifica o JWT (sem verificar assinatura, apenas para ler o payload)
     const base64Url = token.split('.')[1];
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
     const padding = '='.repeat((4 - (base64.length % 4)) % 4);
     const base64WithPadding = base64 + padding;
     
-    // Usa Buffer do Node.js para decodificar base64
     const jsonPayload = Buffer.from(base64WithPadding, 'base64').toString('utf-8');
     const decoded = JSON.parse(jsonPayload);
-    return decoded.sub || null;
+    
+    // No nosso JWT, o userId está em 'userId' (não 'sub')
+    return decoded.userId || decoded.sub || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Obtém o clinicId do token JWT
+ */
+export async function getClinicIdFromToken(): Promise<string | null> {
+  const token = await getAuthToken();
+  if (!token) return null;
+
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+    const base64WithPadding = base64 + padding;
+    
+    const jsonPayload = Buffer.from(base64WithPadding, 'base64').toString('utf-8');
+    const decoded = JSON.parse(jsonPayload);
+    
+    return decoded.clinicId || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Obtém o role do usuário do token JWT
+ */
+export async function getUserRoleFromToken(): Promise<string | null> {
+  const token = await getAuthToken();
+  if (!token) return null;
+
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const padding = '='.repeat((4 - (base64.length % 4)) % 4);
+    const base64WithPadding = base64 + padding;
+    
+    const jsonPayload = Buffer.from(base64WithPadding, 'base64').toString('utf-8');
+    const decoded = JSON.parse(jsonPayload);
+    
+    return decoded.role || null;
   } catch {
     return null;
   }
@@ -47,7 +92,7 @@ export async function setAuthToken(token: string, expiresIn: number): Promise<vo
   const cookieStore = await cookies();
   const expiresAt = new Date(Date.now() + expiresIn * 1000);
   
-  cookieStore.set('auth-token', token, {
+  cookieStore.set('accessToken', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -57,11 +102,28 @@ export async function setAuthToken(token: string, expiresIn: number): Promise<vo
 }
 
 /**
- * Remove o token de autenticação dos cookies
+ * Define o refresh token nos cookies
+ */
+export async function setRefreshToken(token: string, expiresIn: number): Promise<void> {
+  const cookieStore = await cookies();
+  const expiresAt = new Date(Date.now() + expiresIn * 1000);
+  
+  cookieStore.set('refreshToken', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    expires: expiresAt,
+    path: '/',
+  });
+}
+
+/**
+ * Remove os tokens de autenticação dos cookies
  */
 export async function removeAuthToken(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete('auth-token');
+  cookieStore.delete('accessToken');
+  cookieStore.delete('refreshToken');
 }
 
 /**
@@ -72,11 +134,11 @@ export async function apiRequest<T>(
   options: {
     method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
     body?: unknown;
-    params?: Record<string, string | number>;
+    params?: Record<string, string | number | boolean>;
     requireAuth?: boolean;
   } = {}
 ): Promise<T> {
-  const { method = 'GET', body, params, requireAuth = false } = options;
+  const { method = 'GET', body, params, requireAuth = true } = options;
 
   let url = `${API_BASE_URL}${endpoint}`;
 
@@ -106,6 +168,7 @@ export async function apiRequest<T>(
     method,
     headers,
     body: body ? JSON.stringify(body) : undefined,
+    cache: 'no-store', // Importante para Server Actions
   });
 
   if (!response.ok) {
@@ -118,6 +181,7 @@ export async function apiRequest<T>(
     let errorMessage = `Erro na requisição (${response.status})`;
     try {
       const errorData = await response.json();
+      // Backend retorna { timestamp, status, error, message, path }
       errorMessage = errorData.message || errorData.error || errorMessage;
     } catch {
       errorMessage = response.statusText || errorMessage;
@@ -130,7 +194,7 @@ export async function apiRequest<T>(
     throw error;
   }
 
-  // Alguns endpoints podem retornar 204 (No Content) ou 200 sem corpo
+  // Alguns endpoints podem retornar 204 (No Content)
   if (response.status === 204 || response.headers.get('content-length') === '0') {
     return {} as T;
   }
@@ -143,7 +207,10 @@ export async function apiRequest<T>(
       return {} as T;
     }
     try {
-      return JSON.parse(text);
+      const parsed = JSON.parse(text);
+      // Backend retorna ApiResponse<T> com { success, message, data, timestamp }
+      // Retorna apenas o 'data' se existir, senão retorna tudo
+      return parsed.data || parsed;
     } catch {
       return {} as T;
     }
@@ -151,4 +218,3 @@ export async function apiRequest<T>(
 
   return {} as T;
 }
-

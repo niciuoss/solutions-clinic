@@ -1,114 +1,139 @@
-'use client'
+'use server';
 
-import api from '@/lib/api';
-import { API_ROUTES } from '@/config/constants';
+import { apiRequest } from './_helpers';
 import type { 
   Patient, 
   CreatePatientRequest, 
   UpdatePatientRequest,
-  ApiResponse,
   PaginatedResponse 
 } from '@/types';
 
-export async function createPatientAction(data: CreatePatientRequest): Promise<Patient> {
+export async function createPatientAction(data: CreatePatientRequest) {
   try {
-    const response = await api.post<ApiResponse<Patient>>(
-      API_ROUTES.PATIENTS,
-      data
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao criar paciente');
+    const patient = await apiRequest<Patient>('/patients', {
+      method: 'POST',
+      body: data,
+    });
+
+    return {
+      success: true,
+      data: patient,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao criar paciente',
+    };
   }
 }
 
-export async function updatePatientAction(
-  patientId: string,
-  data: UpdatePatientRequest
-): Promise<Patient> {
+export async function updatePatientAction(patientId: string, data: UpdatePatientRequest) {
   try {
-    const response = await api.put<ApiResponse<Patient>>(
-      `${API_ROUTES.PATIENTS}/${patientId}`,
-      data
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao atualizar paciente');
+    const patient = await apiRequest<Patient>(`/patients/${patientId}`, {
+      method: 'PUT',
+      body: data,
+    });
+
+    return {
+      success: true,
+      data: patient,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao atualizar paciente',
+    };
   }
 }
 
-export async function getPatientByIdAction(patientId: string): Promise<Patient> {
+export async function getPatientByIdAction(patientId: string) {
   try {
-    const response = await api.get<ApiResponse<Patient>>(
-      `${API_ROUTES.PATIENTS}/${patientId}`
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao buscar paciente');
+    const patient = await apiRequest<Patient>(`/patients/${patientId}`, {
+      method: 'GET',
+    });
+
+    return {
+      success: true,
+      data: patient,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar paciente',
+    };
   }
 }
 
-export async function getAllPatientsAction(
-  page: number = 0,
-  size: number = 20
-): Promise<PaginatedResponse<Patient>> {
+export async function getAllPatientsAction(page: number = 0, size: number = 20) {
   try {
-    const response = await api.get<ApiResponse<PaginatedResponse<Patient>>>(
-      API_ROUTES.PATIENTS,
-      {
-        params: { page, size, sort: 'fullName,asc' }
-      }
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao listar pacientes');
+    const patients = await apiRequest<PaginatedResponse<Patient>>('/patients', {
+      method: 'GET',
+      params: { page, size, sort: 'fullName,asc' },
+    });
+
+    return {
+      success: true,
+      data: patients,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao listar pacientes',
+    };
   }
 }
 
-export async function searchPatientsAction(
-  query: string,
-  page: number = 0,
-  size: number = 20
-): Promise<PaginatedResponse<Patient>> {
+export async function searchPatientsAction(query: string, page: number = 0, size: number = 20) {
   try {
-    const response = await api.get<ApiResponse<PaginatedResponse<Patient>>>(
-      `${API_ROUTES.PATIENTS}/search`,
-      {
-        params: { query, page, size }
-      }
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao buscar pacientes');
+    const patients = await apiRequest<PaginatedResponse<Patient>>('/patients/search', {
+      method: 'GET',
+      params: { query, page, size },
+    });
+
+    return {
+      success: true,
+      data: patients,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar pacientes',
+    };
   }
 }
 
-export async function autocompletePatientsAction(name: string): Promise<Patient[]> {
+export async function autocompletePatientsAction(name: string) {
   try {
-    const response = await api.get<ApiResponse<Patient[]>>(
-      `${API_ROUTES.PATIENTS}/autocomplete`,
-      {
-        params: { name }
-      }
-    );
-    return response.data.data;
-  } 
-  catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao buscar pacientes');
+    const patients = await apiRequest<Patient[]>('/patients/autocomplete', {
+      method: 'GET',
+      params: { name },
+    });
+
+    return {
+      success: true,
+      data: patients,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar pacientes',
+    };
   }
 }
 
-export async function deletePatientAction(patientId: string): Promise<void> {
+export async function deletePatientAction(patientId: string) {
   try {
-    await api.delete<ApiResponse<void>>(
-      `${API_ROUTES.PATIENTS}/${patientId}`
-    );
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao excluir paciente');
+    await apiRequest(`/patients/${patientId}`, {
+      method: 'DELETE',
+    });
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao excluir paciente',
+    };
   }
 }

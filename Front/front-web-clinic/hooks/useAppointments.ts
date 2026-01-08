@@ -108,6 +108,38 @@ export function useAppointments() {
   };
 }
 
+// Buscar agendamento por Profissional
+  export function useAppointmentsByProfessional(
+    professionalId: string,
+    startDate: string,
+    endDate: string
+  ) {
+    return useQuery({
+      queryKey: ['appointments', 'professional', professionalId, startDate, endDate],
+      queryFn: async () => {
+        const result = await getAppointmentsByProfessionalAction(
+          professionalId,
+          startDate,
+          endDate
+        );
+        return result.success ? result.data : [];
+      },
+      enabled: !!professionalId && !!startDate && !!endDate,
+    });
+  }
+
+  // Buscar agendamentos por período
+  export function useAppointmentsByDateRange(startDate: string, endDate: string) {
+    return useQuery({
+      queryKey: ['appointments', 'range', startDate, endDate],
+      queryFn: async () => {
+        const result = await getAppointmentsByDateRangeAction(startDate, endDate);
+        return result.success ? result.data : [];
+      },
+      enabled: !!startDate && !!endDate,
+    });
+  }
+
 // Agendamento específico
 export function useAppointment(appointmentId: string | null) {
   return useQuery({
@@ -118,10 +150,10 @@ export function useAppointment(appointmentId: string | null) {
 }
 
 // Agendamentos por período
-export function useAppointmentsByDateRange(startDate: string, endDate: string) {
-  return useQuery({
-    queryKey: ['appointments', 'range', startDate, endDate],
-    queryFn: () => getAppointmentsByDateRangeAction(startDate, endDate),
-    enabled: !!startDate && !!endDate,
-  });
-}
+// export function useAppointmentsByDateRange(startDate: string, endDate: string) {
+//   return useQuery({
+//     queryKey: ['appointments', 'range', startDate, endDate],
+//     queryFn: () => getAppointmentsByDateRangeAction(startDate, endDate),
+//     enabled: !!startDate && !!endDate,
+//   });
+// }

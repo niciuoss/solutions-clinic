@@ -26,3 +26,10 @@ export interface FieldError {
   field: string;
   message: string;
 }
+
+export interface ActionResult<T = void> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  isConflict?: boolean; 
+}

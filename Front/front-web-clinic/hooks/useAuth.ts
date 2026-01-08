@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginAction, logoutAction, setPasswordAction } from '@/actions/auth-actions';
-import { ROUTES, STORAGE_KEYS } from '@/config/constants';
-import type { LoginRequest, SetPasswordRequest, User } from '@/types';
+import { loginAction, logoutAction, setPasswordAction, getCurrentUserAction } from '@/actions/auth-actions';
+import { ROUTES } from '@/config/constants';
+import type { User } from '@/types';
 import { toast } from 'sonner';
 
 export function useAuth() {
@@ -13,31 +13,42 @@ export function useAuth() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Para carregar o usuário do localStorage na inicialização
+  // Carregar usuário do token na inicialização
   useEffect(() => {
-    const storedUser = localStorage.getItem(STORAGE_KEYS.USER);
-    const token = localStorage.getItem(STORAGE_KEYS.ACCESS_TOKEN);
-    
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-      setIsAuthenticated(true);
+    async function loadUser() {
+      const result = await getCurrentUserAction();
+      
+      if (result.success && result.data) {
+        // Aqui você pode fazer uma requisição para buscar dados completos do usuário
+        // Por enquanto, apenas marca como autenticado
+        setIsAuthenticated(true);
+      }
+      
+      setIsLoading(false);
     }
     
-    setIsLoading(false);
+    loadUser();
   }, []);
 
-  const login = async (data: LoginRequest) => {
+  const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
-      const response = await loginAction(data);
+      const result = await loginAction(email, password);
       
-      setUser(response.user);
-      setIsAuthenticated(true);
+      if (!result.success) {
+        toast.error(result.error || 'Erro ao fazer login');
+        return result;
+      }
+      
+      if (result.data) {
+        setUser(result.data.user as any);
+        setIsAuthenticated(true);
+      }
       
       toast.success('Login realizado com sucesso!');
       router.push(ROUTES.DASHBOARD);
       
-      return response;
+      return result;
     } catch (error: any) {
       toast.error(error.message || 'Erro ao fazer login');
       throw error;
@@ -46,13 +57,20 @@ export function useAuth() {
     }
   };
 
-  const setPassword = async (data: SetPasswordRequest) => {
+  const definePassword = async (token: string, password: string, confirmPassword: string) => {
     try {
       setIsLoading(true);
-      await setPasswordAction(data);
+      const result = await setPasswordAction(token, password, confirmPassword);
+      
+      if (!result.success) {
+        toast.error(result.error || 'Erro ao definir senha');
+        return result;
+      }
       
       toast.success('Senha definida com sucesso! Você já pode fazer login.');
       router.push(ROUTES.LOGIN);
+      
+      return result;
     } catch (error: any) {
       toast.error(error.message || 'Erro ao definir senha');
       throw error;
@@ -63,7 +81,12 @@ export function useAuth() {
 
   const logout = async () => {
     try {
-      await logoutAction();
+      const result = await logoutAction();
+      
+      if (!result.success) {
+        toast.error('Erro ao fazer logout');
+        return;
+      }
       
       setUser(null);
       setIsAuthenticated(false);
@@ -80,7 +103,7 @@ export function useAuth() {
     isLoading,
     isAuthenticated,
     login,
-    setPassword,
+    setPassword: definePassword,
     logout,
   };
 }
