@@ -2,7 +2,7 @@
 
 import { cookies } from 'next/headers';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/v1';
 
 export interface ApiError {
   message: string;
@@ -174,9 +174,13 @@ export async function apiRequest<T>(
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Token inválido ou expirado
-      await removeAuthToken();
-      throw new Error('Sessão expirada. Faça login novamente.');
+      // Token inválido ou expirado - só tratar como sessão expirada se requireAuth for true
+      if (requireAuth) {
+        await removeAuthToken();
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      // Se requireAuth é false, 401 pode ser erro de validação/credenciais do endpoint
+      // Não remover token nem tratar como sessão expirada
     }
 
     let errorMessage = `Erro na requisição (${response.status})`;
@@ -209,10 +213,16 @@ export async function apiRequest<T>(
     }
     try {
       const parsed = JSON.parse(text);
-      // Backend retorna ApiResponse<T> com { success, message, data, timestamp }
-      // Retorna apenas o 'data' se existir, senão retorna tudo
-      return parsed.data || parsed;
-    } catch {
+      // Backend pode retornar diretamente o objeto ou dentro de um wrapper ApiResponse
+      // Se houver 'data', retorna apenas o data, senão retorna o objeto completo
+      if (parsed && typeof parsed === 'object') {
+        return parsed.data || parsed;
+      }
+      return parsed;
+    } catch (parseError) {
+      // Se falhar ao fazer parse, retorna objeto vazio
+      // Não lança erro para não quebrar o fluxo quando requireAuth é false
+      console.error('Erro ao fazer parse da resposta:', parseError);
       return {} as T;
     }
   }

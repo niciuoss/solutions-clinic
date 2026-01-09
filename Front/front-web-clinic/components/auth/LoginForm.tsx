@@ -10,6 +10,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { ROUTES } from '@/config/constants';
+import Link from 'next/link';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -84,6 +86,15 @@ export function LoginForm() {
             Entrar
           </Button>
         </form>
+        
+        <div className="mt-4 text-center">
+          <p className="text-sm text-muted-foreground">
+            Não tem uma conta?{' '}
+            <Link href={ROUTES.REGISTER} className="text-primary hover:underline font-medium">
+              Cadastre-se
+            </Link>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

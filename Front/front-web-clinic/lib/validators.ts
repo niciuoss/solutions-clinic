@@ -87,3 +87,45 @@ export const roomSchema = z.object({
   description: z.string().optional(),
   capacity: z.number().min(1).default(1),
 });
+
+// SignUp - Clínica
+export const signUpClinicSchema = z.object({
+  // User fields
+  firstName: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres').max(50, 'Nome deve ter no máximo 50 caracteres'),
+  lastName: z.string().min(2, 'Sobrenome deve ter no mínimo 2 caracteres').max(50, 'Sobrenome deve ter no máximo 50 caracteres'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  birthDate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Data de nascimento deve estar no formato DD/MM/YYYY').optional(),
+  
+  // Tenant fields
+  name: z.string().min(2, 'Nome da clínica deve ter no mínimo 2 caracteres').max(100, 'Nome da clínica deve ter no máximo 100 caracteres'),
+  cnpj: z.string().regex(/^\d{14}$/, 'CNPJ deve conter exatamente 14 dígitos'),
+  planType: z.string().max(100, 'Tipo de plano deve ter no máximo 100 caracteres').optional(),
+  address: z.string().max(200, 'Endereço deve ter no máximo 200 caracteres').optional(),
+  phone: z.string().max(20, 'Telefone deve ter no máximo 20 caracteres').optional(),
+  subdomain: z.string()
+    .min(3, 'Subdomínio deve ter no mínimo 3 caracteres')
+    .max(64, 'Subdomínio deve ter no máximo 64 caracteres')
+    .regex(/^[a-z0-9-]+$/, 'Subdomínio deve conter apenas letras minúsculas, números e hífens'),
+});
+
+// SignUp - Médico Solo
+export const signUpSoloSchema = z.object({
+  // User fields
+  firstName: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres').max(50, 'Nome deve ter no máximo 50 caracteres'),
+  lastName: z.string().min(2, 'Sobrenome deve ter no mínimo 2 caracteres').max(50, 'Sobrenome deve ter no máximo 50 caracteres'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  birthDate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Data de nascimento deve estar no formato DD/MM/YYYY'),
+  
+  // Tenant fields
+  name: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres').max(100, 'Nome deve ter no máximo 100 caracteres'),
+  cpf: z.string().regex(/^\d{11}$/, 'CPF deve conter exatamente 11 dígitos'),
+  planType: z.string().max(100, 'Tipo de plano deve ter no máximo 100 caracteres').optional(),
+  address: z.string().max(200, 'Endereço deve ter no máximo 200 caracteres').optional(),
+  phone: z.string().max(20, 'Telefone deve ter no máximo 20 caracteres').optional(),
+  subdomain: z.string()
+    .min(3, 'Subdomínio deve ter no mínimo 3 caracteres')
+    .max(64, 'Subdomínio deve ter no máximo 64 caracteres')
+    .regex(/^[a-z0-9-]+$/, 'Subdomínio deve conter apenas letras minúsculas, números e hífens'),
+});

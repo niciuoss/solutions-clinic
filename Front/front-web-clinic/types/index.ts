@@ -21,3 +21,6 @@ export * from './clinic.types';
 
 // Medical Record Types
 export * from './medical-record.types';
+
+// SignUp Types
+export * from './signup.types';

@@ -91,6 +91,8 @@ public class DefaultSignUpClinicOwnerUseCase implements SignUpClinicOwnerUseCase
         user.setLastName(request.lastName());
         user.setEmail(request.email().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.password()));
+        user.setBirthDate(request.birthDate());
+        // Para clínica, o CPF pode não ser obrigatório, mas se necessário pode ser adicionado ao request
         return user;
     }
 

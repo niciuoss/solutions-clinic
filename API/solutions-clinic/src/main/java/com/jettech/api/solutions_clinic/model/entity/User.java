@@ -26,7 +26,7 @@ public class User {
     @Pattern(regexp = "\\d{11}", message = "O campo [cpf] deve conter exatamente 11 dígitos")
     private String cpf;
 
-    @Column(nullable = false, length = 10)
+    @Column(nullable = true, length = 10)
     @Pattern(regexp = "^\\d{2}/\\d{2}/\\d{4}$", message = "O campo [birthDate] deve ser uma data válida no formato DD/MM/YYYY")
     private String birthDate;
 

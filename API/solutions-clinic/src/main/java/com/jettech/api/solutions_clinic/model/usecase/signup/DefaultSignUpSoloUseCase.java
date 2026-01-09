@@ -86,6 +86,8 @@ public class DefaultSignUpSoloUseCase implements SignUpSoloUseCase {
         user.setLastName(request.lastName());
         user.setEmail(request.email().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.password()));
+        user.setBirthDate(request.birthDate());
+        user.setCpf(request.cpf());
         return user;
     }
 
