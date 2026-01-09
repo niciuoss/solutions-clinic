@@ -9,7 +9,9 @@ import {
   getClinicIdFromToken,
   getUserRoleFromToken 
 } from './_helpers';
-import type { AuthResponse } from '@/types';
+import { API_ROUTES } from '@/config/constants';
+import type { AuthResponse, UserRole } from '@/types';
+import { UserRole as UserRoleEnum } from '@/types';
 
 interface LoginResult {
   success: boolean;
@@ -27,6 +29,8 @@ interface LoginResult {
 
 /**
  * Realiza o login do usuário e salva o token nos cookies
+ * Endpoint: POST /v1/auth/sign-in
+ * Retorna: { access_token: string, expires_in: number } (expires_in em milliseconds)
  */
 export async function loginAction(email: string, password: string): Promise<LoginResult> {
   try {
@@ -37,25 +41,50 @@ export async function loginAction(email: string, password: string): Promise<Logi
       };
     }
 
-    const response = await apiRequest<AuthResponse>('/auth/login', {
+    // Backend retorna: { access_token: string, expires_in: number }
+    // expires_in vem em milliseconds (epochMilli)
+    const authResponse = await apiRequest<{ access_token: string; expires_in: number }>(API_ROUTES.AUTH.SIGN_IN, {
       method: 'POST',
       body: { email, password },
       requireAuth: false,
     });
 
-    // Salva os tokens nos cookies
-    await setAuthToken(response.accessToken, response.expiresIn);
-    await setRefreshToken(response.refreshToken, 604800); // 7 dias
+    if (!authResponse.access_token) {
+      return {
+        success: false,
+        error: 'Token não recebido do servidor',
+      };
+    }
 
+    // expires_in vem em milliseconds do backend, converter para segundos
+    // expires_in do backend é timestamp (epochMilli), calcular diferença em segundos
+    const now = Date.now();
+    const expiresAt = authResponse.expires_in;
+    const expiresInSeconds = Math.max(1, Math.floor((expiresAt - now) / 1000));
+
+    // Salva o token nos cookies
+    await setAuthToken(authResponse.access_token, expiresInSeconds);
+
+    // Obter userId do token JWT (está no campo 'sub')
+    const userId = await getUserIdFromToken();
+    
+    if (!userId) {
+      return {
+        success: false,
+        error: 'Não foi possível obter ID do usuário do token',
+      };
+    }
+
+    // Retornar apenas o userId - os dados completos serão buscados no hook useAuth
     return {
       success: true,
       data: {
         user: {
-          id: response.user.id,
-          email: response.user.email,
-          fullName: response.user.fullName,
-          role: response.user.role,
-          clinicId: response.user.clinicId,
+          id: userId,
+          email: email,
+          fullName: '',
+          role: '',
+          clinicId: '',
         },
       },
     };
@@ -149,33 +178,147 @@ export async function getCurrentUserIdAction() {
 }
 
 /**
- * Obtém informações do usuário atual do token
+ * Obtém informações básicas do usuário atual do token
+ * O token JWT do backend Java contém apenas o userId no campo 'sub'
+ * clinicId e role precisam ser buscados via endpoint /users/{id}
  */
 export async function getCurrentUserAction() {
   try {
     const userId = await getUserIdFromToken();
-    const clinicId = await getClinicIdFromToken();
-    const role = await getUserRoleFromToken();
 
-    if (!userId || !clinicId || !role) {
+    if (!userId) {
       return {
         success: false,
         error: 'Usuário não autenticado',
       };
     }
 
+    // O token JWT do backend não inclui clinicId nem role
+    // Esses dados devem ser buscados via getUserByIdAction
     return {
       success: true,
       data: {
         userId,
-        clinicId,
-        role,
+        clinicId: '', // Será preenchido ao buscar dados completos
+        role: '', // Será preenchido ao buscar dados completos
       },
     };
   } catch (error) {
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Erro ao obter dados do usuário',
+    };
+  }
+}
+
+/**
+ * Busca os dados completos do usuário pelo ID
+ * Endpoint: GET /v1/users/{id}
+ * Retorna: UserDetailResponse com firstName, lastName, email, tenantRoles[]
+ */
+interface UserDetailResponse {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  createdAt?: string;
+  updatedAt?: string;
+  tenantRoles?: Array<{
+    tenantId: string;
+    tenantName?: string;
+    subdomain?: string;
+    tenantType?: string;
+    tenantActive?: boolean;
+    role?: string | { name?: string; value?: string };
+  }>;
+}
+
+export async function getUserByIdAction(userId: string) {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: 'ID do usuário é obrigatório',
+      };
+    }
+
+    const userData = await apiRequest<UserDetailResponse>(`/users/${userId}`, {
+      method: 'GET',
+      requireAuth: true,
+    });
+
+    // Mapear os dados do backend para o tipo User do frontend
+    // Backend retorna UserDetailResponse com tenantRoles[]
+    // Preferir o primeiro tenantRole ativo, senão o primeiro disponível
+    const activeTenantRole = userData.tenantRoles?.find(tr => tr.tenantActive) || userData.tenantRoles?.[0];
+    
+    // Extrair role - backend retorna enum Role (OWNER, ADMIN, RECEPTION, SPECIALIST, FINANCE, READONLY)
+    // que será serializado como string no JSON
+    let roleValue = '';
+    if (activeTenantRole?.role) {
+      if (typeof activeTenantRole.role === 'string') {
+        roleValue = activeTenantRole.role;
+      } else if (typeof activeTenantRole.role === 'object' && activeTenantRole.role !== null) {
+        // Se vier como objeto enum serializado
+        roleValue = (activeTenantRole.role as any).name || (activeTenantRole.role as any).value || String(activeTenantRole.role);
+      }
+    }
+    
+    // Mapear roles do backend para o formato do frontend se necessário
+    // Backend: OWNER, ADMIN, RECEPTION, SPECIALIST, FINANCE, READONLY
+    // Frontend: ADMIN_CLINIC, PROFISSIONAL_SAUDE, RECEPCIONISTA
+    const roleMapping: Record<string, string> = {
+      'OWNER': 'ADMIN_CLINIC',
+      'ADMIN': 'ADMIN_CLINIC',
+      'RECEPTION': 'RECEPCIONISTA',
+      'SPECIALIST': 'PROFISSIONAL_SAUDE',
+    };
+    roleValue = roleMapping[roleValue] || roleValue;
+    
+    const fullName = `${userData.firstName || ''} ${userData.lastName || ''}`.trim() || userData.email;
+    
+    // Converter createdAt se vier em formato LocalDateTime
+    let createdAtStr = userData.createdAt || new Date().toISOString();
+    if (createdAtStr && !createdAtStr.includes('T') && !createdAtStr.includes('Z')) {
+      // Se vier no formato do Java LocalDateTime, converter
+      createdAtStr = new Date(createdAtStr).toISOString();
+    }
+    
+    // Garantir que roleValue seja um valor válido do enum UserRole do frontend
+    let finalRole: UserRole = UserRoleEnum.RECEPCIONISTA; // Default
+    if (roleValue === UserRoleEnum.ADMIN_CLINIC || roleValue === 'ADMIN_CLINIC') {
+      finalRole = UserRoleEnum.ADMIN_CLINIC;
+    } else if (roleValue === UserRoleEnum.PROFISSIONAL_SAUDE || roleValue === 'PROFISSIONAL_SAUDE') {
+      finalRole = UserRoleEnum.PROFISSIONAL_SAUDE;
+    } else if (roleValue === UserRoleEnum.RECEPCIONISTA || roleValue === 'RECEPCIONISTA') {
+      finalRole = UserRoleEnum.RECEPCIONISTA;
+    } else if (roleValue === 'OWNER' || roleValue === 'ADMIN') {
+      finalRole = UserRoleEnum.ADMIN_CLINIC;
+    } else if (roleValue === 'SPECIALIST') {
+      finalRole = UserRoleEnum.PROFISSIONAL_SAUDE;
+    } else if (roleValue === 'RECEPTION') {
+      finalRole = UserRoleEnum.RECEPCIONISTA;
+    }
+    
+    const user = {
+      id: userData.id || userId,
+      email: userData.email || '',
+      fullName: fullName,
+      role: finalRole,
+      clinicId: activeTenantRole?.tenantId || '',
+      isActive: activeTenantRole?.tenantActive ?? true,
+      emailVerified: true,
+      createdAt: createdAtStr,
+    };
+
+    return {
+      success: true,
+      data: user,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar dados do usuário',
     };
   }
 }

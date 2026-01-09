@@ -32,7 +32,7 @@ export function SetPasswordForm({ token }: SetPasswordFormProps) {
   const onSubmit = async (data: SetPasswordRequest) => {
     try {
       setIsLoading(true);
-      await setPassword(data);
+      await setPassword(data.token, data.password, data.confirmPassword);
     } catch (error) {
       // Erro já tratado no hook useAuth
     } finally {

@@ -16,7 +16,9 @@ export const ROUTES = {
 
 export const API_ROUTES = {
   AUTH: {
-    LOGIN: '/auth/login',
+    SIGN_IN: '/auth/sign-in',
+    SIGNUP_CLINIC_OWNER: '/auth/signup/clinic-owner',
+    SIGNUP_SOLO: '/auth/signup/solo',
     REFRESH: '/auth/refresh',
     LOGOUT: '/auth/logout',
   },

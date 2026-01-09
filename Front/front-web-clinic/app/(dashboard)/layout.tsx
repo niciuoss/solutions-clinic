@@ -3,6 +3,7 @@
 import { ReactNode, useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 
@@ -32,24 +33,26 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:block">
-        <Sidebar />
-      </aside>
-
-      {/* Mobile Sidebar */}
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-64">
+    <ProtectedRoute>
+      <div className="flex h-screen overflow-hidden bg-gray-50">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:block">
           <Sidebar />
-        </SheetContent>
-      </Sheet>
+        </aside>
 
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header title={getPageTitle()} onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        {/* Mobile Sidebar */}
+        <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+          <SheetContent side="left" className="p-0 w-64">
+            <Sidebar />
+          </SheetContent>
+        </Sheet>
+
+        {/* Main Content */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header title={getPageTitle()} onMenuClick={() => setSidebarOpen(true)} />
+          <main className="flex-1 overflow-y-auto p-6">{children}</main>
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

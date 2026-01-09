@@ -13,7 +13,7 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
     
     List<Patient> findByTenantId(UUID tenantId);
     
-    List<Patient> findByTenantIdAndIsActive(UUID tenantId, boolean isActive);
+    List<Patient> findByTenantIdAndActive(UUID tenantId, boolean active);
     
     boolean existsByCpfAndTenantId(String cpf, UUID tenantId);
 }

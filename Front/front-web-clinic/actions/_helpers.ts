@@ -34,8 +34,9 @@ export async function getUserIdFromToken(): Promise<string | null> {
     const jsonPayload = Buffer.from(base64WithPadding, 'base64').toString('utf-8');
     const decoded = JSON.parse(jsonPayload);
     
-    // No nosso JWT, o userId está em 'userId' (não 'sub')
-    return decoded.userId || decoded.sub || null;
+    // No backend Java, o userId está no campo 'sub' (subject) do JWT
+    // Criado com: .withSubject(user.getId().toString())
+    return decoded.sub || decoded.userId || null;
   } catch {
     return null;
   }

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { loginAction, logoutAction, setPasswordAction, getCurrentUserAction } from '@/actions/auth-actions';
+import { loginAction, logoutAction, setPasswordAction, getCurrentUserAction, getUserByIdAction } from '@/actions/auth-actions';
 import { ROUTES } from '@/config/constants';
-import type { User } from '@/types';
+import type { User, UserRole } from '@/types';
 import { toast } from 'sonner';
 
 export function useAuth() {
@@ -16,15 +16,31 @@ export function useAuth() {
   // Carregar usuário do token na inicialização
   useEffect(() => {
     async function loadUser() {
-      const result = await getCurrentUserAction();
-      
-      if (result.success && result.data) {
-        // Aqui você pode fazer uma requisição para buscar dados completos do usuário
-        // Por enquanto, apenas marca como autenticado
-        setIsAuthenticated(true);
+      try {
+        const result = await getCurrentUserAction();
+        
+        if (result.success && result.data?.userId) {
+          // Buscar dados completos do usuário
+          const userResult = await getUserByIdAction(result.data.userId);
+          
+          if (userResult.success && userResult.data) {
+            setUser(userResult.data as User);
+            setIsAuthenticated(true);
+          } else {
+            // Se não conseguir buscar dados completos, ainda marca como autenticado
+            // mas com dados básicos do token
+            setIsAuthenticated(true);
+          }
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+        }
+      } catch {
+        setIsAuthenticated(false);
+        setUser(null);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     }
     
     loadUser();
@@ -37,20 +53,42 @@ export function useAuth() {
       
       if (!result.success) {
         toast.error(result.error || 'Erro ao fazer login');
+        setIsLoading(false);
         return result;
       }
       
-      if (result.data) {
-        setUser(result.data.user as any);
-        setIsAuthenticated(true);
+      // Buscar dados completos do usuário após login bem-sucedido
+      if (result.data?.user?.id) {
+        const userResult = await getUserByIdAction(result.data.user.id);
+        
+        if (userResult.success && userResult.data) {
+          setUser(userResult.data as User);
+          setIsAuthenticated(true);
+        } else if (result.data.user) {
+          // Usar dados parciais se não conseguir buscar completos
+          const partialUser: User = {
+            id: result.data.user.id,
+            email: result.data.user.email,
+            fullName: result.data.user.fullName,
+            role: result.data.user.role as UserRole,
+            clinicId: result.data.user.clinicId,
+            isActive: true,
+            emailVerified: true,
+            createdAt: new Date().toISOString(),
+          };
+          setUser(partialUser);
+          setIsAuthenticated(true);
+        }
       }
       
       toast.success('Login realizado com sucesso!');
       router.push(ROUTES.DASHBOARD);
       
       return result;
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao fazer login');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login';
+      toast.error(errorMessage);
+      setIsLoading(false);
       throw error;
     } finally {
       setIsLoading(false);
@@ -71,8 +109,9 @@ export function useAuth() {
       router.push(ROUTES.LOGIN);
       
       return result;
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao definir senha');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao definir senha';
+      toast.error(errorMessage);
       throw error;
     } finally {
       setIsLoading(false);
@@ -81,20 +120,25 @@ export function useAuth() {
 
   const logout = async () => {
     try {
+      setIsLoading(true);
       const result = await logoutAction();
       
       if (!result.success) {
         toast.error('Erro ao fazer logout');
+        setIsLoading(false);
         return;
       }
       
+      // Limpar estado do usuário
       setUser(null);
       setIsAuthenticated(false);
       
       toast.success('Logout realizado com sucesso!');
       router.push(ROUTES.LOGIN);
-    } catch (error: any) {
+    } catch {
       toast.error('Erro ao fazer logout');
+    } finally {
+      setIsLoading(false);
     }
   };
 
