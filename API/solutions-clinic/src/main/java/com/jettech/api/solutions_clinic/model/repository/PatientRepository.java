@@ -1,6 +1,8 @@
 package com.jettech.api.solutions_clinic.model.repository;
 
 import com.jettech.api.solutions_clinic.model.entity.Patient;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -16,5 +18,9 @@ public interface PatientRepository extends JpaRepository<Patient, UUID> {
     List<Patient> findByTenantIdAndActive(UUID tenantId, boolean active);
     
     boolean existsByCpfAndTenantId(String cpf, UUID tenantId);
+    
+    Page<Patient> findByTenantId(UUID tenantId, Pageable pageable);
+    
+    Page<Patient> findByTenantIdAndActive(UUID tenantId, boolean active, Pageable pageable);
 }
 

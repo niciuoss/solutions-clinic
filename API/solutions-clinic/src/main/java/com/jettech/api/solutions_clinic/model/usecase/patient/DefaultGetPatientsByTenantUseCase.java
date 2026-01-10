@@ -1,0 +1,88 @@
+package com.jettech.api.solutions_clinic.model.usecase.patient;
+
+import com.jettech.api.solutions_clinic.model.entity.Patient;
+import com.jettech.api.solutions_clinic.model.repository.PatientRepository;
+import com.jettech.api.solutions_clinic.model.repository.TenantRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.naming.AuthenticationException;
+
+@Service
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+public class DefaultGetPatientsByTenantUseCase implements GetPatientsByTenantUseCase {
+
+    private final PatientRepository patientRepository;
+    private final TenantRepository tenantRepository;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PatientResponse> execute(GetPatientsByTenantRequest request) throws AuthenticationException {
+        // Validar se o tenant existe
+        tenantRepository.findById(request.tenantId())
+                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+
+        // Criar Pageable com ordenação
+        Pageable pageable = createPageable(request.page(), request.size(), request.sort());
+
+        // Buscar pacientes paginados por tenant
+        Page<Patient> patientsPage = patientRepository.findByTenantId(request.tenantId(), pageable);
+
+        // Converter para Page<PatientResponse>
+        return patientsPage.map(this::toResponse);
+    }
+
+    private Pageable createPageable(int page, int size, String sort) {
+        Sort sortObj;
+        
+        if (sort != null && !sort.isEmpty()) {
+            // Parse do sort string: "field,direction" ou "field"
+            String[] sortParts = sort.split(",");
+            String field = sortParts[0].trim();
+            String direction = sortParts.length > 1 ? sortParts[1].trim().toUpperCase() : "ASC";
+            
+            Sort.Direction sortDirection = "DESC".equals(direction) ? Sort.Direction.DESC : Sort.Direction.ASC;
+            sortObj = Sort.by(sortDirection, field);
+        } else {
+            // Ordenação padrão: por firstName ascendente
+            sortObj = Sort.by(Sort.Direction.ASC, "firstName");
+        }
+        
+        return PageRequest.of(page, size, sortObj);
+    }
+
+    private PatientResponse toResponse(Patient patient) {
+        return new PatientResponse(
+                patient.getId(),
+                patient.getTenant().getId(),
+                patient.getFirstName(),
+                patient.getCpf(),
+                patient.getBirthDate(),
+                patient.getGender(),
+                patient.getEmail(),
+                patient.getPhone(),
+                patient.getWhatsapp(),
+                patient.getAddressStreet(),
+                patient.getAddressNumber(),
+                patient.getAddressComplement(),
+                patient.getAddressNeighborhood(),
+                patient.getAddressCity(),
+                patient.getAddressState(),
+                patient.getAddressZipcode(),
+                patient.getBloodType(),
+                patient.getAllergies(),
+                patient.getGuardianName(),
+                patient.getGuardianPhone(),
+                patient.getGuardianRelationship(),
+                patient.isActive(),
+                patient.getCreatedAt(),
+                patient.getUpdatedAt()
+        );
+    }
+}
