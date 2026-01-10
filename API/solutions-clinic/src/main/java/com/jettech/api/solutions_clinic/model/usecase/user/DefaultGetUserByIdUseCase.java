@@ -35,6 +35,9 @@ public class DefaultGetUserByIdUseCase implements GetUserByIdUseCase {
                         utr.getTenant().getName(),
                         utr.getTenant().getSubdomain(),
                         utr.getTenant().getType(),
+                        utr.getTenant().getStatus(),
+                        utr.getTenant().getPlanType(),
+                        utr.getTenant().getTrialEndsAt(),
                         utr.getTenant().isActive(),
                         utr.getRole()
                 ))

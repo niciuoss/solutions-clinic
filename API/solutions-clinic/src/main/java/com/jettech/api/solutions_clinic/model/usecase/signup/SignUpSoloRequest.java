@@ -1,5 +1,6 @@
 package com.jettech.api.solutions_clinic.model.usecase.signup;
 
+import com.jettech.api.solutions_clinic.model.entity.PlanType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -36,8 +37,7 @@ public record SignUpSoloRequest(
     @Pattern(regexp = "\\d{11}", message = "O campo [cpf] deve conter exatamente 11 dígitos")
     String cpf,
     
-    @Size(max = 100, message = "O campo [planType] deve ter no máximo 100 caracteres")
-    String planType,
+    PlanType planType,
     
     @Size(max = 200, message = "O campo [address] deve ter no máximo 200 caracteres")
     String address,

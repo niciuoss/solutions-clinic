@@ -2,6 +2,7 @@ package com.jettech.api.solutions_clinic.model.usecase.signup;
 
 import com.jettech.api.solutions_clinic.model.entity.Role;
 import com.jettech.api.solutions_clinic.model.entity.Tenant;
+import com.jettech.api.solutions_clinic.model.entity.TenantStatus;
 import com.jettech.api.solutions_clinic.model.entity.TypeTenant;
 import com.jettech.api.solutions_clinic.model.entity.User;
 import com.jettech.api.solutions_clinic.model.entity.UserTenantRole;
@@ -81,6 +82,7 @@ public class DefaultSignUpClinicOwnerUseCase implements SignUpClinicOwnerUseCase
         tenant.setPhone(request.phone());
         tenant.setSubdomain(request.subdomain().toLowerCase());
         tenant.setType(type);
+        tenant.setStatus(TenantStatus.PENDING_SETUP);
         tenant.setActive(true);
         return tenant;
     }

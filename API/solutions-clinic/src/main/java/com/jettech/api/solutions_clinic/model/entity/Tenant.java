@@ -5,6 +5,7 @@ import lombok.Data;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -22,7 +23,8 @@ public class Tenant {
     @Column(unique = true)
     private String cnpj;
 
-    private String planType;
+    @Enumerated(EnumType.STRING)
+    private PlanType planType;
     private String address;
     private String phone;
     private boolean active;
@@ -33,6 +35,12 @@ public class Tenant {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TypeTenant type;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TenantStatus status = TenantStatus.PENDING_SETUP;
+
+    private LocalDate trialEndsAt;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

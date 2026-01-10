@@ -1,5 +1,6 @@
 package com.jettech.api.solutions_clinic.model.usecase.signup;
 
+import com.jettech.api.solutions_clinic.model.entity.PlanType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -35,8 +36,7 @@ public record SignUpClinicOwnerRequest(
     @Pattern(regexp = "\\d{14}", message = "O campo [cnpj] deve conter exatamente 14 dígitos")
     String cnpj,
     
-    @Size(max = 100, message = "O campo [planType] deve ter no máximo 100 caracteres")
-    String planType,
+    PlanType planType,
     
     @Size(max = 200, message = "O campo [address] deve ter no máximo 200 caracteres")
     String address,

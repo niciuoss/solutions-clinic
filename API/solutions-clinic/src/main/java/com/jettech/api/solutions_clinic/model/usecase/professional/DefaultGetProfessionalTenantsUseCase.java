@@ -1,7 +1,6 @@
 package com.jettech.api.solutions_clinic.model.usecase.professional;
 
 import com.jettech.api.solutions_clinic.model.entity.Professional;
-import com.jettech.api.solutions_clinic.model.entity.User;
 import com.jettech.api.solutions_clinic.model.repository.ProfessionalRepository;
 import com.jettech.api.solutions_clinic.model.repository.UserRepository;
 import lombok.AccessLevel;
@@ -11,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.naming.AuthenticationException;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,9 +22,9 @@ public class DefaultGetProfessionalTenantsUseCase implements GetProfessionalTena
 
     @Override
     @Transactional(readOnly = true)
-    public ProfessionalTenantResponse execute(java.util.UUID userId) throws AuthenticationException {
+    public ProfessionalTenantResponse execute(UUID userId) throws AuthenticationException {
         // Validar se o usuário existe
-        User user = userRepository.findById(userId)
+        userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + userId));
 
         // Buscar todos os profissionais do usuário
@@ -38,6 +38,9 @@ public class DefaultGetProfessionalTenantsUseCase implements GetProfessionalTena
                         professional.getTenant().getCnpj(),
                         professional.getTenant().getSubdomain(),
                         professional.getTenant().getType(),
+                        professional.getTenant().getStatus(),
+                        professional.getTenant().getPlanType(),
+                        professional.getTenant().getTrialEndsAt(),
                         professional.getTenant().isActive(),
                         professional.getId(),
                         professional.getSpecialty(),
