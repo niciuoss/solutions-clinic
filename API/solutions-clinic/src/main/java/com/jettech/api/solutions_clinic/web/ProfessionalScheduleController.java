@@ -4,10 +4,10 @@ import com.jettech.api.solutions_clinic.model.usecase.professionalschedule.*;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.naming.AuthenticationException;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,85 +22,27 @@ public class ProfessionalScheduleController implements ProfessionalScheduleAPI {
     private final DefaultDeleteProfessionalScheduleUseCase deleteProfessionalScheduleUseCase;
 
     @Override
-    public ResponseEntity<Object> createProfessionalSchedule(@Valid @RequestBody CreateProfessionalScheduleRequest request) {
-        try {
-            var result = this.createProfessionalScheduleUseCase.execute(request);
-            return ResponseEntity.ok().body(result);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("não encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            }
-            if (e.getMessage().contains("já existe") || e.getMessage().contains("Já existe")) {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao criar agenda: " + e.getMessage());
-        }
+    public ProfessionalScheduleResponse createProfessionalSchedule(@Valid @RequestBody CreateProfessionalScheduleRequest request) throws AuthenticationException {
+        return createProfessionalScheduleUseCase.execute(request);
     }
 
     @Override
-    public ResponseEntity<Object> getProfessionalScheduleById(@PathVariable UUID id) {
-        try {
-            var result = this.getProfessionalScheduleByIdUseCase.execute(id);
-            return ResponseEntity.ok().body(result);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("não encontrado") || e.getMessage().contains("não encontrada")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao buscar agenda: " + e.getMessage());
-        }
+    public ProfessionalScheduleResponse getProfessionalScheduleById(@PathVariable UUID id) throws AuthenticationException {
+        return getProfessionalScheduleByIdUseCase.execute(id);
     }
 
     @Override
-    public ResponseEntity<Object> getProfessionalSchedulesByProfessionalId(@PathVariable UUID professionalId) {
-        try {
-            var result = this.getProfessionalSchedulesByProfessionalIdUseCase.execute(professionalId);
-            return ResponseEntity.ok().body(result);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("não encontrado")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao buscar agendas: " + e.getMessage());
-        }
+    public List<ProfessionalScheduleResponse> getProfessionalSchedulesByProfessionalId(@PathVariable UUID professionalId) throws AuthenticationException {
+        return getProfessionalSchedulesByProfessionalIdUseCase.execute(professionalId);
     }
 
     @Override
-    public ResponseEntity<Object> updateProfessionalSchedule(@Valid @RequestBody UpdateProfessionalScheduleRequest request) {
-        try {
-            var result = this.updateProfessionalScheduleUseCase.execute(request);
-            return ResponseEntity.ok().body(result);
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("não encontrado") || e.getMessage().contains("não encontrada")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao atualizar agenda: " + e.getMessage());
-        }
+    public ProfessionalScheduleResponse updateProfessionalSchedule(@Valid @RequestBody UpdateProfessionalScheduleRequest request) throws AuthenticationException {
+        return updateProfessionalScheduleUseCase.execute(request);
     }
 
     @Override
-    public ResponseEntity<Object> deleteProfessionalSchedule(@PathVariable UUID id) {
-        try {
-            this.deleteProfessionalScheduleUseCase.execute(id);
-            return ResponseEntity.ok().body("Agenda deletada com sucesso");
-        } catch (RuntimeException e) {
-            if (e.getMessage().contains("não encontrado") || e.getMessage().contains("não encontrada")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            }
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Erro ao deletar agenda: " + e.getMessage());
-        }
+    public void deleteProfessionalSchedule(@PathVariable UUID id) {
+        deleteProfessionalScheduleUseCase.execute(id);
     }
 }

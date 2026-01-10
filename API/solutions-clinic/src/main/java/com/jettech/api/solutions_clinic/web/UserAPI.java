@@ -10,7 +10,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.naming.AuthenticationException;
 import java.util.UUID;
 
 @RestController
@@ -31,7 +31,7 @@ public interface UserAPI {
             @ApiResponse(responseCode = "200", description = "Usuário criado com sucesso", content = @Content(schema = @Schema(implementation = User.class))),
             @ApiResponse(responseCode = "409", description = "Email já existente", content = @Content)
     })
-    ResponseEntity<Object> createUser(@Valid @RequestBody CreateUserRequest user);
+    User createUser(@Valid @RequestBody CreateUserRequest user) throws AuthenticationException;
 
     @GetMapping("/{id}")
     @Operation(
@@ -50,6 +50,6 @@ public interface UserAPI {
                 content = @Content
             )
     })
-    ResponseEntity<Object> getUserById(@PathVariable UUID id);
+    UserDetailResponse getUserById(@PathVariable UUID id) throws AuthenticationException;
 }
 

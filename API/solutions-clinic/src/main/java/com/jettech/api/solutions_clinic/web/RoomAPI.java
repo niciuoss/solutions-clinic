@@ -9,12 +9,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+import javax.naming.AuthenticationException;
 import java.util.UUID;
 
 @Tag(name = "Salas", description = "Endpoints para gerenciamento de salas")
@@ -28,7 +28,7 @@ public interface RoomAPI {
             @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content),
             @ApiResponse(responseCode = "404", description = "Clínica não encontrada", content = @Content)
     })
-    ResponseEntity<Object> createRoom(@Valid @RequestBody CreateRoomRequest request);
+    RoomResponse createRoom(@Valid @RequestBody CreateRoomRequest request) throws AuthenticationException;
 
     @GetMapping("/rooms/{id}")
     @Operation(
@@ -47,6 +47,6 @@ public interface RoomAPI {
                 content = @Content
             )
     })
-    ResponseEntity<Object> getRoomById(@PathVariable UUID id);
+    RoomResponse getRoomById(@PathVariable UUID id) throws AuthenticationException;
 }
 

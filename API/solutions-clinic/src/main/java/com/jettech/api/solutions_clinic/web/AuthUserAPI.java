@@ -9,7 +9,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
+
+import javax.naming.AuthenticationException;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,5 +31,5 @@ public interface AuthUserAPI {
                     content = @Content(schema = @Schema(implementation = AuthUserResponse.class))),
             @ApiResponse(responseCode = "401", description = "Credenciais inválidas", content = @Content)
     })
-    ResponseEntity<Object> signIn(@Valid @RequestBody AuthUserRequest authUserRequest);
+    AuthUserResponse signIn(@Valid @RequestBody AuthUserRequest authUserRequest) throws AuthenticationException;
 }

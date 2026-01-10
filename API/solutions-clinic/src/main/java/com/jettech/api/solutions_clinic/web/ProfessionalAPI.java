@@ -11,13 +11,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 
+import javax.naming.AuthenticationException;
 import java.util.UUID;
 
 @Tag(name = "Profissionais", description = "Endpoints para gerenciamento de profissionais")
@@ -32,7 +31,7 @@ public interface ProfessionalAPI {
             @ApiResponse(responseCode = "404", description = "Usuário ou clínica não encontrado", content = @Content),
             @ApiResponse(responseCode = "409", description = "Profissional já existe para este usuário e clínica", content = @Content)
     })
-    ResponseEntity<Object> createProfessional(@Valid @RequestBody CreateProfessionalRequest request);
+    ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationException;
 
     @PostMapping("/clinics/{clinicId}/professionals")
     @Operation(summary = "Adiciona profissional a uma clínica", description = "Registra um profissional associando-o a uma clínica específica.")
@@ -43,10 +42,10 @@ public interface ProfessionalAPI {
             @ApiResponse(responseCode = "404", description = "Usuário ou clínica não encontrado", content = @Content),
             @ApiResponse(responseCode = "409", description = "Profissional já existe para este usuário e clínica", content = @Content)
     })
-    ResponseEntity<Object> addProfessionalToClinic(
+    ProfessionalResponse addProfessionalToClinic(
             @PathVariable UUID clinicId,
             @Valid @RequestBody AddProfessionalToClinicBodyRequest request
-    );
+    ) throws AuthenticationException;
 
     @GetMapping("/professionals/{userId}/tenants")
     @Operation(summary = "Lista tenants vinculados a um profissional", description = "Retorna todos os tenants (clínicas) onde o usuário atua como profissional.")
@@ -55,6 +54,6 @@ public interface ProfessionalAPI {
                     content = @Content(schema = @Schema(implementation = ProfessionalTenantResponse.class))),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content)
     })
-    ResponseEntity<Object> getProfessionalTenants(@PathVariable UUID userId);
+    ProfessionalTenantResponse getProfessionalTenants(@PathVariable UUID userId) throws AuthenticationException;
 }
 

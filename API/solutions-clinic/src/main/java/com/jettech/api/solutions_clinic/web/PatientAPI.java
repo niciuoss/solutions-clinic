@@ -10,13 +10,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.naming.AuthenticationException;
 import java.util.UUID;
 
 @Tag(name = "Pacientes", description = "Endpoints para gerenciamento de pacientes")
@@ -31,7 +31,7 @@ public interface PatientAPI {
             @ApiResponse(responseCode = "404", description = "Clínica não encontrada", content = @Content),
             @ApiResponse(responseCode = "409", description = "Paciente já existe com este CPF nesta clínica", content = @Content)
     })
-    ResponseEntity<Object> createPatient(@Valid @RequestBody CreatePatientRequest request);
+    PatientResponse createPatient(@Valid @RequestBody CreatePatientRequest request) throws AuthenticationException;
 
     @GetMapping("/patients")
     @Operation(
@@ -50,12 +50,12 @@ public interface PatientAPI {
                 content = @Content
             )
     })
-    ResponseEntity<Object> getPatientsByTenant(
+    Page<PatientResponse> getPatientsByTenant(
             @RequestParam UUID tenantId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, defaultValue = "firstName,asc") String sort
-    );
+    ) throws AuthenticationException;
 
     @GetMapping("/patients/{id}")
     @Operation(
@@ -74,6 +74,6 @@ public interface PatientAPI {
                 content = @Content
             )
     })
-    ResponseEntity<Object> getPatientById(@PathVariable UUID id);
+    PatientResponse getPatientById(@PathVariable UUID id) throws AuthenticationException;
 }
 

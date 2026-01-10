@@ -10,7 +10,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
+
+import javax.naming.AuthenticationException;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -38,7 +40,7 @@ public interface SignUpAPI {
             content = @Content
         )
     })
-    ResponseEntity<Object> signUpClinicOwner(@Valid @RequestBody SignUpClinicOwnerRequest request);
+    SignUpResponse signUpClinicOwner(@Valid @RequestBody SignUpClinicOwnerRequest request) throws AuthenticationException;
 
     @PostMapping("/solo")
     @Operation(
@@ -57,6 +59,6 @@ public interface SignUpAPI {
             content = @Content
         )
     })
-    ResponseEntity<Object> signUpSolo(@Valid @RequestBody SignUpSoloRequest request);
+    SignUpResponse signUpSolo(@Valid @RequestBody SignUpSoloRequest request) throws AuthenticationException;
 }
 
