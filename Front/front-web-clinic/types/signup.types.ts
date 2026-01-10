@@ -4,7 +4,6 @@ export interface SignUpClinicOwnerRequest {
   lastName: string;
   email: string;
   password: string;
-  birthDate?: string; // Formato: DD/MM/YYYY (opcional para clínica)
   
   // Tenant fields
   name: string;

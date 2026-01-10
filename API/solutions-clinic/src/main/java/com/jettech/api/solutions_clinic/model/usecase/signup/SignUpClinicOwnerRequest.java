@@ -24,9 +24,6 @@ public record SignUpClinicOwnerRequest(
     @Size(min = 8, message = "O campo [password] deve ter no mínimo 8 caracteres")
     String password,
     
-    @Pattern(regexp = "^\\d{2}/\\d{2}/\\d{4}$", message = "O campo [birthDate] deve ser uma data válida no formato DD/MM/YYYY")
-    String birthDate,
-    
     // Tenant fields
     @NotBlank(message = "O campo [name] é obrigatório")
     @Size(min = 2, max = 100, message = "O campo [name] deve ter entre 2 e 100 caracteres")

@@ -59,7 +59,7 @@ export function SignUpForm() {
       setTimeout(() => {
         router.push(ROUTES.LOGIN);
       }, 2000);
-    } catch (error) {
+    } catch {
       toast.error('Erro ao cadastrar clínica');
     } finally {
       setIsLoading(false);
@@ -83,7 +83,7 @@ export function SignUpForm() {
       setTimeout(() => {
         router.push(ROUTES.LOGIN);
       }, 2000);
-    } catch (error) {
+    } catch {
       toast.error('Erro ao cadastrar profissional');
     } finally {
       setIsLoading(false);
@@ -220,32 +220,6 @@ export function SignUpForm() {
                   {clinicForm.formState.errors.password && (
                     <p className="text-sm text-red-500">
                       {clinicForm.formState.errors.password.message}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="clinic-birthDate">Data de Nascimento</Label>
-                  <Input
-                    id="clinic-birthDate"
-                    {...clinicForm.register('birthDate')}
-                    disabled={isLoading}
-                    placeholder="DD/MM/YYYY"
-                    maxLength={10}
-                    onChange={(e) => {
-                      let value = e.target.value.replace(/\D/g, '');
-                      if (value.length >= 2) {
-                        value = value.slice(0, 2) + '/' + value.slice(2);
-                      }
-                      if (value.length >= 5) {
-                        value = value.slice(0, 5) + '/' + value.slice(5, 9);
-                      }
-                      clinicForm.setValue('birthDate', value);
-                    }}
-                  />
-                  {clinicForm.formState.errors.birthDate && (
-                    <p className="text-sm text-red-500">
-                      {clinicForm.formState.errors.birthDate.message}
                     </p>
                   )}
                 </div>
