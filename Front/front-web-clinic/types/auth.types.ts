@@ -1,3 +1,6 @@
+export type TenantStatus = 'PENDING_SETUP' | 'TRIAL' | 'ACTIVE' | 'SUSPENDED' | 'CANCELED';
+export type PlanType = 'BASIC' | 'PRO' | 'CUSTOM';
+
 export interface User {
   id: string;
   clinicId: string;
@@ -12,6 +15,10 @@ export interface User {
   emailVerified: boolean;
   lastLoginAt?: string;
   createdAt: string;
+  // Dados do Tenant
+  tenantStatus?: TenantStatus;
+  planType?: PlanType;
+  trialEndsAt?: string;
 }
 
 export enum UserRole {

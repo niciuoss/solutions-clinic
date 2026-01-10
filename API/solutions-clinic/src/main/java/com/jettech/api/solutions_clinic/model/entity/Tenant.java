@@ -2,6 +2,7 @@ package com.jettech.api.solutions_clinic.model.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -38,6 +39,7 @@ public class Tenant {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    @ColumnDefault("'PENDING_SETUP'")
     private TenantStatus status = TenantStatus.PENDING_SETUP;
 
     private LocalDate trialEndsAt;

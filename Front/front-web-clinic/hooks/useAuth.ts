@@ -24,8 +24,13 @@ export function useAuth() {
           const userResult = await getUserByIdAction(result.data.userId);
           
           if (userResult.success && userResult.data) {
-            setUser(userResult.data as User);
+            const userData = userResult.data as User;
+            setUser(userData);
             setIsAuthenticated(true);
+            
+            // Validar status do tenant e redirecionar se necessário
+            // Apenas na inicialização, não redireciona imediatamente para evitar loops
+            // O redirecionamento após login é feito no método login()
           } else {
             // Se não conseguir buscar dados completos, ainda marca como autenticado
             // mas com dados básicos do token
@@ -44,7 +49,7 @@ export function useAuth() {
     }
     
     loadUser();
-  }, []);
+  }, [router]);
 
   const login = async (email: string, password: string) => {
     try {
@@ -60,10 +65,52 @@ export function useAuth() {
       // Buscar dados completos do usuário após login bem-sucedido
       if (result.data?.user?.id) {
         const userResult = await getUserByIdAction(result.data.user.id);
+        console.log("🚀 ~ login ~ userResult:", userResult)
         
         if (userResult.success && userResult.data) {
-          setUser(userResult.data as User);
+          const userData = userResult.data as User;
+          setUser(userData);
           setIsAuthenticated(true);
+          
+          // Validar status do tenant e redirecionar conforme os requisitos
+          const tenantStatus = userData.tenantStatus;
+          
+          if (tenantStatus === 'PENDING_SETUP') {
+            toast.info('Por favor, escolha um plano para continuar');
+            router.push(ROUTES.PLAN_SELECTION);
+            return result;
+          } else if (tenantStatus === 'ACTIVE') {
+            toast.success('Login realizado com sucesso!');
+            router.push(ROUTES.DASHBOARD);
+            return result;
+          } else if (tenantStatus === 'TRIAL') {
+            // TRIAL também pode acessar o dashboard
+            toast.success('Login realizado com sucesso! Período de teste ativo.');
+            router.push(ROUTES.DASHBOARD);
+            return result;
+          } else if (tenantStatus === 'SUSPENDED') {
+            toast.error('Sua conta está suspensa. Entre em contato com o suporte.');
+            router.push(ROUTES.PLAN_SELECTION);
+            return result;
+          } else if (tenantStatus === 'CANCELED') {
+            toast.error('Sua conta foi cancelada. Entre em contato com o suporte.');
+            // Limpar estado local e redirecionar
+            setUser(null);
+            setIsAuthenticated(false);
+            await logoutAction();
+            router.push(ROUTES.LOGIN);
+            return result;
+          } else if (!tenantStatus) {
+            // Se não tem status definido, considerar como PENDING_SETUP
+            toast.info('Por favor, escolha um plano para continuar');
+            router.push(ROUTES.PLAN_SELECTION);
+            return result;
+          } else {
+            // Status desconhecido, tratar como PENDING_SETUP por segurança
+            toast.info('Por favor, escolha um plano para continuar');
+            router.push(ROUTES.PLAN_SELECTION);
+            return result;
+          }
         } else if (result.data.user) {
           // Usar dados parciais se não conseguir buscar completos
           const partialUser: User = {
@@ -78,11 +125,10 @@ export function useAuth() {
           };
           setUser(partialUser);
           setIsAuthenticated(true);
+          toast.success('Login realizado com sucesso!');
+          router.push(ROUTES.DASHBOARD);
         }
       }
-      
-      toast.success('Login realizado com sucesso!');
-      router.push(ROUTES.DASHBOARD);
       
       return result;
     } catch (error) {
@@ -142,6 +188,29 @@ export function useAuth() {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const result = await getCurrentUserAction();
+      
+      if (result.success && result.data?.userId) {
+        // Buscar dados completos do usuário
+        const userResult = await getUserByIdAction(result.data.userId);
+        
+        if (userResult.success && userResult.data) {
+          const userData = userResult.data as User;
+          setUser(userData);
+          setIsAuthenticated(true);
+          return { success: true, user: userData };
+        }
+      }
+      
+      return { success: false };
+    } catch (error) {
+      console.error('Erro ao atualizar dados do usuário:', error);
+      return { success: false };
+    }
+  };
+
   return {
     user,
     isLoading,
@@ -149,5 +218,6 @@ export function useAuth() {
     login,
     setPassword: definePassword,
     logout,
+    refreshUser,
   };
 }

@@ -228,6 +228,9 @@ interface UserDetailResponse {
     tenantName?: string;
     subdomain?: string;
     tenantType?: string;
+    tenantStatus?: string;
+    planType?: string;
+    trialEndsAt?: string;
     tenantActive?: boolean;
     role?: string | { name?: string; value?: string };
   }>;
@@ -309,6 +312,9 @@ export async function getUserByIdAction(userId: string) {
       isActive: activeTenantRole?.tenantActive ?? true,
       emailVerified: true,
       createdAt: createdAtStr,
+      tenantStatus: activeTenantRole?.tenantStatus as any,
+      planType: activeTenantRole?.planType as any,
+      trialEndsAt: activeTenantRole?.trialEndsAt,
     };
 
     return {
@@ -337,6 +343,45 @@ export async function isAuthenticatedAction() {
     return {
       success: true,
       data: false,
+    };
+  }
+}
+
+/**
+ * Atualiza o plano do tenant
+ * Endpoint: PATCH /v1/tenants/{tenantId}/plan
+ * Body: { planType: 'BASIC' | 'PRO' | 'CUSTOM' }
+ */
+export async function updateTenantPlanAction(tenantId: string, planType: string) {
+  try {
+    if (!tenantId) {
+      return {
+        success: false,
+        error: 'ID do tenant é obrigatório',
+      };
+    }
+
+    if (!planType || !['BASIC', 'PRO', 'CUSTOM'].includes(planType)) {
+      return {
+        success: false,
+        error: 'Tipo de plano inválido',
+      };
+    }
+
+    const response = await apiRequest<any>(API_ROUTES.TENANTS.UPDATE_PLAN(tenantId), {
+      method: 'PATCH',
+      body: { planType },
+      requireAuth: true,
+    });
+
+    return {
+      success: true,
+      data: response,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao atualizar plano do tenant',
     };
   }
 }
