@@ -10,14 +10,27 @@ import type {
 
 export async function createPatientAction(data: CreatePatientRequest) {
   try {
-    const patient = await apiRequest<Patient>('/patients', {
+    // Converter fullName para firstName para o backend
+    const requestData: any = {
+      ...data,
+      firstName: data.fullName,
+    };
+    delete requestData.fullName;
+
+    const patient = await apiRequest<any>('/patients', {
       method: 'POST',
-      body: data,
+      body: requestData,
     });
+
+    // Mapear firstName para fullName para compatibilidade com o frontend
+    const mappedPatient: Patient = {
+      ...patient,
+      fullName: patient.firstName || '',
+    };
 
     return {
       success: true,
-      data: patient,
+      data: mappedPatient,
     };
   } catch (error) {
     return {
@@ -29,14 +42,27 @@ export async function createPatientAction(data: CreatePatientRequest) {
 
 export async function updatePatientAction(patientId: string, data: UpdatePatientRequest) {
   try {
-    const patient = await apiRequest<Patient>(`/patients/${patientId}`, {
+    // Converter fullName para firstName para o backend, se existir
+    const requestData: any = { ...data };
+    if (data.fullName) {
+      requestData.firstName = data.fullName;
+      delete requestData.fullName;
+    }
+
+    const patient = await apiRequest<any>(`/patients/${patientId}`, {
       method: 'PUT',
-      body: data,
+      body: requestData,
     });
+
+    // Mapear firstName para fullName para compatibilidade com o frontend
+    const mappedPatient: Patient = {
+      ...patient,
+      fullName: patient.firstName || '',
+    };
 
     return {
       success: true,
-      data: patient,
+      data: mappedPatient,
     };
   } catch (error) {
     return {
@@ -48,13 +74,19 @@ export async function updatePatientAction(patientId: string, data: UpdatePatient
 
 export async function getPatientByIdAction(patientId: string) {
   try {
-    const patient = await apiRequest<Patient>(`/patients/${patientId}`, {
+    const patient = await apiRequest<any>(`/patients/${patientId}`, {
       method: 'GET',
     });
 
+    // Mapear firstName para fullName para compatibilidade com o frontend
+    const mappedPatient: Patient = {
+      ...patient,
+      fullName: patient.firstName || '',
+    };
+
     return {
       success: true,
-      data: patient,
+      data: mappedPatient,
     };
   } catch (error) {
     return {
@@ -64,16 +96,31 @@ export async function getPatientByIdAction(patientId: string) {
   }
 }
 
-export async function getAllPatientsAction(page: number = 0, size: number = 20) {
+export async function getAllPatientsAction(tenantId: string, page: number = 0, size: number = 20) {
   try {
-    const patients = await apiRequest<PaginatedResponse<Patient>>('/patients', {
+    if (!tenantId) {
+      return {
+        success: false,
+        error: 'ID da clínica (tenantId) é obrigatório',
+      };
+    }
+
+    const response = await apiRequest<any>('/patients', {
       method: 'GET',
-      params: { page, size, sort: 'fullName,asc' },
+      params: { tenantId, page, size, sort: 'firstName,asc' },
     });
+
+    // Mapear firstName para fullName para compatibilidade com o frontend
+    if (response?.content) {
+      response.content = response.content.map((patient: any) => ({
+        ...patient,
+        fullName: patient.firstName || '',
+      }));
+    }
 
     return {
       success: true,
-      data: patients,
+      data: response as PaginatedResponse<Patient>,
     };
   } catch (error) {
     return {

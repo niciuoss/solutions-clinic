@@ -13,13 +13,19 @@ import {
 import type { CreatePatientRequest, UpdatePatientRequest } from '@/types';
 import { toast } from 'sonner';
 
-export function usePatients(page: number = 0, size: number = 20) {
+export function usePatients(tenantId: string | null, page: number = 0, size: number = 20) {
   const queryClient = useQueryClient();
 
   // Listar todos os pacientes
   const { data: patients, isLoading, error, refetch } = useQuery({
-    queryKey: ['patients', page, size],
-    queryFn: () => getAllPatientsAction(page, size),
+    queryKey: ['patients', tenantId, page, size],
+    queryFn: () => {
+      if (!tenantId) {
+        throw new Error('ID da clínica (tenantId) é obrigatório');
+      }
+      return getAllPatientsAction(tenantId, page, size);
+    },
+    enabled: !!tenantId,
   });
 
   // Criar paciente

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { usePatients, usePatientSearch } from '@/hooks/usePatients';
+import { useAuth } from '@/hooks/useAuth';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,8 +16,10 @@ import { EmptyState } from '@/components/common/EmptyState';
 export function PatientList() {
   const [searchQuery, setSearchQuery] = useState('');
   const debouncedSearch = useDebounce(searchQuery, 500);
+  const { user } = useAuth();
+  const tenantId = user?.clinicId || null;
 
-  const { patients, isLoading: isLoadingAll } = usePatients(0, 20);
+  const { patients, isLoading: isLoadingAll } = usePatients(tenantId, 0, 20);
   const { data: searchResults, isLoading: isSearching } = usePatientSearch(
     debouncedSearch,
     0,
