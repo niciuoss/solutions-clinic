@@ -51,6 +51,7 @@ public class SecurityConfig {
                     auth.requestMatchers("/users").permitAll()
                             .requestMatchers("/auth/**").permitAll()
                             .requestMatchers("/v1/auth/**").permitAll()
+                            .requestMatchers("/v1/subscriptions/webhook").permitAll()
                             .requestMatchers(
                                     "/swagger-ui.html",
                                     "/swagger-ui/**",
@@ -63,7 +64,9 @@ public class SecurityConfig {
                             // Para rotas permitidas, permite que a requisição continue sem autenticação
                             String path = request.getRequestURI();
                             if (path.startsWith("/v1/auth/") || 
-                                path.startsWith("/auth/") || path.equals("/users")) {
+                                path.startsWith("/auth/") || 
+                                path.equals("/users") ||
+                                path.equals("/v1/subscriptions/webhook")) {
                                 // Não retorna erro, permite que a requisição continue
                                 return;
                             }

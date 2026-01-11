@@ -1,5 +1,9 @@
 package com.jettech.api.solutions_clinic.web;
 
+import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionBody;
+import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionRequest;
+import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionResponse;
+import com.jettech.api.solutions_clinic.model.usecase.subscription.DefaultCreateCheckoutSessionUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultUpdateTenantPlanUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.TenantResponse;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanBody;
@@ -23,6 +27,7 @@ import java.util.UUID;
 public class TenantController implements TenantAPI {
 
     private final DefaultUpdateTenantPlanUseCase updateTenantPlanUseCase;
+    private final DefaultCreateCheckoutSessionUseCase createCheckoutSessionUseCase;
 
     @Override
     public TenantResponse updateTenantPlan(
@@ -33,5 +38,15 @@ public class TenantController implements TenantAPI {
         // Criar request com tenantId do path e planType do body
         UpdateTenantPlanRequest request = new UpdateTenantPlanRequest(tenantId, body.planType());
         return updateTenantPlanUseCase.execute(request);
+    }
+
+    @Override
+    public CreateCheckoutSessionResponse createCheckoutSession(
+            @PathVariable UUID tenantId,
+            @Valid @RequestBody CreateCheckoutSessionBody body
+    ) throws AuthenticationException {
+        log.info("Criando sessão de checkout - tenantId: {}, planType: {}", tenantId, body.planType());
+        CreateCheckoutSessionRequest request = new CreateCheckoutSessionRequest(tenantId, body.planType());
+        return createCheckoutSessionUseCase.execute(request);
     }
 }

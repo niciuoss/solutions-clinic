@@ -27,16 +27,13 @@ public class DefaultUpdateTenantPlanUseCase implements UpdateTenantPlanUseCase {
         log.info("id clinica {}", request.tenantId());
 
         // Atualizar o plano
+        // Nota: Para ativar o plano via pagamento, use o endpoint de checkout
+        // Este endpoint apenas atualiza o tipo de plano, mas não ativa o tenant
+        // A ativação é feita automaticamente quando o pagamento é aprovado via webhook
         tenant.setPlanType(request.planType());
 
-        // Se estava em PENDING_SETUP e selecionou um plano, atualizar status para ACTIVE
-        // Exceto se for CUSTOM (que requer aprovação)
-        if (tenant.getStatus() == TenantStatus.PENDING_SETUP) {
-            if (request.planType() != PlanType.CUSTOM) {
-                tenant.setStatus(TenantStatus.ACTIVE);
-            }
-            // Se for CUSTOM, mantém PENDING_SETUP até aprovação manual
-        }
+        // Se for CUSTOM, mantém PENDING_SETUP até aprovação manual
+        // Para outros planos, a ativação será feita pelo webhook do Stripe quando o pagamento for aprovado
 
         tenant = tenantRepository.save(tenant);
 

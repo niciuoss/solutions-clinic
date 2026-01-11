@@ -385,3 +385,40 @@ export async function updateTenantPlanAction(tenantId: string, planType: string)
     };
   }
 }
+
+export async function createCheckoutSessionAction(tenantId: string, planType: string) {
+  try {
+    if (!tenantId) {
+      return {
+        success: false,
+        error: 'ID do tenant é obrigatório',
+      };
+    }
+
+    if (!planType || !['BASIC', 'PRO'].includes(planType)) {
+      return {
+        success: false,
+        error: 'Tipo de plano inválido. Apenas BASIC e PRO podem ser pagos via checkout.',
+      };
+    }
+
+    const response = await apiRequest<{ checkoutUrl: string; sessionId: string }>(
+      API_ROUTES.TENANTS.CREATE_CHECKOUT(tenantId),
+      {
+        method: 'POST',
+        body: { planType },
+        requireAuth: true,
+      }
+    );
+
+    return {
+      success: true,
+      data: response,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao criar sessão de checkout',
+    };
+  }
+}

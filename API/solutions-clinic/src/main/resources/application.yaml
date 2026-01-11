@@ -20,3 +20,18 @@ security:
     issuer: ${SECURITY_JWT_ISSUER:solutions-clinic}
     audience: ${SECURITY_JWT_AUDIENCE:}
     jwk-set-uri: ${SECURITY_JWT_JWK_SET_URI:}
+
+stripe:
+  api:
+    key: ${STRIPE_API_KEY:}
+    secret: ${STRIPE_API_SECRET:}
+  webhook:
+    secret: ${STRIPE_WEBHOOK_SECRET:}
+    success:
+      path: ${STRIPE_WEBHOOK_SUCCESS_PATH:/plan-selection/success}
+    cancel:
+      path: ${STRIPE_WEBHOOK_CANCEL_PATH:/plan-selection}
+
+app:
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:3000}
