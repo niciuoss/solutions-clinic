@@ -5,6 +5,7 @@ export const ROUTES = {
   REGISTER: '/register',
   REGISTER_CLINIC: '/register-clinic',
   PLAN_SELECTION: '/plan-selection',
+  PLAN_SELECTION_SUCCESS: '/plan-selection/success',
   
   DASHBOARD: '/dashboard',
   PATIENTS: '/patients',
@@ -30,6 +31,7 @@ export const API_ROUTES = {
   },
   TENANTS: {
     UPDATE_PLAN: (tenantId: string) => `/tenants/${tenantId}/plan`,
+    CREATE_CHECKOUT: (tenantId: string) => `/tenants/${tenantId}/checkout`,
   },
   PATIENTS: "/patients",
   APPOINTMENTS: "/appointments",

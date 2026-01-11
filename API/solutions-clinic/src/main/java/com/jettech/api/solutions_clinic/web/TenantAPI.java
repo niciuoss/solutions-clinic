@@ -1,5 +1,7 @@
 package com.jettech.api.solutions_clinic.web;
 
+import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionBody;
+import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionResponse;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.TenantResponse;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanBody;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.naming.AuthenticationException;
@@ -44,5 +47,32 @@ public interface TenantAPI {
     TenantResponse updateTenantPlan(
             @PathVariable UUID tenantId,
             @Valid @RequestBody UpdateTenantPlanBody body
+    ) throws AuthenticationException;
+
+    @PostMapping("/tenants/{tenantId}/checkout")
+    @Operation(
+        summary = "Cria sessão de checkout do Stripe",
+        description = "Cria uma sessão de checkout do Stripe para pagamento do plano selecionado pelo tenant"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Sessão de checkout criada com sucesso",
+                content = @Content(schema = @Schema(implementation = CreateCheckoutSessionResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "400",
+                description = "Dados inválidos",
+                content = @Content
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "Tenant não encontrado",
+                content = @Content
+            )
+    })
+    CreateCheckoutSessionResponse createCheckoutSession(
+            @PathVariable UUID tenantId,
+            @Valid @RequestBody CreateCheckoutSessionBody body
     ) throws AuthenticationException;
 }

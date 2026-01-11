@@ -9,7 +9,7 @@ import { ROUTES } from '@/config/constants';
 import { toast } from 'sonner';
 import type { PlanType } from '@/types';
 import { cn } from '@/lib/utils';
-import { updateTenantPlanAction } from '@/actions/auth-actions';
+import { createCheckoutSessionAction } from '@/actions/auth-actions';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 const plans = [
@@ -86,38 +86,14 @@ export function PlanSelectionPage() {
         return;
       }
 
-      // Chamar a API para atualizar o plano
-      const result = await updateTenantPlanAction(user.clinicId, planId);
+      // Criar sessão de checkout do Stripe
+      const result = await createCheckoutSessionAction(user.clinicId, planId);
 
-      if (result.success) {
-        const planName = plans.find(p => p.id === planId)?.name || planId;
-        toast.success(`Plano ${planName} selecionado com sucesso!`);
-        
-        // Recarregar os dados do usuário para atualizar o tenantStatus no contexto
-        const refreshResult = await refreshUser();
-        
-        if (refreshResult.success && refreshResult.user) {
-          // Verificar se o status foi atualizado corretamente
-          if (refreshResult.user.tenantStatus === 'ACTIVE' || refreshResult.user.tenantStatus === 'TRIAL') {
-            // Status atualizado, redirecionar imediatamente
-            router.push(ROUTES.DASHBOARD);
-          } else {
-            // Status ainda não atualizado, aguardar um pouco e tentar novamente
-            // Isso pode acontecer se o backend ainda não processou completamente
-            setTimeout(() => {
-              router.push(ROUTES.DASHBOARD);
-            }, 1000);
-          }
-        } else {
-          // Se não conseguir atualizar, tenta redirecionar mesmo assim
-          // O ProtectedRoute tentará carregar os dados novamente
-          setTimeout(() => {
-            router.push(ROUTES.DASHBOARD);
-            router.refresh();
-          }, 1000);
-        }
+      if (result.success && result.data?.checkoutUrl) {
+        // Redirecionar para o checkout do Stripe
+        window.location.href = result.data.checkoutUrl;
       } else {
-        toast.error(result.error || 'Erro ao selecionar plano. Tente novamente.');
+        toast.error(result.error || 'Erro ao criar sessão de pagamento. Tente novamente.');
         setSelectedPlan(null);
       }
     } catch {

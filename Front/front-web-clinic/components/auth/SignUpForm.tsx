@@ -30,16 +30,10 @@ export function SignUpForm() {
 
   const clinicForm = useForm<ClinicFormData>({
     resolver: zodResolver(signUpClinicSchema),
-    defaultValues: {
-      planType: 'Básico',
-    },
   });
 
   const soloForm = useForm<SoloFormData>({
     resolver: zodResolver(signUpSoloSchema),
-    defaultValues: {
-      planType: 'Básico',
-    },
   });
 
   const onSubmitClinic = async (data: ClinicFormData) => {
@@ -281,16 +275,6 @@ export function SignUpForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="clinic-planType">Tipo de Plano</Label>
-                  <Input
-                    id="clinic-planType"
-                    {...clinicForm.register('planType')}
-                    disabled={isLoading}
-                    placeholder="Básico, Premium, etc."
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="clinic-phone">Telefone</Label>
                   <Input
                     id="clinic-phone"
@@ -469,16 +453,6 @@ export function SignUpForm() {
                   <p className="text-xs text-muted-foreground">
                     Apenas letras minúsculas, números e hífens
                   </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="solo-planType">Tipo de Plano</Label>
-                  <Input
-                    id="solo-planType"
-                    {...soloForm.register('planType')}
-                    disabled={isLoading}
-                    placeholder="Básico, Premium, etc."
-                  />
                 </div>
 
                 <div className="space-y-2">
