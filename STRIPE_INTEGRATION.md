@@ -78,7 +78,9 @@ app:
    - Clique em "Add endpoint"
    - URL do endpoint: `https://seu-dominio.com/v1/subscriptions/webhook`
    - Eventos a serem ouvidos:
-     - `checkout.session.completed` (obrigatório)
+     - `checkout.session.completed` (obrigatório) - quando o pagamento é aprovado
+     - `customer.subscription.updated` (recomendado) - quando a subscription é atualizada/renovada
+     - `customer.subscription.deleted` (recomendado) - quando a subscription é cancelada
    - Copie o "Signing secret" (para usar como `STRIPE_WEBHOOK_SECRET`)
 
 ## Fluxo de Pagamento
@@ -132,10 +134,31 @@ Para testar em desenvolvimento:
    - Sucesso: `4242 4242 4242 4242`
    - Falha: `4000 0000 0000 0002`
 
+## Eventos Processados
+
+O sistema processa os seguintes eventos do Stripe:
+
+1. **checkout.session.completed**
+   - Disparado quando o pagamento é aprovado
+   - Ativa a subscription e o tenant
+   - Salva o stripeSubscriptionId e stripeCustomerId
+
+2. **customer.subscription.updated**
+   - Disparado quando a subscription é atualizada ou renovada
+   - Atualiza `currentPeriodStart` e `currentPeriodEnd` (datas de vencimento)
+   - Atualiza o status da subscription baseado no status do Stripe
+   - Permite rastrear quando o plano vence
+
+3. **customer.subscription.deleted**
+   - Disparado quando a subscription é cancelada
+   - Marca a subscription como `CANCELED`
+   - Salva a data de cancelamento (`canceledAt`)
+   - Desativa o tenant
+
 ## Próximos Passos (Opcional)
 
-- Implementar cancelamento de assinaturas
 - Implementar upgrade/downgrade de planos
 - Adicionar página de gerenciamento de assinatura
 - Implementar notificações por email após pagamento
 - Adicionar logs mais detalhados para auditoria
+- Implementar sincronização periódica com Stripe para garantir dados atualizados
