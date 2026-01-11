@@ -9,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-
 interface HeaderProps {
   title: string;
   onMenuClick?: () => void;
@@ -17,25 +16,25 @@ interface HeaderProps {
 
 export function Header({ title, onMenuClick }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-white px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-header px-6">
       {/* Mobile menu button */}
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden"
+        className="md:hidden text-header-foreground"
         onClick={onMenuClick}
       >
         <Menu className="h-5 w-5" />
       </Button>
 
       {/* Title */}
-      <h1 className="text-xl font-semibold">{title}</h1>
+      <h1 className="text-xl font-semibold text-header-foreground">{title}</h1>
 
       <div className="ml-auto flex items-center gap-4">
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative text-header-foreground">
               <Bell className="h-5 w-5" />
               <Badge
                 variant="destructive"

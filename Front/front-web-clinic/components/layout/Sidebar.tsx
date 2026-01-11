@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -73,26 +74,33 @@ export function Sidebar() {
   const isAdmin = user?.role === 'ADMIN_CLINIC';
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-white">
+    <div className="flex h-full w-64 flex-col border-r bg-sidebar">
       {/* Logo */}
       <div className="flex h-16 items-center border-b px-6">
         <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600">
-            <Stethoscope className="h-5 w-5 text-white" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg ">
+            <Image 
+              src="/Logo.png" 
+              alt="Logo da página"
+              width={35} 
+              height={35}
+              className="object-contain" />
           </div>
-          <span className="text-lg font-semibold">Solutions Clinic</span>
+          <span className="text-lg font-semibold text-sidebar-foreground">Solutions Clinic</span>
         </Link>
       </div>
 
       {/* User info */}
       <div className="border-b p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-            <UserCircle className="h-6 w-6 text-blue-600" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-sidebar-accent">
+            <UserCircle className="h-6 w-6 text-sidebar-accent-foreground" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">{user?.fullName || 'Usuário'}</p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            <p className="text-sm font-medium truncate text-sidebar-foreground">
+              {user?.fullName || 'Usuário'}
+            </p>
+            <p className="text-xs text-sidebar-foreground/70 truncate">{user?.email}</p>
           </div>
         </div>
       </div>
@@ -101,7 +109,6 @@ export function Sidebar() {
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
           {navigation.map((item) => {
-            // Esconder itens admin se não for admin
             if (item.adminOnly && !isAdmin) return null;
 
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
@@ -112,10 +119,11 @@ export function Sidebar() {
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    ?
+                      'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm'
+                    : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground'
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -130,7 +138,7 @@ export function Sidebar() {
       <div className="border-t p-4">
         <Button
           variant="ghost"
-          className="w-full justify-start"
+          className="w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           onClick={logout}
         >
           <LogOut className="mr-3 h-5 w-5" />

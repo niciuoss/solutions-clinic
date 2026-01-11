@@ -31,6 +31,7 @@ export interface Patient {
 }
 
 export interface CreatePatientRequest {
+  tenantId: string;
   fullName: string;
   cpf?: string;
   rg?: string;

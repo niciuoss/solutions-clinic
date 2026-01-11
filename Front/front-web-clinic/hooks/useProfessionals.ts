@@ -12,18 +12,22 @@ import { toast } from 'sonner';
 export function useProfessionals() {
   const queryClient = useQueryClient();
 
-  // Listar todos os profissionais ativos
-  const { data: professionals, isLoading, error, refetch } = useQuery({
+  const { data: result, isLoading, error, refetch } = useQuery({
     queryKey: ['professionals'],
     queryFn: () => getAllActiveProfessionalsAction(),
   });
 
-  // Criar perfil profissional
+  const professionals = result?.success ? result.data : [];
+
   const createMutation = useMutation({
     mutationFn: (data: CreateProfessionalRequest) => createProfessionalAction(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['professionals'] });
-      toast.success('Perfil profissional criado com sucesso!');
+    onSuccess: (result) => {
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ['professionals'] });
+        toast.success('Perfil profissional criado com sucesso!');
+      } else {
+        toast.error(result.error || 'Erro ao criar perfil profissional');
+      }
     },
     onError: (error: any) => {
       toast.error(error.message || 'Erro ao criar perfil profissional');
@@ -40,11 +44,14 @@ export function useProfessionals() {
   };
 }
 
-// Hook para profissional específico
 export function useProfessional(professionalId: string | null) {
   return useQuery({
     queryKey: ['professional', professionalId],
-    queryFn: () => getProfessionalByIdAction(professionalId!),
+    queryFn: async () => {
+      if (!professionalId) return null;
+      const result = await getProfessionalByIdAction(professionalId);
+      return result.success ? result.data : null;
+    },
     enabled: !!professionalId,
   });
 }

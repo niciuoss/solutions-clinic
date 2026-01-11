@@ -4,14 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, Calendar, CheckCircle, Clock } from 'lucide-react';
 
 export function DashboardStats() {
-  // TODO: Buscar dados reais da API
   const stats = [
     {
       title: 'Pacientes Ativos',
       value: '248',
       icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
     },
     {
       title: 'Agendamentos Hoje',

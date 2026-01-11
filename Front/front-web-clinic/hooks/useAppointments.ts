@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getTodayAppointmentsAction,
   getAppointmentByIdAction,
   getAppointmentsByDateRangeAction,
+  getAppointmentsByProfessionalAction,
   createAppointmentAction,
   updateAppointmentAction,
   startAppointmentAction,
@@ -20,140 +22,170 @@ import { toast } from 'sonner';
 
 export function useAppointments() {
   const queryClient = useQueryClient();
+  const [pendingConflict, setPendingConflict] = useState<{
+    data: any;
+    error: string;
+    type: 'create' | 'update';
+    appointmentId?: string;
+  } | null>(null);
 
-  // Agendamentos de hoje
-  const { data: todayAppointments, isLoading, refetch } = useQuery({
+  const { data: result, isLoading, refetch } = useQuery({
     queryKey: ['appointments', 'today'],
     queryFn: () => getTodayAppointmentsAction(),
-    refetchInterval: 30000, // Atualiza a cada 30 segundos
+    refetchInterval: 30000,
   });
 
-  // Criar agendamento
+  const todayAppointments = result?.success ? result.data : [];
+
   const createMutation = useMutation({
-    mutationFn: (data: CreateAppointmentRequest) => createAppointmentAction(data),
+    mutationFn: async ({ data, forceSchedule = false }: { 
+      data: CreateAppointmentRequest; 
+      forceSchedule?: boolean 
+    }) => {
+      const result = await createAppointmentAction(data, forceSchedule);
+      
+      if (!result.success && result.isConflict && !forceSchedule) {
+        setPendingConflict({
+          data,
+          error: result.error || '',
+          type: 'create',
+        });
+        throw new Error('CONFLICT');
+      }
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      return result.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      setPendingConflict(null);
       toast.success('Agendamento criado com sucesso!');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Erro ao criar agendamento');
+      if (error.message !== 'CONFLICT') {
+        toast.error(error.message || 'Erro ao criar agendamento');
+      }
     },
   });
 
-  // Atualizar agendamento
   const updateMutation = useMutation({
-    mutationFn: ({ appointmentId, data }: { appointmentId: string; data: UpdateAppointmentRequest }) =>
-      updateAppointmentAction(appointmentId, data),
+    mutationFn: async ({ 
+      appointmentId, 
+      data, 
+      forceSchedule = false 
+    }: { 
+      appointmentId: string;
+      data: UpdateAppointmentRequest; 
+      forceSchedule?: boolean 
+    }) => {
+      const result = await updateAppointmentAction(appointmentId, data, forceSchedule);
+      
+      if (!result.success && result.isConflict && !forceSchedule) {
+        setPendingConflict({
+          data,
+          error: result.error || '',
+          type: 'update',
+          appointmentId,
+        });
+        throw new Error('CONFLICT');
+      }
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      return result.data;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      setPendingConflict(null);
       toast.success('Agendamento atualizado com sucesso!');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Erro ao atualizar agendamento');
+      if (error.message !== 'CONFLICT') {
+        toast.error(error.message || 'Erro ao atualizar agendamento');
+      }
     },
   });
 
-  // Iniciar atendimento
-  const startMutation = useMutation({
-    mutationFn: (appointmentId: string) => startAppointmentAction(appointmentId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      toast.success('Atendimento iniciado!');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Erro ao iniciar atendimento');
-    },
-  });
+  const confirmConflict = async () => {
+    if (!pendingConflict) return;
 
-  // Finalizar atendimento
-  const finishMutation = useMutation({
-    mutationFn: ({ appointmentId, data }: { appointmentId: string; data: FinishAppointmentRequest }) =>
-      finishAppointmentAction(appointmentId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      toast.success('Atendimento finalizado com sucesso!');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Erro ao finalizar atendimento');
-    },
-  });
+    if (pendingConflict.type === 'create') {
+      await createMutation.mutateAsync({ 
+        data: pendingConflict.data, 
+        forceSchedule: true 
+      });
+    } else if (pendingConflict.type === 'update') {
+      await updateMutation.mutateAsync({ 
+        appointmentId: pendingConflict.appointmentId!,
+        data: pendingConflict.data, 
+        forceSchedule: true 
+      });
+    }
+  };
 
-  // Cancelar agendamento
-  const cancelMutation = useMutation({
-    mutationFn: ({ appointmentId, reason }: { appointmentId: string; reason?: string }) =>
-      cancelAppointmentAction(appointmentId, reason),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
-      toast.success('Agendamento cancelado!');
-    },
-    onError: (error: any) => {
-      toast.error(error.message || 'Erro ao cancelar agendamento');
-    },
-  });
+  const cancelConflict = () => {
+    setPendingConflict(null);
+  };
 
   return {
     todayAppointments,
     isLoading,
     refetch,
-    createAppointment: createMutation.mutateAsync,
-    updateAppointment: updateMutation.mutateAsync,
-    startAppointment: startMutation.mutateAsync,
-    finishAppointment: finishMutation.mutateAsync,
-    cancelAppointment: cancelMutation.mutateAsync,
+    createAppointment: (data: CreateAppointmentRequest) => 
+      createMutation.mutateAsync({ data }),
+    updateAppointment: (appointmentId: string, data: UpdateAppointmentRequest) => 
+      updateMutation.mutateAsync({ appointmentId, data }),
+    confirmConflict,
+    cancelConflict,
+    pendingConflict,
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,
-    isStarting: startMutation.isPending,
-    isFinishing: finishMutation.isPending,
-    isCancelling: cancelMutation.isPending,
   };
 }
 
-// Buscar agendamento por Profissional
-  export function useAppointmentsByProfessional(
-    professionalId: string,
-    startDate: string,
-    endDate: string
-  ) {
-    return useQuery({
-      queryKey: ['appointments', 'professional', professionalId, startDate, endDate],
-      queryFn: async () => {
-        const result = await getAppointmentsByProfessionalAction(
-          professionalId,
-          startDate,
-          endDate
-        );
-        return result.success ? result.data : [];
-      },
-      enabled: !!professionalId && !!startDate && !!endDate,
-    });
-  }
-
-  // Buscar agendamentos por período
-  export function useAppointmentsByDateRange(startDate: string, endDate: string) {
-    return useQuery({
-      queryKey: ['appointments', 'range', startDate, endDate],
-      queryFn: async () => {
-        const result = await getAppointmentsByDateRangeAction(startDate, endDate);
-        return result.success ? result.data : [];
-      },
-      enabled: !!startDate && !!endDate,
-    });
-  }
-
-// Agendamento específico
 export function useAppointment(appointmentId: string | null) {
   return useQuery({
     queryKey: ['appointment', appointmentId],
-    queryFn: () => getAppointmentByIdAction(appointmentId!),
+    queryFn: async () => {
+      if (!appointmentId) return null;
+      const result = await getAppointmentByIdAction(appointmentId);
+      return result.success ? result.data : null;
+    },
     enabled: !!appointmentId,
   });
 }
 
-// Agendamentos por período
-// export function useAppointmentsByDateRange(startDate: string, endDate: string) {
-//   return useQuery({
-//     queryKey: ['appointments', 'range', startDate, endDate],
-//     queryFn: () => getAppointmentsByDateRangeAction(startDate, endDate),
-//     enabled: !!startDate && !!endDate,
-//   });
-// }
+export function useAppointmentsByDateRange(startDate: string, endDate: string) {
+  return useQuery({
+    queryKey: ['appointments', 'range', startDate, endDate],
+    queryFn: async () => {
+      const result = await getAppointmentsByDateRangeAction(startDate, endDate);
+      return result.success ? result.data : [];
+    },
+    enabled: !!startDate && !!endDate,
+  });
+}
+
+export function useAppointmentsByProfessional(
+  professionalId: string,
+  startDate: string,
+  endDate: string
+) {
+  return useQuery({
+    queryKey: ['appointments', 'professional', professionalId, startDate, endDate],
+    queryFn: async () => {
+      const result = await getAppointmentsByProfessionalAction(
+        professionalId,
+        startDate,
+        endDate
+      );
+      return result.success ? result.data : [];
+    },
+    enabled: !!professionalId && !!startDate && !!endDate,
+  });
+}

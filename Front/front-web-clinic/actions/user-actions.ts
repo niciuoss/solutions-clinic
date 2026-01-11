@@ -1,59 +1,86 @@
-'use client'
+'use server';
 
-import api from '@/lib/api';
-import { API_ROUTES } from '@/config/constants';
+import { apiRequest } from './_helpers';
 import type { 
   User,
   CreateUserRequest,
   UserRole,
-  ApiResponse 
+  ActionResult,
 } from '@/types';
 
-export async function createUserAction(data: CreateUserRequest): Promise<User> {
+export async function createUserAction(
+  data: CreateUserRequest
+): Promise<ActionResult<User>> {
   try {
-    const response = await api.post<ApiResponse<User>>(
-      API_ROUTES.USERS,
-      data
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao criar usuário');
+    const user = await apiRequest<User>('/users', {
+      method: 'POST',
+      body: data,
+    });
+
+    return {
+      success: true,
+      data: user,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao criar usuário',
+    };
   }
 }
 
-export async function getUsersByRoleAction(role: UserRole): Promise<User[]> {
+export async function getUsersByRoleAction(
+  role: UserRole
+): Promise<ActionResult<User[]>> {
   try {
-    const response = await api.get<ApiResponse<User[]>>(
-      `${API_ROUTES.USERS}/role/${role}`
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao buscar usuários');
+    const users = await apiRequest<User[]>(`/users/role/${role}`, {
+      method: 'GET',
+    });
+
+    return {
+      success: true,
+      data: users,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar usuários',
+    };
   }
 }
 
-export async function getProfessionalsAction(): Promise<User[]> {
+export async function getProfessionalsAction(): Promise<ActionResult<User[]>> {
   try {
-    const response = await api.get<ApiResponse<User[]>>(
-      `${API_ROUTES.USERS}/professionals`
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao buscar profissionais');
+    const users = await apiRequest<User[]>('/users/professionals', {
+      method: 'GET',
+    });
+
+    return {
+      success: true,
+      data: users,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar profissionais',
+    };
   }
 }
 
-export async function getReceptionistsAction(): Promise<User[]> {
+export async function getReceptionistsAction(): Promise<ActionResult<User[]>> {
   try {
-    const response = await api.get<ApiResponse<User[]>>(
-      `${API_ROUTES.USERS}/receptionists`
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao buscar recepcionistas');
+    const users = await apiRequest<User[]>('/users/receptionists', {
+      method: 'GET',
+    });
+
+    return {
+      success: true,
+      data: users,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar recepcionistas',
+    };
   }
 }

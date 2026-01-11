@@ -5,12 +5,14 @@ import type {
   Patient, 
   CreatePatientRequest, 
   UpdatePatientRequest,
-  PaginatedResponse 
+  PaginatedResponse,
+  ActionResult, 
 } from '@/types';
 
-export async function createPatientAction(data: CreatePatientRequest) {
+export async function createPatientAction(
+  data: CreatePatientRequest
+): Promise<ActionResult<Patient>> { 
   try {
-    // Converter fullName para firstName para o backend
     const requestData: any = {
       ...data,
       firstName: data.fullName,
@@ -22,7 +24,6 @@ export async function createPatientAction(data: CreatePatientRequest) {
       body: requestData,
     });
 
-    // Mapear firstName para fullName para compatibilidade com o frontend
     const mappedPatient: Patient = {
       ...patient,
       fullName: patient.firstName || '',
@@ -40,9 +41,11 @@ export async function createPatientAction(data: CreatePatientRequest) {
   }
 }
 
-export async function updatePatientAction(patientId: string, data: UpdatePatientRequest) {
+export async function updatePatientAction(
+  patientId: string, 
+  data: UpdatePatientRequest
+): Promise<ActionResult<Patient>> { 
   try {
-    // Converter fullName para firstName para o backend, se existir
     const requestData: any = { ...data };
     if (data.fullName) {
       requestData.firstName = data.fullName;
@@ -54,7 +57,6 @@ export async function updatePatientAction(patientId: string, data: UpdatePatient
       body: requestData,
     });
 
-    // Mapear firstName para fullName para compatibilidade com o frontend
     const mappedPatient: Patient = {
       ...patient,
       fullName: patient.firstName || '',
@@ -72,13 +74,14 @@ export async function updatePatientAction(patientId: string, data: UpdatePatient
   }
 }
 
-export async function getPatientByIdAction(patientId: string) {
+export async function getPatientByIdAction(
+  patientId: string
+): Promise<ActionResult<Patient>> { 
   try {
     const patient = await apiRequest<any>(`/patients/${patientId}`, {
       method: 'GET',
     });
 
-    // Mapear firstName para fullName para compatibilidade com o frontend
     const mappedPatient: Patient = {
       ...patient,
       fullName: patient.firstName || '',
@@ -96,7 +99,11 @@ export async function getPatientByIdAction(patientId: string) {
   }
 }
 
-export async function getAllPatientsAction(tenantId: string, page: number = 0, size: number = 20) {
+export async function getAllPatientsAction(
+  tenantId: string, 
+  page: number = 0, 
+  size: number = 20
+): Promise<ActionResult<PaginatedResponse<Patient>>> { 
   try {
     if (!tenantId) {
       return {
@@ -110,7 +117,6 @@ export async function getAllPatientsAction(tenantId: string, page: number = 0, s
       params: { tenantId, page, size, sort: 'firstName,asc' },
     });
 
-    // Mapear firstName para fullName para compatibilidade com o frontend
     if (response?.content) {
       response.content = response.content.map((patient: any) => ({
         ...patient,
@@ -130,7 +136,11 @@ export async function getAllPatientsAction(tenantId: string, page: number = 0, s
   }
 }
 
-export async function searchPatientsAction(query: string, page: number = 0, size: number = 20) {
+export async function searchPatientsAction(
+  query: string, 
+  page: number = 0, 
+  size: number = 20
+): Promise<ActionResult<PaginatedResponse<Patient>>> { 
   try {
     const patients = await apiRequest<PaginatedResponse<Patient>>('/patients/search', {
       method: 'GET',
@@ -149,7 +159,9 @@ export async function searchPatientsAction(query: string, page: number = 0, size
   }
 }
 
-export async function autocompletePatientsAction(name: string) {
+export async function autocompletePatientsAction(
+  name: string
+): Promise<ActionResult<Patient[]>> { 
   try {
     const patients = await apiRequest<Patient[]>('/patients/autocomplete', {
       method: 'GET',
@@ -168,7 +180,9 @@ export async function autocompletePatientsAction(name: string) {
   }
 }
 
-export async function deletePatientAction(patientId: string) {
+export async function deletePatientAction(
+  patientId: string
+): Promise<ActionResult<void>> { 
   try {
     await apiRequest(`/patients/${patientId}`, {
       method: 'DELETE',

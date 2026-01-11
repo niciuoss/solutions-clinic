@@ -1,74 +1,116 @@
-'use client'
+'use server';
 
-import api from '@/lib/api';
-import { API_ROUTES } from '@/config/constants';
+import { apiRequest } from './_helpers';
 import type { 
   Professional,
   CreateProfessionalRequest,
-  ApiResponse 
+  ActionResult,
 } from '@/types';
 
 export async function createProfessionalAction(
   data: CreateProfessionalRequest
-): Promise<Professional> {
+): Promise<ActionResult<Professional>> {
   try {
-    const response = await api.post<ApiResponse<Professional>>(
-      API_ROUTES.PROFESSIONALS,
-      data
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao criar profissional');
+    const professional = await apiRequest<Professional>('/professionals', {
+      method: 'POST',
+      body: data,
+    });
+
+    return {
+      success: true,
+      data: professional,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao criar profissional',
+    };
   }
 }
 
-export async function getProfessionalByIdAction(professionalId: string): Promise<Professional> {
+export async function getProfessionalByIdAction(
+  professionalId: string
+): Promise<ActionResult<Professional>> {
   try {
-    const response = await api.get<ApiResponse<Professional>>(
-      `${API_ROUTES.PROFESSIONALS}/${professionalId}`
+    const professional = await apiRequest<Professional>(
+      `/professionals/${professionalId}`,
+      {
+        method: 'GET',
+      }
     );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao buscar profissional');
+
+    return {
+      success: true,
+      data: professional,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar profissional',
+    };
   }
 }
 
-export async function getProfessionalByUserIdAction(userId: string): Promise<Professional> {
+export async function getProfessionalByUserIdAction(
+  userId: string
+): Promise<ActionResult<Professional>> {
   try {
-    const response = await api.get<ApiResponse<Professional>>(
-      `${API_ROUTES.PROFESSIONALS}/user/${userId}`
+    const professional = await apiRequest<Professional>(
+      `/professionals/user/${userId}`,
+      {
+        method: 'GET',
+      }
     );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao buscar profissional');
+
+    return {
+      success: true,
+      data: professional,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar profissional',
+    };
   }
 }
 
-export async function getAllActiveProfessionalsAction(): Promise<Professional[]> {
+export async function getAllActiveProfessionalsAction(): Promise<ActionResult<Professional[]>> {
   try {
-    const response = await api.get<ApiResponse<Professional[]>>(
-      API_ROUTES.PROFESSIONALS
-    );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao listar profissionais');
+    const professionals = await apiRequest<Professional[]>('/professionals', {
+      method: 'GET',
+    });
+
+    return {
+      success: true,
+      data: professionals,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao listar profissionais',
+    };
   }
 }
 
 export async function getProfessionalsBySpecialtyAction(
   specialty: string
-): Promise<Professional[]> {
+): Promise<ActionResult<Professional[]>> {
   try {
-    const response = await api.get<ApiResponse<Professional[]>>(
-      `${API_ROUTES.PROFESSIONALS}/specialty/${specialty}`
+    const professionals = await apiRequest<Professional[]>(
+      `/professionals/specialty/${specialty}`,
+      {
+        method: 'GET',
+      }
     );
-    
-    return response.data.data;
-  } catch (error: any) {
-    throw new Error(error.response?.data?.message || 'Erro ao buscar profissionais');
+
+    return {
+      success: true,
+      data: professionals,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar profissionais',
+    };
   }
 }
