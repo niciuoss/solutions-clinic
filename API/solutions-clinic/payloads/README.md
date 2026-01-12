@@ -34,6 +34,22 @@ curl -X POST http://localhost:8080/v1/auth/signup/solo \
   -d @solo-exemplo2.json
 ```
 
+#### Teste 5: Cadastro de Paciente (completo)
+```bash
+curl -X POST http://localhost:8080/v1/patients \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -d @patient-exemplo1.json
+```
+
+#### Teste 6: Cadastro de Paciente (mínimo)
+```bash
+curl -X POST http://localhost:8080/v1/patients \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer SEU_TOKEN_AQUI" \
+  -d @patient-exemplo2.json
+```
+
 ### Com Postman/Insomnia
 
 1. Importe os arquivos JSON como body da requisição
@@ -41,7 +57,10 @@ curl -X POST http://localhost:8080/v1/auth/signup/solo \
 3. Configure a URL:
    - Para clínica: `http://localhost:8080/v1/auth/signup/clinic-owner`
    - Para solo: `http://localhost:8080/v1/auth/signup/solo`
-4. Configure o header: `Content-Type: application/json`
+   - Para paciente: `http://localhost:8080/v1/patients`
+4. Configure os headers:
+   - `Content-Type: application/json`
+   - `Authorization: Bearer SEU_TOKEN_AQUI` (obrigatório para pacientes)
 5. Cole o conteúdo do arquivo JSON no body
 
 ### Com HTTPie
@@ -52,6 +71,12 @@ http POST localhost:8080/v1/auth/signup/clinic-owner < clinic-owner-exemplo1.jso
 
 # Solo
 http POST localhost:8080/v1/auth/signup/solo < solo-exemplo1.json
+
+# Paciente (completo)
+http POST localhost:8080/v1/patients Authorization:"Bearer SEU_TOKEN_AQUI" < patient-exemplo1.json
+
+# Paciente (mínimo)
+http POST localhost:8080/v1/patients Authorization:"Bearer SEU_TOKEN_AQUI" < patient-exemplo2.json
 ```
 
 ## Importante
@@ -60,3 +85,22 @@ http POST localhost:8080/v1/auth/signup/solo < solo-exemplo1.json
 
 Se você tentar usar os mesmos valores duas vezes, receberá um erro de validação.
 
+### Campos do Payload de Paciente
+
+**Campos obrigatórios:**
+- `tenantId`: UUID da clínica (obrigatório)
+- `firstName`: Nome completo do paciente (obrigatório, 2-100 caracteres)
+
+**Campos opcionais:**
+- `cpf`: CPF com exatamente 11 dígitos (sem formatação)
+- `birthDate`: Data de nascimento no formato `DD/MM/YYYY`
+- `gender`: `MASCULINO`, `FEMININO`, `OUTRO`, `NAO_INFORMADO`
+- `email`: Email válido
+- `phone`: Telefone
+- `whatsapp`: WhatsApp
+- `addressStreet`, `addressNumber`, `addressComplement`, `addressNeighborhood`, `addressCity`, `addressState`, `addressZipcode`: Dados de endereço
+- `bloodType`: `A_POSITIVE`, `A_NEGATIVE`, `B_POSITIVE`, `B_NEGATIVE`, `AB_POSITIVE`, `AB_NEGATIVE`, `O_POSITIVE`, `O_NEGATIVE`
+- `allergies`: Alergias do paciente
+- `guardianName`, `guardianPhone`, `guardianRelationship`: Dados do responsável (útil para menores de idade)
+
+⚠️ **Para cadastro de pacientes, é necessário estar autenticado** (token JWT no header Authorization).

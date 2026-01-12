@@ -1,10 +1,12 @@
 'use server';
 
 import { apiRequest } from './_helpers';
+import { getUserByIdAction } from './auth-actions';
 import type { 
   Professional,
   CreateProfessionalRequest,
   ActionResult,
+  PaginatedResponse,
 } from '@/types';
 
 export async function createProfessionalAction(
@@ -111,6 +113,116 @@ export async function getProfessionalsBySpecialtyAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Erro ao buscar profissionais',
+    };
+  }
+}
+
+export async function getProfessionalsByClinicAction(
+  clinicId: string,
+  page: number = 0,
+  size: number = 20,
+  sort: string = 'user.fullName,asc',
+  search?: string,
+  active?: boolean,
+  documentType?: string
+): Promise<ActionResult<PaginatedResponse<Professional>>> {
+  try {
+    if (!clinicId) {
+      return {
+        success: false,
+        error: 'ID da clínica é obrigatório',
+      };
+    }
+
+    // Preparar parâmetros
+    const params: Record<string, string | number | boolean> = {
+      page,
+      size,
+      sort,
+    };
+
+    if (search) params.search = search;
+    if (active !== undefined) params.active = active;
+    if (documentType) params.documentType = documentType;
+
+    // Buscar profissionais paginados do backend
+    const response = await apiRequest<PaginatedResponse<{
+      id: string;
+      userId: string;
+      tenantId: string;
+      specialty: string;
+      documentType: string;
+      documentNumber: string;
+      documentState?: string;
+      bio?: string;
+      active: boolean;
+      createdAt: string;
+      updatedAt: string;
+    }>>(
+      `/clinics/${clinicId}/professionals`,
+      {
+        method: 'GET',
+        params,
+      }
+    );
+
+    // Buscar dados completos dos usuários em paralelo apenas para os itens da página atual
+    const professionalsWithUsers = await Promise.all(
+      (response.content || []).map(async (prof) => {
+        const userResult = await getUserByIdAction(prof.userId);
+        if (!userResult.success || !userResult.data) {
+          return null;
+        }
+
+        const user = userResult.data;
+
+        // Montar objeto Professional no formato esperado pelo frontend
+        const professional: Professional = {
+          id: prof.id,
+          user: {
+            id: user.id,
+            clinicId: user.clinicId || clinicId,
+            email: user.email,
+            fullName: user.fullName,
+            role: user.role,
+            phone: (user as any).phone,
+            isActive: user.isActive,
+            emailVerified: user.emailVerified,
+            createdAt: user.createdAt || prof.createdAt,
+            tenantStatus: user.tenantStatus,
+            planType: user.planType,
+          },
+          specialty: prof.specialty,
+          documentType: prof.documentType as any,
+          documentNumber: prof.documentNumber,
+          documentState: prof.documentState,
+          bio: prof.bio,
+          isActive: prof.active,
+        };
+
+        return professional;
+      })
+    );
+
+    // Filtrar profissionais nulos
+    const validProfessionals = professionalsWithUsers.filter(
+      (p): p is Professional => p !== null
+    );
+
+    return {
+      success: true,
+      data: {
+        content: validProfessionals,
+        totalElements: response.totalElements || 0,
+        totalPages: response.totalPages || 0,
+        size: response.size || size,
+        number: response.number || page,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar profissionais da clínica',
     };
   }
 }

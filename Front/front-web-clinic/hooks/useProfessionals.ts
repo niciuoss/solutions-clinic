@@ -5,9 +5,11 @@ import {
   getAllActiveProfessionalsAction,
   getProfessionalByIdAction,
   createProfessionalAction,
+  getProfessionalsByClinicAction,
 } from '@/actions/professional-actions';
 import type { CreateProfessionalRequest } from '@/types';
 import { toast } from 'sonner';
+import { useAuth } from './useAuth';
 
 export function useProfessionals() {
   const queryClient = useQueryClient();
@@ -54,4 +56,55 @@ export function useProfessional(professionalId: string | null) {
     },
     enabled: !!professionalId,
   });
+}
+
+export function useProfessionalsByClinic(
+  clinicId: string | null,
+  page: number = 0,
+  size: number = 20,
+  sort: string = 'user.fullName,asc',
+  search?: string,
+  active?: boolean,
+  documentType?: string
+) {
+  const queryClient = useQueryClient();
+
+  const { data: result, isLoading, error, refetch } = useQuery({
+    queryKey: ['professionals', 'clinic', clinicId, page, size, sort, search, active, documentType],
+    queryFn: async () => {
+      if (!clinicId) return { success: false, data: { content: [], totalElements: 0, totalPages: 0, size, number: page } };
+      return await getProfessionalsByClinicAction(clinicId, page, size, sort, search, active, documentType);
+    },
+    enabled: !!clinicId,
+  });
+
+  const professionals = result?.success ? result.data?.content || [] : [];
+  const pagination = result?.success ? {
+    totalElements: result.data?.totalElements || 0,
+    totalPages: result.data?.totalPages || 0,
+    size: result.data?.size || size,
+    number: result.data?.number || page,
+  } : null;
+
+  return {
+    professionals,
+    pagination,
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+export function useProfessionalsByCurrentClinic(
+  page: number = 0,
+  size: number = 20,
+  sort: string = 'user.fullName,asc',
+  search?: string,
+  active?: boolean,
+  documentType?: string
+) {
+  const { user } = useAuth();
+  const clinicId = user?.clinicId || null;
+  
+  return useProfessionalsByClinic(clinicId, page, size, sort, search, active, documentType);
 }

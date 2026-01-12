@@ -11,10 +11,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.naming.AuthenticationException;
 import java.util.UUID;
@@ -55,5 +57,32 @@ public interface ProfessionalAPI {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content)
     })
     ProfessionalTenantResponse getProfessionalTenants(@PathVariable UUID userId) throws AuthenticationException;
+
+    @GetMapping("/clinics/{clinicId}/professionals")
+    @Operation(
+        summary = "Lista profissionais de uma clínica com paginação e filtros",
+        description = "Retorna uma lista paginada de profissionais de uma clínica específica com suporte a busca textual, filtros e ordenação."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Lista de profissionais retornada com sucesso",
+                content = @Content(schema = @Schema(implementation = Page.class))
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "Clínica não encontrada",
+                content = @Content
+            )
+    })
+    Page<ProfessionalResponse> getProfessionalsByClinic(
+            @PathVariable UUID clinicId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false, defaultValue = "user.fullName,asc") String sort,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) String documentType
+    ) throws AuthenticationException;
 }
 

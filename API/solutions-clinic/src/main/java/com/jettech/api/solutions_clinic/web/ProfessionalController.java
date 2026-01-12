@@ -1,13 +1,18 @@
 package com.jettech.api.solutions_clinic.web;
 
+import com.jettech.api.solutions_clinic.model.entity.DocumentType;
 import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfessionalToClinicBodyRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfessionalToClinicRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultAddProfessionalToClinicUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultCreateProfessionalUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultGetProfessionalsByClinicUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultGetProfessionalTenantsUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.GetProfessionalsByClinicRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.ProfessionalResponse;
 import com.jettech.api.solutions_clinic.model.usecase.professional.ProfessionalTenantResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +32,7 @@ public class ProfessionalController implements ProfessionalAPI {
     private final DefaultCreateProfessionalUseCase createProfessionalUseCase;
     private final DefaultAddProfessionalToClinicUseCase addProfessionalToClinicUseCase;
     private final DefaultGetProfessionalTenantsUseCase getProfessionalTenantsUseCase;
+    private final DefaultGetProfessionalsByClinicUseCase getProfessionalsByClinicUseCase;
 
     @Override
     public ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationException {
@@ -51,6 +57,36 @@ public class ProfessionalController implements ProfessionalAPI {
     @Override
     public ProfessionalTenantResponse getProfessionalTenants(@PathVariable UUID userId) throws AuthenticationException {
         return getProfessionalTenantsUseCase.execute(userId);
+    }
+
+    @Override
+    public Page<ProfessionalResponse> getProfessionalsByClinic(
+            @PathVariable UUID clinicId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false, defaultValue = "user.fullName,asc") String sort,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) String documentType
+    ) throws AuthenticationException {
+        DocumentType docType = null;
+        if (documentType != null && !documentType.isEmpty()) {
+            try {
+                docType = DocumentType.valueOf(documentType.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                // Se o tipo não for válido, mantém como null (todos os tipos)
+            }
+        }
+        
+        return getProfessionalsByClinicUseCase.execute(new GetProfessionalsByClinicRequest(
+                clinicId,
+                page,
+                size,
+                sort,
+                search,
+                active,
+                docType
+        ));
     }
 }
 
