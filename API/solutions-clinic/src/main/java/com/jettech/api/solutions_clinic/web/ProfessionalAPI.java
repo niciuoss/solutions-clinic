@@ -4,6 +4,7 @@ import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfession
 import com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.ProfessionalResponse;
 import com.jettech.api.solutions_clinic.model.usecase.professional.ProfessionalTenantResponse;
+import com.jettech.api.solutions_clinic.model.usecase.professional.UpdateProfessionalActiveBodyRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -83,6 +85,18 @@ public interface ProfessionalAPI {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) String documentType
+    ) throws AuthenticationException;
+
+    @PatchMapping("/professionals/{id}/active")
+    @Operation(summary = "Atualiza o status ativo de um profissional", description = "Ativa ou desativa um profissional no sistema.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Status do profissional atualizado com sucesso", 
+                    content = @Content(schema = @Schema(implementation = ProfessionalResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Profissional não encontrado", content = @Content)
+    })
+    ProfessionalResponse updateProfessionalActive(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateProfessionalActiveBodyRequest request
     ) throws AuthenticationException;
 }
 

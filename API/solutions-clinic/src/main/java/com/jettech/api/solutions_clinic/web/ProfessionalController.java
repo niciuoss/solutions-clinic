@@ -8,9 +8,12 @@ import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultAddPro
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultCreateProfessionalUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultGetProfessionalsByClinicUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultGetProfessionalTenantsUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultUpdateProfessionalActiveUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.GetProfessionalsByClinicRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.ProfessionalResponse;
 import com.jettech.api.solutions_clinic.model.usecase.professional.ProfessionalTenantResponse;
+import com.jettech.api.solutions_clinic.model.usecase.professional.UpdateProfessionalActiveBodyRequest;
+import com.jettech.api.solutions_clinic.model.usecase.professional.UpdateProfessionalActiveRequest;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
@@ -33,6 +36,7 @@ public class ProfessionalController implements ProfessionalAPI {
     private final DefaultAddProfessionalToClinicUseCase addProfessionalToClinicUseCase;
     private final DefaultGetProfessionalTenantsUseCase getProfessionalTenantsUseCase;
     private final DefaultGetProfessionalsByClinicUseCase getProfessionalsByClinicUseCase;
+    private final DefaultUpdateProfessionalActiveUseCase updateProfessionalActiveUseCase;
 
     @Override
     public ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationException {
@@ -86,6 +90,16 @@ public class ProfessionalController implements ProfessionalAPI {
                 search,
                 active,
                 docType
+        ));
+    }
+
+    @Override
+    public ProfessionalResponse updateProfessionalActive(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateProfessionalActiveBodyRequest request) throws AuthenticationException {
+        return updateProfessionalActiveUseCase.execute(new UpdateProfessionalActiveRequest(
+                id,
+                request.active()
         ));
     }
 }

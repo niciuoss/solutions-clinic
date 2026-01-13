@@ -23,7 +23,8 @@ export enum DocumentType {
 }
 
 export interface CreateProfessionalRequest {
-  userId?: string;
+  userId: string;
+  tenantId?: string;
   specialty: string;
   documentType: DocumentType;
   documentNumber: string;

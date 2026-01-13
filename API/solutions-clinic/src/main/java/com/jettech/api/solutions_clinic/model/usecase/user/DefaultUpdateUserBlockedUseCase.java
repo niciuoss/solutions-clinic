@@ -1,0 +1,40 @@
+package com.jettech.api.solutions_clinic.model.usecase.user;
+
+import com.jettech.api.solutions_clinic.model.entity.User;
+import com.jettech.api.solutions_clinic.model.repository.UserRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.naming.AuthenticationException;
+
+@Service
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+public class DefaultUpdateUserBlockedUseCase implements UpdateUserBlockedUseCase {
+
+    private final UserRepository userRepository;
+
+    @Override
+    @Transactional
+    public UserResponse execute(UpdateUserBlockedRequest request) throws AuthenticationException {
+        User user = userRepository.findById(request.id())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.id()));
+
+        user.setBlocked(request.blocked());
+        user = userRepository.save(user);
+
+        return new UserResponse(
+                user.getId(),
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getPhone(),
+                user.getCpf(),
+                user.getBirthDate(),
+                user.isBlocked(),
+                user.getCreatedAt(),
+                user.getUpdatedAt()
+        );
+    }
+}
