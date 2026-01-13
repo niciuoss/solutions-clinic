@@ -1,6 +1,6 @@
 import { UserRole, Gender } from './auth.types';
 
-// CreateUserRequest para o backend (firstName, lastName, email, password, phone?, cpf?, birthDate?)
+// CreateUserRequest para o backend (firstName, lastName, email, password, phone?, cpf?, birthDate?, tenantId?)
 export interface CreateUserRequestBodyRequest {
   firstName: string;
   lastName: string;
@@ -9,6 +9,7 @@ export interface CreateUserRequestBodyRequest {
   phone?: string;
   cpf?: string;
   birthDate?: string;
+  tenantId?: string;
 }
 
 // CreateUserRequest antigo (mantido para compatibilidade se usado em outros lugares)

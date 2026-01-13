@@ -1,11 +1,14 @@
 package com.jettech.api.solutions_clinic.model.usecase.professional;
 
 import com.jettech.api.solutions_clinic.model.entity.Professional;
+import com.jettech.api.solutions_clinic.model.entity.Role;
 import com.jettech.api.solutions_clinic.model.entity.Tenant;
 import com.jettech.api.solutions_clinic.model.entity.User;
+import com.jettech.api.solutions_clinic.model.entity.UserTenantRole;
 import com.jettech.api.solutions_clinic.model.repository.ProfessionalRepository;
 import com.jettech.api.solutions_clinic.model.repository.TenantRepository;
 import com.jettech.api.solutions_clinic.model.repository.UserRepository;
+import com.jettech.api.solutions_clinic.model.repository.UserTenantRoleRepository;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ public class DefaultCreateProfessionalUseCase implements CreateProfessionalUseCa
     private final ProfessionalRepository professionalRepository;
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
+    private final UserTenantRoleRepository userTenantRoleRepository;
 
     @Override
     @Transactional
@@ -50,6 +54,15 @@ public class DefaultCreateProfessionalUseCase implements CreateProfessionalUseCa
         professional.setActive(true);
 
         professional = professionalRepository.save(professional);
+
+        // Criar role SPECIALIST automaticamente para o usuário no tenant
+        if (!userTenantRoleRepository.existsByUserAndTenantAndRole(user, tenant, Role.SPECIALIST)) {
+            UserTenantRole userTenantRole = new UserTenantRole();
+            userTenantRole.setUser(user);
+            userTenantRole.setTenant(tenant);
+            userTenantRole.setRole(Role.SPECIALIST);
+            userTenantRoleRepository.save(userTenantRole);
+        }
 
         // Converter para Response
         return new ProfessionalResponse(

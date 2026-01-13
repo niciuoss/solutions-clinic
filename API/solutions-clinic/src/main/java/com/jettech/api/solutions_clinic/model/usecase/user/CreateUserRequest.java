@@ -4,6 +4,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
+import java.util.UUID;
+
 public record CreateUserRequest(
     @NotBlank(message = "O campo [firstName] é obrigatório")
     String firstName,
@@ -24,6 +26,8 @@ public record CreateUserRequest(
     String cpf,
     
     @Pattern(regexp = "^\\d{2}/\\d{2}/\\d{4}$", message = "O campo [birthDate] deve ser uma data válida no formato DD/MM/YYYY")
-    String birthDate
+    String birthDate,
+    
+    UUID tenantId
 ) {
 }

@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { Loader2, User, Mail, Lock, Eye, EyeOff, Phone, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { associateUserToTenantAction, deleteUserAction } from '@/actions/user-actions';
+import { deleteUserAction } from '@/actions/user-actions';
 import type { CreateUserRequestBodyRequest } from '@/types';
 
 const createUserFormSchema = z.object({
@@ -100,11 +100,10 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
     }
 
     setIsSubmitting(true);
-    let createdUserId: string | null = null;
-    let userAssociated = false;
 
     try {
-      // 1. Criar usuário com todos os dados (incluindo CPF, phone, birthDate)
+      // Criar usuário com todos os dados (incluindo CPF, phone, birthDate e tenantId)
+      // O backend criará automaticamente a role RECEPTION quando tenantId for fornecido
       const createData: CreateUserRequestBodyRequest = {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -113,6 +112,7 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
         phone: data.phone?.replace(/\D/g, '') || undefined,
         cpf: data.cpf?.replace(/\D/g, '') || undefined,
         birthDate: data.birthDate || undefined,
+        tenantId: user.clinicId,
       };
 
       const createResult = await createUserAction(createData);
@@ -128,24 +128,6 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
         return;
       }
 
-      createdUserId = createResult.data.id;
-
-      // 2. Associar usuário ao tenant (com role padrão RECEPTION)
-      const associateResult = await associateUserToTenantAction(createdUserId, user.clinicId, 'RECEPTION');
-      if (!associateResult.success) {
-        // Deletar o usuário criado se não conseguiu associar
-        if (createdUserId) {
-          await deleteUserAction(createdUserId);
-        }
-        toast.error(
-          'Usuário criado, mas não foi possível associá-lo à clínica: ' + 
-          (associateResult.error || 'Erro desconhecido')
-        );
-        setIsSubmitting(false);
-        return;
-      }
-      
-      userAssociated = true;
       toast.success('Usuário cadastrado e associado à clínica com sucesso!');
       if (onSuccess) {
         onSuccess();
@@ -153,14 +135,6 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
         router.push('/users');
       }
     } catch (error) {
-      // Se houve erro e o usuário foi criado mas não associado, deletar
-      if (createdUserId && !userAssociated) {
-        try {
-          await deleteUserAction(createdUserId);
-        } catch (deleteError) {
-          console.error('Erro ao deletar usuário criado:', deleteError);
-        }
-      }
       toast.error('Erro ao cadastrar usuário');
       console.error(error);
     } finally {

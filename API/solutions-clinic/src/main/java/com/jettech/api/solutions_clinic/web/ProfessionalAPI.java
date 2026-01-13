@@ -27,7 +27,7 @@ import java.util.UUID;
 public interface ProfessionalAPI {
 
     @PostMapping("/professionals")
-    @Operation(summary = "Cria um novo profissional", description = "Registra um novo profissional no sistema associado a um usuário e uma clínica.")
+    @Operation(summary = "Cria um novo profissional", description = "Registra um novo profissional no sistema associado a um usuário e uma clínica. A role SPECIALIST é criada automaticamente para o usuário no tenant.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profissional criado com sucesso", 
                     content = @Content(schema = @Schema(implementation = ProfessionalResponse.class))),
@@ -38,7 +38,7 @@ public interface ProfessionalAPI {
     ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationException;
 
     @PostMapping("/clinics/{clinicId}/professionals")
-    @Operation(summary = "Adiciona profissional a uma clínica", description = "Registra um profissional associando-o a uma clínica específica.")
+    @Operation(summary = "Adiciona profissional a uma clínica", description = "Registra um profissional associando-o a uma clínica específica. A role SPECIALIST é criada automaticamente para o usuário no tenant.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Profissional adicionado à clínica com sucesso", 
                     content = @Content(schema = @Schema(implementation = ProfessionalResponse.class))),

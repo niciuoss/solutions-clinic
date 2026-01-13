@@ -35,10 +35,11 @@ import java.util.UUID;
 public interface UserAPI {
 
     @PostMapping
-    @Operation(summary = "Cria um novo usuário", description = "Registra um novo usuário no sistema com o papel padrão de 'USER'.")
+    @Operation(summary = "Cria um novo usuário", description = "Registra um novo usuário no sistema. Se tenantId for fornecido, o usuário será automaticamente associado ao tenant com a role RECEPTION.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Usuário criado com sucesso", content = @Content(schema = @Schema(implementation = User.class))),
-            @ApiResponse(responseCode = "409", description = "Email já existente", content = @Content)
+            @ApiResponse(responseCode = "409", description = "Email já existente", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Clínica não encontrada (quando tenantId é fornecido)", content = @Content)
     })
     User createUser(@Valid @RequestBody CreateUserRequest user) throws AuthenticationException;
 
