@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { createPatientAction, updatePatientAction } from '@/actions/patient-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -88,6 +89,7 @@ function formatInitialCEP(cep: string | undefined): string {
 
 export function PatientForm({ patient, onSuccess }: PatientFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -181,6 +183,9 @@ export function PatientForm({ patient, onSuccess }: PatientFormProps) {
       }
 
       if (result.success) {
+        // Invalidar todas as queries de pacientes para atualizar a lista
+        queryClient.invalidateQueries({ queryKey: ['patients'] });
+        
         toast.success(
           isEditing
             ? 'Paciente atualizado com sucesso!'

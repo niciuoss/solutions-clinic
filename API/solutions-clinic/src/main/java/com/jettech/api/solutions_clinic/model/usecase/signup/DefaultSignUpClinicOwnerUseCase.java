@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.naming.AuthenticationException;
+import java.util.Arrays;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -89,8 +90,24 @@ public class DefaultSignUpClinicOwnerUseCase implements SignUpClinicOwnerUseCase
 
     private User createUser(SignUpClinicOwnerRequest request) {
         User user = new User();
-        user.setFirstName(request.firstName());
-        user.setLastName(request.lastName());
+        
+        // Usar o nome da clínica como nome do usuário
+        // Se firstName ou lastName não forem fornecidos ou estiverem vazios, usar o nome da clínica
+        String firstName = request.firstName();
+        String lastName = request.lastName();
+        
+        if (firstName == null || firstName.trim().isEmpty() || 
+            lastName == null || lastName.trim().isEmpty()) {
+            // Dividir o nome da clínica: primeira palavra como firstName, restante como lastName
+            String[] nameParts = request.name().trim().split("\\s+");
+            firstName = nameParts[0];
+            lastName = nameParts.length > 1 
+                ? String.join(" ", Arrays.copyOfRange(nameParts, 1, nameParts.length))
+                : request.name(); // Se tiver apenas uma palavra, usar o nome completo como lastName
+        }
+        
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
         user.setEmail(request.email().toLowerCase());
         user.setPassword(passwordEncoder.encode(request.password()));
         // Para clínica, birthDate não é obrigatório

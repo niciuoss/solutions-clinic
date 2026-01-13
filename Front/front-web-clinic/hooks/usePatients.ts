@@ -17,16 +17,18 @@ export function usePatients(tenantId: string | null, page: number = 0, size: num
   const queryClient = useQueryClient();
 
   // Listar todos os pacientes
-  const { data: patients, isLoading, error, refetch } = useQuery({
+  const { data: result, isLoading, error, refetch } = useQuery({
     queryKey: ['patients', tenantId, page, size],
-    queryFn: () => {
+    queryFn: async () => {
       if (!tenantId) {
-        throw new Error('ID da clínica (tenantId) é obrigatório');
+        return { success: false, data: { content: [], totalElements: 0, totalPages: 0, size, number: page } };
       }
-      return getAllPatientsAction(tenantId, page, size);
+      return await getAllPatientsAction(tenantId, page, size);
     },
     enabled: !!tenantId,
   });
+
+  const patients = result?.success ? result.data : null;
 
   // Criar paciente
   const createMutation = useMutation({
@@ -90,11 +92,22 @@ export function usePatient(patientId: string | null) {
 
 // Busca de pacientes
 export function usePatientSearch(query: string, page: number = 0, size: number = 20) {
-  return useQuery({
+  const { data: result, isLoading, error } = useQuery({
     queryKey: ['patients', 'search', query, page, size],
-    queryFn: () => searchPatientsAction(query, page, size),
+    queryFn: async () => {
+      if (query.length < 2) {
+        return { success: false, data: { content: [], totalElements: 0, totalPages: 0, size, number: page } };
+      }
+      return await searchPatientsAction(query, page, size);
+    },
     enabled: query.length >= 2,
   });
+
+  return {
+    data: result?.success ? result.data : null,
+    isLoading,
+    error,
+  };
 }
 
 // Autocomplete de pacientes

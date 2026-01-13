@@ -31,3 +31,21 @@ export interface CreateProfessionalRequest {
   documentState?: string;
   bio?: string;
 }
+
+export interface CreateProfessionalWithUserRequest {
+  // User fields
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone?: string;
+  cpf?: string;
+  birthDate?: string;
+  
+  // Professional fields
+  specialty: string;
+  documentType: DocumentType;
+  documentNumber: string;
+  documentState?: string;
+  bio?: string;
+}

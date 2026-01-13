@@ -81,6 +81,29 @@ export const professionalSchema = z.object({
   profileImageUrl: z.string().url('URL inválida').optional().or(z.literal('')),
 });
 
+// Professional with User (novo formulário combinado)
+export const professionalWithUserSchema = z.object({
+  // User fields
+  firstName: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres').max(50, 'Nome deve ter no máximo 50 caracteres'),
+  lastName: z.string().min(2, 'Sobrenome deve ter no mínimo 2 caracteres').max(50, 'Sobrenome deve ter no máximo 50 caracteres'),
+  email: z.string().email('Email inválido'),
+  password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
+  confirmPassword: z.string().min(8, 'Confirmação de senha é obrigatória'),
+  phone: z.string().optional(),
+  cpf: z.string().regex(/^\d{3}\.\d{3}\.\d{3}-\d{2}$/, 'CPF inválido').optional().or(z.literal('')),
+  birthDate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Data de nascimento deve estar no formato DD/MM/YYYY').optional().or(z.literal('')),
+  
+  // Professional fields
+  specialty: z.string().min(1, 'Especialidade é obrigatória'),
+  documentType: z.enum(['CRM', 'CREFITO', 'CRO', 'CRP', 'CRN', 'COREN', 'OUTRO']),
+  documentNumber: z.string().min(1, 'Número do documento é obrigatório'),
+  documentState: z.string().max(2).optional(),
+  bio: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'As senhas não conferem',
+  path: ['confirmPassword'],
+});
+
 // Room
 export const roomSchema = z.object({
   name: z.string().min(1, 'Nome da sala é obrigatório'),
@@ -90,9 +113,7 @@ export const roomSchema = z.object({
 
 // SignUp - Clínica
 export const signUpClinicSchema = z.object({
-  // User fields
-  firstName: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres').max(50, 'Nome deve ter no máximo 50 caracteres'),
-  lastName: z.string().min(2, 'Sobrenome deve ter no mínimo 2 caracteres').max(50, 'Sobrenome deve ter no máximo 50 caracteres'),
+  // User fields (email e senha para acesso)
   email: z.string().email('Email inválido'),
   password: z.string().min(8, 'Senha deve ter no mínimo 8 caracteres'),
   

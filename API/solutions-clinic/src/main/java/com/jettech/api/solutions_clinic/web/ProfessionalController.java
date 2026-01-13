@@ -4,8 +4,10 @@ import com.jettech.api.solutions_clinic.model.entity.DocumentType;
 import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfessionalToClinicBodyRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfessionalToClinicRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalRequest;
+import com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalWithUserRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultAddProfessionalToClinicUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultCreateProfessionalUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultCreateProfessionalWithUserUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultGetProfessionalsByClinicUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultGetProfessionalTenantsUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultUpdateProfessionalActiveUseCase;
@@ -33,6 +35,7 @@ import java.util.UUID;
 public class ProfessionalController implements ProfessionalAPI {
 
     private final DefaultCreateProfessionalUseCase createProfessionalUseCase;
+    private final DefaultCreateProfessionalWithUserUseCase createProfessionalWithUserUseCase;
     private final DefaultAddProfessionalToClinicUseCase addProfessionalToClinicUseCase;
     private final DefaultGetProfessionalTenantsUseCase getProfessionalTenantsUseCase;
     private final DefaultGetProfessionalsByClinicUseCase getProfessionalsByClinicUseCase;
@@ -101,6 +104,11 @@ public class ProfessionalController implements ProfessionalAPI {
                 id,
                 request.active()
         ));
+    }
+
+    @Override
+    public ProfessionalResponse createProfessionalWithUser(@Valid @RequestBody CreateProfessionalWithUserRequest request) throws AuthenticationException {
+        return createProfessionalWithUserUseCase.execute(request);
     }
 }
 

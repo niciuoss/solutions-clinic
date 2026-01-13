@@ -8,12 +8,34 @@ import type {
   ActionResult,
   PaginatedResponse,
 } from '@/types';
+import type { CreateProfessionalWithUserRequest } from '@/types/professional.types';
 
 export async function createProfessionalAction(
   data: CreateProfessionalRequest
 ): Promise<ActionResult<Professional>> {
   try {
     const professional = await apiRequest<Professional>('/professionals', {
+      method: 'POST',
+      body: data,
+    });
+
+    return {
+      success: true,
+      data: professional,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao criar profissional',
+    };
+  }
+}
+
+export async function createProfessionalWithUserAction(
+  data: CreateProfessionalWithUserRequest
+): Promise<ActionResult<Professional>> {
+  try {
+    const professional = await apiRequest<Professional>('/professionals/with-user', {
       method: 'POST',
       body: data,
     });

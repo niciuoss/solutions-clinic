@@ -6,9 +6,7 @@
 
 ```json
 {
-  "firstName": "João",
-  "lastName": "Silva",
-  "email": "joao.silva@clinicamedica.com.br",
+  "email": "contato@clinicamedica.com.br",
   "password": "senhaSegura123",
   "name": "Clínica Médica São Paulo",
   "cnpj": "12345678000190",
@@ -23,9 +21,7 @@
 
 ```json
 {
-  "firstName": "Maria",
-  "lastName": "Santos",
-  "email": "maria.santos@clinicaexemplo.com",
+  "email": "contato@clinicaexemplo.com",
   "password": "minhasenha123",
   "name": "Clínica Exemplo",
   "cnpj": "98765432000123",
@@ -33,13 +29,13 @@
 }
 ```
 
+**Nota:** Os campos `firstName` e `lastName` são opcionais. Se não fornecidos, o nome da clínica será usado como nome do usuário (primeira palavra como firstName, restante como lastName).
+
 ### Exemplo 2 - Clínica com dados completos
 
 ```json
 {
-  "firstName": "Carlos",
-  "lastName": "Oliveira",
-  "email": "carlos.oliveira@saudeplus.com.br",
+  "email": "contato@saudeplus.com.br",
   "password": "senhaForte@2024",
   "name": "Saúde Plus Clínica",
   "cnpj": "11223344000155",
@@ -112,9 +108,7 @@
 curl -X POST http://localhost:8080/v1/auth/signup/clinic-owner \
   -H "Content-Type: application/json" \
   -d '{
-    "firstName": "João",
-    "lastName": "Silva",
-    "email": "joao.silva@clinicamedica.com.br",
+    "email": "contato@clinicamedica.com.br",
     "password": "senhaSegura123",
     "name": "Clínica Médica São Paulo",
     "cnpj": "12345678000190",
@@ -152,7 +146,7 @@ curl -X POST http://localhost:8080/v1/auth/signup/solo \
 {
   "userId": "550e8400-e29b-41d4-a716-446655440000",
   "tenantId": "660e8400-e29b-41d4-a716-446655440000",
-  "email": "joao.silva@clinicamedica.com.br",
+  "email": "contato@clinicamedica.com.br",
   "tenantName": "Clínica Médica São Paulo",
   "subdomain": "clinicamedica-sp"
 }
@@ -163,11 +157,11 @@ curl -X POST http://localhost:8080/v1/auth/signup/solo \
 ## Validações Importantes
 
 ### Para `/v1/auth/signup/clinic-owner`:
-- ✅ `firstName`: 2-50 caracteres, obrigatório
-- ✅ `lastName`: 2-50 caracteres, obrigatório
+- ⚪ `firstName`: 2-50 caracteres, opcional (se não fornecido, será derivado do nome da clínica)
+- ⚪ `lastName`: 2-50 caracteres, opcional (se não fornecido, será derivado do nome da clínica)
 - ✅ `email`: formato válido, obrigatório, único
 - ✅ `password`: mínimo 8 caracteres, obrigatório
-- ✅ `name`: 2-100 caracteres, obrigatório
+- ✅ `name`: 2-100 caracteres, obrigatório (será usado como nome do usuário se firstName/lastName não forem fornecidos)
 - ✅ `cnpj`: exatamente 14 dígitos, obrigatório, único
 - ✅ `subdomain`: 3-64 caracteres, apenas letras minúsculas, números e hífens, obrigatório, único
 - ⚪ `planType`: máximo 100 caracteres, opcional

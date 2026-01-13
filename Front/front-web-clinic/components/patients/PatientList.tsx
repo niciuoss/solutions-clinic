@@ -28,8 +28,8 @@ export function PatientList() {
 
   const isLoading = isLoadingAll || isSearching;
   const displayPatients = debouncedSearch.length >= 2 
-    ? searchResults?.content 
-    : patients?.content;
+    ? searchResults?.content || []
+    : patients?.content || [];
 
   if (isLoading) {
     return <LoadingSpinner />;

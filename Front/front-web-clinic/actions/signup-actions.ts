@@ -18,10 +18,10 @@ export async function signUpClinicOwnerAction(
   data: SignUpClinicOwnerRequest
 ): Promise<SignUpResult> {
   try {
-    if (!data.firstName || !data.lastName || !data.email || !data.password) {
+    if (!data.email || !data.password) {
       return {
         success: false,
-        error: 'Dados do usuário são obrigatórios',
+        error: 'Email e senha são obrigatórios',
       };
     }
 
@@ -32,11 +32,26 @@ export async function signUpClinicOwnerAction(
       };
     }
 
+    // Usar o nome da clínica como nome do usuário
+    // Dividir o nome: primeira palavra como firstName, restante como lastName
+    const nameParts = data.name.trim().split(/\s+/);
+    const firstName = nameParts[0] || data.name;
+    const lastName = nameParts.length > 1 
+      ? nameParts.slice(1).join(' ') 
+      : data.name; // Se tiver apenas uma palavra, usar o nome completo como lastName também
+
+    // Preparar dados para o backend (que ainda espera firstName e lastName)
+    const requestData = {
+      ...data,
+      firstName,
+      lastName,
+    };
+
     const response = await apiRequest<SignUpResponse>(
       API_ROUTES.AUTH.SIGNUP_CLINIC_OWNER,
       {
         method: 'POST',
-        body: data,
+        body: requestData,
         requireAuth: false,
       }
     );

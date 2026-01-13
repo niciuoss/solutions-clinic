@@ -98,5 +98,16 @@ public interface ProfessionalAPI {
             @PathVariable UUID id,
             @Valid @RequestBody UpdateProfessionalActiveBodyRequest request
     ) throws AuthenticationException;
+
+    @PostMapping("/professionals/with-user")
+    @Operation(summary = "Cria um novo profissional com usuário", description = "Cria um novo usuário e associa-o como profissional à clínica autenticada. A role SPECIALIST é criada automaticamente.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Profissional criado com sucesso", 
+                    content = @Content(schema = @Schema(implementation = ProfessionalResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Clínica não encontrada", content = @Content),
+            @ApiResponse(responseCode = "409", description = "Email ou CPF já cadastrado", content = @Content)
+    })
+    ProfessionalResponse createProfessionalWithUser(@Valid @RequestBody com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalWithUserRequest request) throws AuthenticationException;
 }
 

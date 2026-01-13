@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { createUserAction } from '@/actions/user-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -69,6 +70,7 @@ function formatDate(value: string): string {
 
 export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -128,6 +130,9 @@ export function CreateUserForm({ onSuccess }: CreateUserFormProps) {
         return;
       }
 
+      // Invalidar todas as queries de usuários para atualizar a lista
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      
       toast.success('Usuário cadastrado e associado à clínica com sucesso!');
       if (onSuccess) {
         onSuccess();

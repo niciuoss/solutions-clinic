@@ -151,37 +151,22 @@ export function SignUpForm() {
           <TabsContent value="clinic">
             <form onSubmit={clinicForm.handleSubmit(onSubmitClinic)} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Dados Pessoais */}
+                {/* Dados da Clínica */}
                 <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Dados do Responsável</h3>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="clinic-firstName">Nome *</Label>
-                  <Input
-                    id="clinic-firstName"
-                    {...clinicForm.register('firstName')}
-                    disabled={isLoading}
-                    placeholder="João"
-                  />
-                  {clinicForm.formState.errors.firstName && (
-                    <p className="text-sm text-red-500">
-                      {clinicForm.formState.errors.firstName.message}
-                    </p>
-                  )}
+                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Dados da Clínica</h3>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="clinic-lastName">Sobrenome *</Label>
+                <div className="md:col-span-2 space-y-2">
+                  <Label htmlFor="clinic-name">Nome da Clínica *</Label>
                   <Input
-                    id="clinic-lastName"
-                    {...clinicForm.register('lastName')}
+                    id="clinic-name"
+                    {...clinicForm.register('name')}
                     disabled={isLoading}
-                    placeholder="Silva"
+                    placeholder="Clínica Médica São Paulo"
                   />
-                  {clinicForm.formState.errors.lastName && (
+                  {clinicForm.formState.errors.name && (
                     <p className="text-sm text-red-500">
-                      {clinicForm.formState.errors.lastName.message}
+                      {clinicForm.formState.errors.name.message}
                     </p>
                   )}
                 </div>
@@ -193,7 +178,7 @@ export function SignUpForm() {
                     type="email"
                     {...clinicForm.register('email')}
                     disabled={isLoading}
-                    placeholder="joao@clinicamedica.com.br"
+                    placeholder="contato@clinicamedica.com.br"
                   />
                   {clinicForm.formState.errors.email && (
                     <p className="text-sm text-red-500">
@@ -214,26 +199,6 @@ export function SignUpForm() {
                   {clinicForm.formState.errors.password && (
                     <p className="text-sm text-red-500">
                       {clinicForm.formState.errors.password.message}
-                    </p>
-                  )}
-                </div>
-
-                {/* Dados da Clínica */}
-                <div className="md:col-span-2 mt-4">
-                  <h3 className="text-lg font-semibold mb-3 text-blue-600">Dados da Clínica</h3>
-                </div>
-
-                <div className="md:col-span-2 space-y-2">
-                  <Label htmlFor="clinic-name">Nome da Clínica *</Label>
-                  <Input
-                    id="clinic-name"
-                    {...clinicForm.register('name')}
-                    disabled={isLoading}
-                    placeholder="Clínica Médica São Paulo"
-                  />
-                  {clinicForm.formState.errors.name && (
-                    <p className="text-sm text-red-500">
-                      {clinicForm.formState.errors.name.message}
                     </p>
                   )}
                 </div>

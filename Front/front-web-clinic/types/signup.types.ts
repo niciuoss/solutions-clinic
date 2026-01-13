@@ -1,7 +1,5 @@
 export interface SignUpClinicOwnerRequest {
-  // User fields
-  firstName: string;
-  lastName: string;
+  // User fields (email e senha para acesso)
   email: string;
   password: string;
   

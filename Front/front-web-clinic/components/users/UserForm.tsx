@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { updateUserAction } from '@/actions/user-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -63,6 +64,7 @@ function formatDate(value: string): string {
 
 export function UserForm({ user, onSuccess }: UserFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -98,6 +100,9 @@ export function UserForm({ user, onSuccess }: UserFormProps) {
       const result = await updateUserAction(user.id, updateData);
 
       if (result.success) {
+        // Invalidar todas as queries de usuários para atualizar a lista
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+        
         toast.success('Usuário atualizado com sucesso!');
         if (onSuccess) {
           onSuccess();

@@ -7,12 +7,10 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record SignUpClinicOwnerRequest(
-    // User fields
-    @NotBlank(message = "O campo [firstName] é obrigatório")
+    // User fields (firstName e lastName são opcionais - serão derivados do nome da clínica se não fornecidos)
     @Size(min = 2, max = 50, message = "O campo [firstName] deve ter entre 2 e 50 caracteres")
     String firstName,
     
-    @NotBlank(message = "O campo [lastName] é obrigatório")
     @Size(min = 2, max = 50, message = "O campo [lastName] deve ter entre 2 e 50 caracteres")
     String lastName,
     

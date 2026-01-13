@@ -4,9 +4,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { createProfessionalAction, updateProfessionalAction, addProfessionalToClinicAction } from '@/actions/professional-actions';
-import { getProfessionalsAction } from '@/actions/user-actions';
+import { createProfessionalWithUserAction, updateProfessionalAction } from '@/actions/professional-actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,14 +20,39 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Loader2, GraduationCap, FileText, User } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import type { Professional, CreateProfessionalRequest } from '@/types';
+import { Loader2, GraduationCap, FileText, User, Mail, Lock, Eye, EyeOff, Phone, Calendar } from 'lucide-react';
+import { useState } from 'react';
+import type { Professional } from '@/types';
 import { DocumentType } from '@/types/professional.types';
-import { professionalSchema } from '@/lib/validators';
-import type { User } from '@/types';
+import { professionalWithUserSchema, professionalSchema } from '@/lib/validators';
 
-type ProfessionalFormData = z.infer<typeof professionalSchema>;
+type ProfessionalFormData = z.infer<typeof professionalWithUserSchema>;
+type ProfessionalUpdateFormData = z.infer<typeof professionalSchema>;
+
+// Funções de formatação
+function formatCPF(value: string): string {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 3) return numbers;
+  if (numbers.length <= 6) return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+  if (numbers.length <= 9) return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6)}`;
+  return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(6, 9)}-${numbers.slice(9, 11)}`;
+}
+
+function formatPhone(value: string): string {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 10) {
+    if (numbers.length <= 6) return `(${numbers.slice(0, 2)}) ${numbers.slice(2)}`;
+    return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 6)}-${numbers.slice(6)}`;
+  }
+  return `(${numbers.slice(0, 2)}) ${numbers.slice(2, 7)}-${numbers.slice(7, 11)}`;
+}
+
+function formatDate(value: string): string {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length <= 2) return numbers;
+  if (numbers.length <= 4) return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+  return `${numbers.slice(0, 2)}/${numbers.slice(2, 4)}/${numbers.slice(4, 8)}`;
+}
 
 interface ProfessionalFormProps {
   professional?: Professional;
@@ -36,52 +61,41 @@ interface ProfessionalFormProps {
 
 export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [users, setUsers] = useState<User[]>([]);
-  const [isLoadingUsers, setIsLoadingUsers] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const isEditing = !!professional;
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<ProfessionalFormData>({
-    resolver: zodResolver(professionalSchema),
-    defaultValues: {
+  const form = useForm<ProfessionalFormData | ProfessionalUpdateFormData>({
+    resolver: zodResolver(isEditing ? professionalSchema : professionalWithUserSchema),
+    defaultValues: isEditing ? {
       userId: professional?.user?.id || '',
       specialty: professional?.specialty || '',
       documentType: professional?.documentType || DocumentType.CRM,
       documentNumber: professional?.documentNumber || '',
       documentState: professional?.documentState,
       bio: professional?.bio,
+    } : {
+      firstName: '',
+      lastName: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      phone: '',
+      cpf: '',
+      birthDate: '',
+      specialty: '',
+      documentType: DocumentType.CRM,
+      documentNumber: '',
+      documentState: '',
+      bio: '',
     },
   });
 
-  useEffect(() => {
-    async function loadUsers() {
-      if (!isEditing) {
-        setIsLoadingUsers(true);
-        try {
-          const result = await getProfessionalsAction();
-          if (result.success && result.data) {
-            setUsers(result.data);
-          }
-        } catch (error) {
-          console.error('Erro ao carregar usuários:', error);
-        } finally {
-          setIsLoadingUsers(false);
-        }
-      }
-    }
-
-    loadUsers();
-  }, [isEditing]);
-
-  const onSubmit = async (data: ProfessionalFormData) => {
+  const onSubmit = async (data: ProfessionalFormData | ProfessionalUpdateFormData) => {
     if (!user?.clinicId) {
       toast.error('Erro: Clínica não identificada. Faça login novamente.');
       return;
@@ -93,35 +107,27 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
       let result;
 
       if (isEditing && professional) {
-        // Atualizar profissional existente
-        result = await updateProfessionalAction(professional.id, data);
+        // Atualizar profissional existente (mantém lógica antiga)
+        result = await updateProfessionalAction(professional.id, data as ProfessionalUpdateFormData);
       } else {
-        // Criar novo profissional ou adicionar à clínica
-        if (data.userId) {
-          // Usar addProfessionalToClinic para adicionar profissional à clínica
-          result = await addProfessionalToClinicAction(user.clinicId, {
-            userId: data.userId,
-            specialty: data.specialty,
-            documentType: data.documentType,
-            documentNumber: data.documentNumber,
-            documentState: data.documentState,
-            bio: data.bio,
-          });
-        } else {
-          // Criar profissional usando createProfessional (requer userId e tenantId)
-          result = await createProfessionalAction({
-            userId: user.id,
-            tenantId: user.clinicId!,
-            specialty: data.specialty,
-            documentType: data.documentType,
-            documentNumber: data.documentNumber,
-            documentState: data.documentState,
-            bio: data.bio,
-          });
+        // Criar novo profissional com usuário
+        const createData = data as ProfessionalFormData;
+        
+        // Remover confirmPassword antes de enviar
+        const { confirmPassword, ...dataToSend } = createData;
+        
+        // Limpar formatação de CPF (remover pontos e hífen)
+        if (dataToSend.cpf) {
+          dataToSend.cpf = dataToSend.cpf.replace(/\D/g, '');
         }
+        
+        result = await createProfessionalWithUserAction(dataToSend);
       }
 
       if (result.success) {
+        // Invalidar todas as queries de profissionais para atualizar a lista
+        queryClient.invalidateQueries({ queryKey: ['professionals'] });
+        
         toast.success(
           isEditing
             ? 'Profissional atualizado com sucesso!'
@@ -144,76 +150,233 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Informações do Profissional */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <User className="h-5 w-5" />
-            Informações do Profissional
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          {!isEditing && (
-            <div className="sm:col-span-2">
-              <Label htmlFor="userId">Usuário *</Label>
-              <Select
-                value={watch('userId') || ''}
-                onValueChange={(value) => setValue('userId', value)}
-                disabled={isLoadingUsers}
-              >
-                <SelectTrigger className={errors.userId ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Selecione o usuário" />
-                </SelectTrigger>
-                <SelectContent>
-                  {isLoadingUsers ? (
-                    <div className="p-2 text-sm text-muted-foreground">
-                      Carregando usuários...
-                    </div>
-                  ) : users.length > 0 ? (
-                    users.map((userOption) => (
-                      <SelectItem key={userOption.id} value={userOption.id}>
-                        {userOption.fullName} - {userOption.email}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="p-2 text-sm text-muted-foreground">
-                      Nenhum usuário disponível
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
-              {errors.userId && (
-                <p className="mt-1 text-sm text-red-500">{errors.userId.message}</p>
-              )}
-            </div>
-          )}
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      {!isEditing && (
+        <>
+          {/* Dados do Usuário */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="h-5 w-5" />
+                Dados do Usuário
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="firstName">Nome *</Label>
+                <Input
+                  id="firstName"
+                  placeholder="Nome"
+                  {...form.register('firstName')}
+                  className={form.formState.errors.firstName ? 'border-red-500' : ''}
+                />
+                {form.formState.errors.firstName && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.firstName.message}</p>
+                )}
+              </div>
 
-          {isEditing && (
-            <div className="sm:col-span-2">
-              <Label>Usuário</Label>
-              <Input
-                value={professional.user.fullName}
-                disabled
-                className="bg-muted"
-              />
-            </div>
-          )}
+              <div>
+                <Label htmlFor="lastName">Sobrenome *</Label>
+                <Input
+                  id="lastName"
+                  placeholder="Sobrenome"
+                  {...form.register('lastName')}
+                  className={form.formState.errors.lastName ? 'border-red-500' : ''}
+                />
+                {form.formState.errors.lastName && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.lastName.message}</p>
+                )}
+              </div>
 
-          <div className="sm:col-span-2">
-            <Label htmlFor="specialty">Especialidade *</Label>
-            <Input
-              id="specialty"
-              placeholder="Ex: Cardiologia, Fisioterapia, Odontologia..."
-              {...register('specialty')}
-              className={errors.specialty ? 'border-red-500' : ''}
-            />
-            {errors.specialty && (
-              <p className="mt-1 text-sm text-red-500">{errors.specialty.message}</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <div className="sm:col-span-2">
+                <Label htmlFor="email">Email *</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="email@exemplo.com"
+                    className={`pl-10 ${form.formState.errors.email ? 'border-red-500' : ''}`}
+                    {...form.register('email')}
+                  />
+                </div>
+                {form.formState.errors.email && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.email.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="password">Senha *</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Mínimo 8 caracteres"
+                    className={`pl-10 pr-10 ${form.formState.errors.password ? 'border-red-500' : ''}`}
+                    {...form.register('password')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {form.formState.errors.password && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.password.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirme a senha"
+                    className={`pl-10 pr-10 ${form.formState.errors.confirmPassword ? 'border-red-500' : ''}`}
+                    {...form.register('confirmPassword')}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {form.formState.errors.confirmPassword && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.confirmPassword.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="phone">Telefone</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    placeholder="(00) 00000-0000"
+                    className={`pl-10 ${form.formState.errors.phone ? 'border-red-500' : ''}`}
+                    {...form.register('phone')}
+                    onChange={(e) => {
+                      const formatted = formatPhone(e.target.value);
+                      form.setValue('phone', formatted, { shouldValidate: true });
+                    }}
+                    maxLength={15}
+                  />
+                </div>
+                {form.formState.errors.phone && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.phone.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="cpf">CPF</Label>
+                <Input
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  className={form.formState.errors.cpf ? 'border-red-500' : ''}
+                  {...form.register('cpf')}
+                  onChange={(e) => {
+                    const formatted = formatCPF(e.target.value);
+                    form.setValue('cpf', formatted, { shouldValidate: true });
+                  }}
+                  maxLength={14}
+                />
+                {form.formState.errors.cpf && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.cpf.message}</p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="birthDate">Data de Nascimento</Label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="birthDate"
+                    placeholder="DD/MM/AAAA"
+                    className={`pl-10 ${form.formState.errors.birthDate ? 'border-red-500' : ''}`}
+                    {...form.register('birthDate')}
+                    onChange={(e) => {
+                      const formatted = formatDate(e.target.value);
+                      form.setValue('birthDate', formatted, { shouldValidate: true });
+                    }}
+                    maxLength={10}
+                  />
+                </div>
+                {form.formState.errors.birthDate && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.birthDate.message}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Informações do Profissional */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <GraduationCap className="h-5 w-5" />
+                Informações Profissionais
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label htmlFor="specialty">Especialidade *</Label>
+                <Input
+                  id="specialty"
+                  placeholder="Ex: Cardiologia, Fisioterapia, Odontologia..."
+                  {...form.register('specialty')}
+                  className={form.formState.errors.specialty ? 'border-red-500' : ''}
+                />
+                {form.formState.errors.specialty && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.specialty.message}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {isEditing && (
+        <>
+          {/* Informações do Profissional - Edição */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="h-5 w-5" />
+                Informações do Profissional
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <Label>Usuário</Label>
+                <Input
+                  value={professional.user.fullName}
+                  disabled
+                  className="bg-muted"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <Label htmlFor="specialty">Especialidade *</Label>
+                <Input
+                  id="specialty"
+                  placeholder="Ex: Cardiologia, Fisioterapia, Odontologia..."
+                  {...form.register('specialty')}
+                  className={form.formState.errors.specialty ? 'border-red-500' : ''}
+                />
+                {form.formState.errors.specialty && (
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.specialty?.message}</p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       {/* Documentação Profissional */}
       <Card>
@@ -227,10 +390,10 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
           <div>
             <Label htmlFor="documentType">Tipo de Documento *</Label>
             <Select
-              value={watch('documentType') || ''}
-              onValueChange={(value) => setValue('documentType', value as DocumentType)}
+              value={form.watch('documentType') || ''}
+              onValueChange={(value) => form.setValue('documentType', value as DocumentType)}
             >
-              <SelectTrigger className={errors.documentType ? 'border-red-500' : ''}>
+              <SelectTrigger className={form.formState.errors.documentType ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Selecione o tipo" />
               </SelectTrigger>
               <SelectContent>
@@ -243,8 +406,8 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                 <SelectItem value={DocumentType.OUTRO}>OUTRO</SelectItem>
               </SelectContent>
             </Select>
-            {errors.documentType && (
-              <p className="mt-1 text-sm text-red-500">{errors.documentType.message}</p>
+            {form.formState.errors.documentType && (
+              <p className="mt-1 text-sm text-red-500">{form.formState.errors.documentType.message}</p>
             )}
           </div>
 
@@ -253,20 +416,20 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
             <Input
               id="documentNumber"
               placeholder="Ex: 123456"
-              {...register('documentNumber')}
-              className={errors.documentNumber ? 'border-red-500' : ''}
+              {...form.register('documentNumber')}
+              className={form.formState.errors.documentNumber ? 'border-red-500' : ''}
             />
-            {errors.documentNumber && (
-              <p className="mt-1 text-sm text-red-500">{errors.documentNumber.message}</p>
+            {form.formState.errors.documentNumber && (
+              <p className="mt-1 text-sm text-red-500">{form.formState.errors.documentNumber.message}</p>
             )}
           </div>
 
           <div>
             <Label htmlFor="documentState">Estado do Documento (UF)</Label>
             <Select
-              value={watch('documentState') || undefined}
+              value={form.watch('documentState') || undefined}
               onValueChange={(value) => {
-                setValue('documentState', value);
+                form.setValue('documentState', value);
               }}
             >
               <SelectTrigger>
@@ -320,12 +483,12 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
             <Textarea
               id="bio"
               placeholder="Descreva a formação e experiência profissional..."
-              {...register('bio')}
+              {...form.register('bio')}
               rows={6}
-              className={errors.bio ? 'border-red-500' : ''}
+              className={form.formState.errors.bio ? 'border-red-500' : ''}
             />
-            {errors.bio && (
-              <p className="mt-1 text-sm text-red-500">{errors.bio.message}</p>
+            {form.formState.errors.bio && (
+              <p className="mt-1 text-sm text-red-500">{form.formState.errors.bio.message}</p>
             )}
             <p className="mt-1 text-sm text-muted-foreground">
               Esta informação será exibida no perfil do profissional.
