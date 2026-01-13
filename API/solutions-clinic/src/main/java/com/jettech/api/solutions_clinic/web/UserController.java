@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.naming.AuthenticationException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -97,5 +99,13 @@ public class UserController implements UserAPI {
                 id,
                 request.blocked()
         ));
+    }
+
+    @Override
+    public Map<String, Boolean> checkCpfExists(@PathVariable String cpf) throws AuthenticationException {
+        boolean exists = ((DefaultUpdateUserUseCase) updateUserUseCase).checkCpfExists(cpf);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("exists", exists);
+        return response;
     }
 }

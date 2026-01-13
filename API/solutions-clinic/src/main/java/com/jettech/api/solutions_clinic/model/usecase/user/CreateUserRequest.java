@@ -2,6 +2,7 @@ package com.jettech.api.solutions_clinic.model.usecase.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 public record CreateUserRequest(
     @NotBlank(message = "O campo [firstName] é obrigatório")
@@ -15,6 +16,14 @@ public record CreateUserRequest(
     String email,
     
     @NotBlank(message = "O campo [password] é obrigatório")
-    String password
+    String password,
+    
+    String phone,
+    
+    @Pattern(regexp = "\\d{11}", message = "O campo [cpf] deve conter exatamente 11 dígitos")
+    String cpf,
+    
+    @Pattern(regexp = "^\\d{2}/\\d{2}/\\d{4}$", message = "O campo [birthDate] deve ser uma data válida no formato DD/MM/YYYY")
+    String birthDate
 ) {
 }

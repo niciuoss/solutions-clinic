@@ -75,4 +75,33 @@ public interface TenantAPI {
             @PathVariable UUID tenantId,
             @Valid @RequestBody CreateCheckoutSessionBody body
     ) throws AuthenticationException;
+
+    @PostMapping("/tenants/{tenantId}/users/{userId}/roles/{role}")
+    @Operation(
+        summary = "Associa um usuário a uma clínica com um papel específico",
+        description = "Cria uma associação entre um usuário e uma clínica (tenant) com um papel (role) específico. " +
+                      "Se a associação já existir, retorna erro."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Usuário associado à clínica com sucesso",
+                content = @Content
+            ),
+            @ApiResponse(
+                responseCode = "400",
+                description = "Dados inválidos ou associação já existe",
+                content = @Content
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "Usuário ou clínica não encontrado",
+                content = @Content
+            )
+    })
+    void associateUserToTenant(
+            @PathVariable UUID tenantId,
+            @PathVariable UUID userId,
+            @PathVariable String role
+    ) throws AuthenticationException;
 }

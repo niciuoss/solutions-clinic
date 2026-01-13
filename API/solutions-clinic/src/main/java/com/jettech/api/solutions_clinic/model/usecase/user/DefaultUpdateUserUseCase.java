@@ -31,8 +31,19 @@ public class DefaultUpdateUserUseCase implements UpdateUserUseCase {
         if (request.phone() != null) {
             user.setPhone(request.phone());
         }
-        if (request.cpf() != null) {
+        if (request.cpf() != null && !request.cpf().trim().isEmpty()) {
+            // Validar se o CPF já está em uso por outro usuário
+            final User finalUser = user;
+            userRepository.findByCpf(request.cpf())
+                    .ifPresent((existingUser) -> {
+                        if (!existingUser.getId().equals(finalUser.getId())) {
+                            throw new RuntimeException("CPF já está cadastrado: " + request.cpf());
+                        }
+                    });
             user.setCpf(request.cpf());
+        } else if (request.cpf() != null && request.cpf().trim().isEmpty()) {
+            // Se CPF for string vazia, remover o CPF
+            user.setCpf(null);
         }
         if (request.birthDate() != null) {
             user.setBirthDate(request.birthDate());
@@ -63,5 +74,12 @@ public class DefaultUpdateUserUseCase implements UpdateUserUseCase {
                 savedUser.getCreatedAt(),
                 savedUser.getUpdatedAt()
         );
+    }
+
+    public boolean checkCpfExists(String cpf) {
+        if (cpf == null || cpf.trim().isEmpty()) {
+            return false;
+        }
+        return userRepository.findByCpf(cpf).isPresent();
     }
 }

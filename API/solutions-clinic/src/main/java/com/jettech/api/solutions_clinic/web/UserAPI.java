@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.naming.AuthenticationException;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -124,5 +125,16 @@ public interface UserAPI {
             @PathVariable UUID id,
             @Valid @RequestBody UpdateUserBlockedBodyRequest request
     ) throws AuthenticationException;
+
+    @GetMapping("/check-cpf/{cpf}")
+    @Operation(summary = "Verifica se um CPF já está cadastrado", description = "Verifica se um CPF já está cadastrado no sistema.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Verificação realizada com sucesso",
+                content = @Content
+            )
+    })
+    Map<String, Boolean> checkCpfExists(@PathVariable String cpf) throws AuthenticationException;
 }
 

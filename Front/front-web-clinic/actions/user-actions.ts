@@ -4,16 +4,18 @@ import { apiRequest } from './_helpers';
 import type { 
   User,
   CreateUserRequest,
+  CreateUserRequestBodyRequest,
   UserRole,
   ActionResult,
   PaginatedResponse,
   UserListItem,
   UpdateUserBodyRequest,
   UpdateUserBlockedBodyRequest,
+  UserDetailResponse,
 } from '@/types';
 
 export async function createUserAction(
-  data: CreateUserRequest
+  data: CreateUserRequestBodyRequest
 ): Promise<ActionResult<User>> {
   try {
     const user = await apiRequest<User>('/users', {
@@ -196,6 +198,113 @@ export async function updateUserBlockedAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Erro ao atualizar status de bloqueio',
+    };
+  }
+}
+
+export async function getUserDetailAction(
+  userId: string
+): Promise<ActionResult<UserDetailResponse>> {
+  try {
+    if (!userId) {
+      return {
+        success: false,
+        error: 'ID do usuário é obrigatório',
+      };
+    }
+
+    const userDetail = await apiRequest<UserDetailResponse>(`/users/${userId}`, {
+      method: 'GET',
+    });
+
+    return {
+      success: true,
+      data: userDetail,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao buscar detalhes do usuário',
+    };
+  }
+}
+
+// Action para associar usuário a tenant
+// Endpoint: POST /v1/tenants/{tenantId}/users/{userId}/roles/{role}
+export async function associateUserToTenantAction(
+  userId: string,
+  tenantId: string,
+  role: 'OWNER' | 'ADMIN' | 'RECEPTION' | 'SPECIALIST' | 'FINANCE' | 'READONLY' = 'RECEPTION'
+): Promise<ActionResult<void>> {
+  try {
+    if (!userId || !tenantId) {
+      return {
+        success: false,
+        error: 'ID do usuário e da clínica são obrigatórios',
+      };
+    }
+
+    if (!role) {
+      return {
+        success: false,
+        error: 'Papel (role) é obrigatório',
+      };
+    }
+
+    // Associar usuário ao tenant através do endpoint
+    await apiRequest(`/tenants/${tenantId}/users/${userId}/roles/${role}`, {
+      method: 'POST',
+    });
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    // Tratar erros específicos da API
+    let errorMessage = 'Erro ao associar usuário à clínica';
+    
+    if (error instanceof Error) {
+      // Se a mensagem de erro contém informações úteis, usar ela
+      if (error.message.includes('já está associado')) {
+        errorMessage = 'Usuário já está associado à clínica com este papel';
+      } else if (error.message.includes('não encontrado')) {
+        errorMessage = error.message;
+      } else {
+        errorMessage = error.message;
+      }
+    }
+    
+    return {
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
+// Action para verificar se um CPF já está cadastrado
+export async function checkCpfExistsAction(
+  cpf: string
+): Promise<ActionResult<{ exists: boolean }>> {
+  try {
+    if (!cpf || cpf.trim().length !== 11) {
+      return {
+        success: false,
+        error: 'CPF inválido',
+      };
+    }
+
+    const response = await apiRequest<{ exists: boolean }>(`/users/check-cpf/${cpf}`, {
+      method: 'GET',
+    });
+
+    return {
+      success: true,
+      data: response,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao verificar CPF',
     };
   }
 }

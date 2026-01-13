@@ -14,6 +14,8 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     
+    Optional<User> findByCpf(String cpf);
+    
     @Query("""
         SELECT DISTINCT u FROM users u 
         WHERE u.id IN (SELECT utr.user.id FROM user_tenant_role utr WHERE utr.tenant.id = :tenantId)

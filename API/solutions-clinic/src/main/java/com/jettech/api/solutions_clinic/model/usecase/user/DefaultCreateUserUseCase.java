@@ -16,11 +16,21 @@ public class DefaultCreateUserUseCase implements CreateUserUseCase {
 
     @Override
     public User execute(CreateUserRequest in) {
+        // Validar email duplicado
         userRepository
                 .findByEmail(in.email())
                 .ifPresent((user) -> {
                     throw new RuntimeException("Email already exists: " + in.email());
                 });
+
+        // Validar CPF duplicado (se informado)
+        if (in.cpf() != null && !in.cpf().trim().isEmpty()) {
+            userRepository
+                    .findByCpf(in.cpf())
+                    .ifPresent((user) -> {
+                        throw new RuntimeException("CPF já está cadastrado: " + in.cpf());
+                    });
+        }
 
         var password = this.passwordEncoder.encode(in.password());
 
@@ -29,6 +39,17 @@ public class DefaultCreateUserUseCase implements CreateUserUseCase {
         user.setLastName(in.lastName());
         user.setEmail(in.email());
         user.setPassword(password);
+        
+        // Campos opcionais
+        if (in.phone() != null && !in.phone().trim().isEmpty()) {
+            user.setPhone(in.phone());
+        }
+        if (in.cpf() != null && !in.cpf().trim().isEmpty()) {
+            user.setCpf(in.cpf());
+        }
+        if (in.birthDate() != null && !in.birthDate().trim().isEmpty()) {
+            user.setBirthDate(in.birthDate());
+        }
 
         userRepository.save(user);
 

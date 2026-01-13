@@ -1,5 +1,6 @@
 package com.jettech.api.solutions_clinic.web;
 
+import com.jettech.api.solutions_clinic.model.entity.Role;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionBody;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionRequest;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionResponse;
@@ -8,6 +9,8 @@ import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultUpdateTenant
 import com.jettech.api.solutions_clinic.model.usecase.tenant.TenantResponse;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanBody;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanRequest;
+import com.jettech.api.solutions_clinic.model.usecase.user.AssociateUserToTenantRequest;
+import com.jettech.api.solutions_clinic.model.usecase.user.DefaultAssociateUserToTenantUseCase;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,7 @@ public class TenantController implements TenantAPI {
 
     private final DefaultUpdateTenantPlanUseCase updateTenantPlanUseCase;
     private final DefaultCreateCheckoutSessionUseCase createCheckoutSessionUseCase;
+    private final DefaultAssociateUserToTenantUseCase associateUserToTenantUseCase;
 
     @Override
     public TenantResponse updateTenantPlan(
@@ -48,5 +52,25 @@ public class TenantController implements TenantAPI {
         log.info("Criando sessão de checkout - tenantId: {}, planType: {}", tenantId, body.planType());
         CreateCheckoutSessionRequest request = new CreateCheckoutSessionRequest(tenantId, body.planType());
         return createCheckoutSessionUseCase.execute(request);
+    }
+
+    @Override
+    public void associateUserToTenant(
+            @PathVariable UUID tenantId,
+            @PathVariable UUID userId,
+            @PathVariable String role
+    ) throws AuthenticationException {
+        log.info("Associando usuário à clínica - tenantId: {}, userId: {}, role: {}", tenantId, userId, role);
+        
+        // Converter String para Role enum
+        Role roleEnum;
+        try {
+            roleEnum = Role.valueOf(role.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("Papel inválido: " + role + ". Papéis válidos: OWNER, ADMIN, RECEPTION, SPECIALIST, FINANCE, READONLY");
+        }
+        
+        AssociateUserToTenantRequest request = new AssociateUserToTenantRequest(userId, tenantId, roleEnum);
+        associateUserToTenantUseCase.execute(request);
     }
 }

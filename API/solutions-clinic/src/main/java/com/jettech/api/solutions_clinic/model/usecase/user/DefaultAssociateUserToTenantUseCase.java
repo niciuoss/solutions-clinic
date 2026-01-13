@@ -1,0 +1,50 @@
+package com.jettech.api.solutions_clinic.model.usecase.user;
+
+import com.jettech.api.solutions_clinic.model.entity.Tenant;
+import com.jettech.api.solutions_clinic.model.entity.User;
+import com.jettech.api.solutions_clinic.model.entity.UserTenantRole;
+import com.jettech.api.solutions_clinic.model.repository.TenantRepository;
+import com.jettech.api.solutions_clinic.model.repository.UserRepository;
+import com.jettech.api.solutions_clinic.model.repository.UserTenantRoleRepository;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
+public class DefaultAssociateUserToTenantUseCase implements AssociateUserToTenantUseCase {
+
+    private final UserRepository userRepository;
+    private final TenantRepository tenantRepository;
+    private final UserTenantRoleRepository userTenantRoleRepository;
+
+    @Override
+    @Transactional
+    public Void execute(AssociateUserToTenantRequest request) {
+        // Validar se o usuário existe
+        User user = userRepository.findById(request.userId())
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.userId()));
+
+        // Validar se o tenant existe
+        Tenant tenant = tenantRepository.findById(request.tenantId())
+                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+
+        // Validar se a associação já existe
+        if (userTenantRoleRepository.existsByUserAndTenantAndRole(user, tenant, request.role())) {
+            throw new RuntimeException(
+                    "Usuário já está associado à clínica com o papel " + request.role() + "."
+            );
+        }
+
+        // Criar a associação
+        UserTenantRole userTenantRole = new UserTenantRole();
+        userTenantRole.setUser(user);
+        userTenantRole.setTenant(tenant);
+        userTenantRole.setRole(request.role());
+
+        userTenantRoleRepository.save(userTenantRole);
+
+        return null;
+    }
+}
