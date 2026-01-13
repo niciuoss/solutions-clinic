@@ -20,7 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useAppointments } from '@/hooks/useAppointments';
+import { useAppointmentsByTenant } from '@/hooks/useAppointments';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Search, Eye, Edit, X } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
@@ -29,18 +30,23 @@ import { ptBR } from 'date-fns/locale';
 export function AppointmentTable() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const { user } = useAuthContext();
+  const tenantId = user?.clinicId || null;
 
-  const { todayAppointments, isLoading } = useAppointments();
+  const { data: appointments = [], isLoading } = useAppointmentsByTenant(
+    tenantId,
+    undefined,
+    statusFilter !== 'all' ? statusFilter : undefined
+  );
 
-  const filteredAppointments = todayAppointments?.filter((appointment) => {
-    const matchesStatus = statusFilter === 'all' || appointment.status === statusFilter;
+  const filteredAppointments = appointments?.filter((appointment) => {
     const matchesSearch =
-      appointment.patient.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      appointment.professional.user.fullName
-        .toLowerCase()
+      appointment.patient?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      appointment.professional?.user?.fullName
+        ?.toLowerCase()
         .includes(searchQuery.toLowerCase());
 
-    return matchesStatus && matchesSearch;
+    return matchesSearch;
   });
 
   const getStatusBadge = (status: string) => {

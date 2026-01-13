@@ -27,7 +27,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useAvailability } from '@/hooks/useAvailability';
-import { useProfessionals } from '@/hooks/useProfessionals';
+import { useProfessionalsByCurrentClinic } from '@/hooks/useProfessionals';
 import { ConflictDialog } from './ConflictDialog';
 import { PatientAutocomplete } from './PatientAutocomplete';
 import { RoomSelect } from './RoomSelect';
@@ -68,7 +68,7 @@ type AppointmentFormData = z.infer<typeof appointmentSchema>;
 export function NewAppointmentForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { professionals, isLoading: loadingProfessionals } = useProfessionals();
+  const { professionals, isLoading: loadingProfessionals } = useProfessionalsByCurrentClinic(0, 100);
   const { 
     createAppointment, 
     confirmConflict, 

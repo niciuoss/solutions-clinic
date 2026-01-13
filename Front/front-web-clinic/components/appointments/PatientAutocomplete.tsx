@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import { autocompletePatientsAction } from '@/actions/patient-actions';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,36 +29,59 @@ interface PatientAutocompleteProps {
 }
 
 export function PatientAutocomplete({ onSelect, error }: PatientAutocompleteProps) {
+  const { user } = useAuthContext();
+  const tenantId = user?.clinicId || null;
+  
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [patients, setPatients] = useState<Patient[]>([]);
+  const [allPatients, setAllPatients] = useState<Patient[]>([]);
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   const debouncedSearch = useDebounce(search, 300);
 
+  // Carregar todos os pacientes do tenant quando o componente montar ou o tenantId mudar
   useEffect(() => {
-    const fetchPatients = async () => {
-      if (debouncedSearch.length < 2) {
-        setPatients([]);
+    const fetchAllPatients = async () => {
+      if (!tenantId) {
+        setAllPatients([]);
+        setIsInitialLoading(false);
         return;
       }
 
-      setIsLoading(true);
+      setIsInitialLoading(true);
       try {
-        const result = await autocompletePatientsAction(debouncedSearch);
+        const result = await autocompletePatientsAction(tenantId);
         if (result.success && result.data) {
-          setPatients(result.data);
+          setAllPatients(result.data);
         }
       } catch (error) {
         console.error('Erro ao buscar pacientes:', error);
       } finally {
-        setIsLoading(false);
+        setIsInitialLoading(false);
       }
     };
 
-    fetchPatients();
-  }, [debouncedSearch]);
+    fetchAllPatients();
+  }, [tenantId]);
+
+  // Filtrar pacientes localmente baseado na busca
+  useEffect(() => {
+    if (!debouncedSearch || debouncedSearch.length < 2) {
+      setPatients([]);
+      return;
+    }
+
+    const query = debouncedSearch.toLowerCase();
+    const filtered = allPatients.filter((patient) => 
+      patient.fullName?.toLowerCase().includes(query) ||
+      patient.cpf?.includes(query) ||
+      patient.phone?.includes(query)
+    );
+
+    setPatients(filtered);
+  }, [debouncedSearch, allPatients]);
 
   const handleSelect = (patient: Patient) => {
     setSelectedPatient(patient);
@@ -90,15 +114,20 @@ export function PatientAutocomplete({ onSelect, error }: PatientAutocompleteProp
               onValueChange={setSearch}
             />
             <CommandList>
-              {isLoading ? (
+              {isInitialLoading ? (
                 <div className="flex items-center justify-center p-4">
                   <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="ml-2 text-sm text-muted-foreground">Carregando pacientes...</span>
+                </div>
+              ) : !tenantId ? (
+                <div className="p-4 text-sm text-muted-foreground text-center">
+                  Clínica não identificada. Faça login novamente.
                 </div>
               ) : (
                 <>
                   <CommandEmpty>
                     {search.length < 2
-                      ? 'Digite pelo menos 2 caracteres'
+                      ? 'Digite pelo menos 2 caracteres para buscar'
                       : 'Nenhum paciente encontrado'}
                   </CommandEmpty>
                   <CommandGroup>

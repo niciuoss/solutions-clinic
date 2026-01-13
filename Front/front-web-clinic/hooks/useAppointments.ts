@@ -7,6 +7,7 @@ import {
   getAppointmentByIdAction,
   getAppointmentsByDateRangeAction,
   getAppointmentsByProfessionalAction,
+  getAppointmentsByTenantAction,
   createAppointmentAction,
   updateAppointmentAction,
   startAppointmentAction,
@@ -187,5 +188,23 @@ export function useAppointmentsByProfessional(
       return result.success ? result.data : [];
     },
     enabled: !!professionalId && !!startDate && !!endDate,
+  });
+}
+
+export function useAppointmentsByTenant(
+  tenantId: string | null,
+  date?: string,
+  status?: string,
+  orderBy: string = 'scheduledAt_desc'
+) {
+  return useQuery({
+    queryKey: ['appointments', 'tenant', tenantId, date, status, orderBy],
+    queryFn: async () => {
+      if (!tenantId) return [];
+      const result = await getAppointmentsByTenantAction(tenantId, date, status, orderBy);
+      return result.success ? result.data : [];
+    },
+    enabled: !!tenantId,
+    refetchInterval: 30000, // Atualiza a cada 30 segundos
   });
 }

@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.naming.AuthenticationException;
+import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Salas", description = "Endpoints para gerenciamento de salas")
@@ -48,5 +50,27 @@ public interface RoomAPI {
             )
     })
     RoomResponse getRoomById(@PathVariable UUID id) throws AuthenticationException;
+
+    @GetMapping("/rooms")
+    @Operation(
+        summary = "Lista salas de uma clínica",
+        description = "Retorna todas as salas de uma clínica (tenant), com opção de filtrar apenas salas ativas."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Lista de salas retornada com sucesso",
+                content = @Content(schema = @Schema(implementation = RoomResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "Clínica não encontrada",
+                content = @Content
+            )
+    })
+    List<RoomResponse> getRoomsByTenant(
+            @RequestParam UUID tenantId,
+            @RequestParam(required = false, defaultValue = "true") boolean activeOnly
+    ) throws AuthenticationException;
 }
 

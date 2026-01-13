@@ -330,3 +330,130 @@ export async function getAvailableSlotsAction(
     };
   }
 }
+
+// Interface para o AppointmentResponse do backend (com apenas IDs)
+interface AppointmentResponseBackend {
+  id: string;
+  tenantId: string;
+  patientId: string;
+  professionalId: string;
+  roomId?: string;
+  scheduledAt: string;
+  durationMinutes: number;
+  status: string;
+  observations?: string;
+  cancelledAt?: string;
+  startedAt?: string;
+  finishedAt?: string;
+  durationActualMinutes?: number;
+  totalValue: number;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  paidAt?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getAppointmentsByTenantAction(
+  tenantId: string,
+  date?: string,
+  status?: string,
+  orderBy: string = 'scheduledAt_desc'
+): Promise<ActionResult<Appointment[]>> {
+  try {
+    const params: Record<string, string> = { orderBy };
+    
+    if (date) {
+      params.date = date;
+    }
+    
+    if (status) {
+      params.status = status;
+    }
+
+    const appointmentsResponse = await apiRequest<AppointmentResponseBackend[]>(
+      `/tenants/${tenantId}/appointments`,
+      {
+        method: 'GET',
+        params,
+      }
+    );
+
+    // Se o backend retornar apenas IDs, precisamos buscar os dados completos
+    // Por enquanto, vamos assumir que o backend pode retornar dados completos ou apenas IDs
+    // Se retornar apenas IDs, precisaremos fazer o mapeamento
+    const appointments: Appointment[] = await Promise.all(
+      appointmentsResponse.map(async (appt) => {
+        // Verificar se já tem os dados completos (patient e professional como objetos)
+        if ('patient' in appt && typeof (appt as any).patient === 'object') {
+          return appt as unknown as Appointment;
+        }
+
+        // Se não tiver, buscar os dados completos
+        const { getPatientByIdAction } = await import('./patient-actions');
+        const { getProfessionalByIdAction } = await import('./professional-actions');
+        
+        const [patientResult, professionalResult] = await Promise.all([
+          getPatientByIdAction(appt.patientId),
+          getProfessionalByIdAction(appt.professionalId),
+        ]);
+
+        const patient = patientResult.success ? patientResult.data : null;
+        const professional = professionalResult.success ? professionalResult.data : null;
+
+        if (!patient || !professional) {
+          // Se não conseguir buscar, retornar um objeto parcial
+          return {
+            id: appt.id,
+            patient: { id: appt.patientId, fullName: 'Carregando...' } as any,
+            professional: { id: appt.professionalId, user: { fullName: 'Carregando...' }, specialty: '' } as any,
+            scheduledAt: appt.scheduledAt,
+            durationMinutes: appt.durationMinutes,
+            status: appt.status as any,
+            observations: appt.observations,
+            startedAt: appt.startedAt,
+            finishedAt: appt.finishedAt,
+            durationActualMinutes: appt.durationActualMinutes,
+            totalValue: appt.totalValue,
+            paymentMethod: appt.paymentMethod as any,
+            paymentStatus: appt.paymentStatus as any,
+            paidAt: appt.paidAt,
+            procedures: [],
+            createdAt: appt.createdAt,
+          } as Appointment;
+        }
+
+        return {
+          id: appt.id,
+          patient,
+          professional,
+          room: appt.roomId ? { id: appt.roomId } as any : undefined,
+          scheduledAt: appt.scheduledAt,
+          durationMinutes: appt.durationMinutes,
+          status: appt.status as any,
+          observations: appt.observations,
+          startedAt: appt.startedAt,
+          finishedAt: appt.finishedAt,
+          durationActualMinutes: appt.durationActualMinutes,
+          totalValue: appt.totalValue,
+          paymentMethod: appt.paymentMethod as any,
+          paymentStatus: appt.paymentStatus as any,
+          paidAt: appt.paidAt,
+          procedures: [],
+          createdAt: appt.createdAt,
+        } as Appointment;
+      })
+    );
+
+    return {
+      success: true,
+      data: appointments,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Erro ao buscar agendamentos',
+    };
+  }
+}

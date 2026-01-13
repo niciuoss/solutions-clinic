@@ -66,6 +66,35 @@ export async function getAllActiveRoomsAction(): Promise<ActionResult<Room[]>> {
   }
 }
 
+export async function getRoomsByTenantAction(
+  tenantId: string,
+  activeOnly: boolean = true
+): Promise<ActionResult<Room[]>> {
+  try {
+    if (!tenantId) {
+      return {
+        success: false,
+        error: 'ID da clínica (tenantId) é obrigatório',
+      };
+    }
+
+    const rooms = await apiRequest<Room[]>('/rooms', {
+      method: 'GET',
+      params: { tenantId, activeOnly: String(activeOnly) },
+    });
+
+    return {
+      success: true,
+      data: rooms,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao listar salas',
+    };
+  }
+}
+
 export async function deleteRoomAction(roomId: string): Promise<ActionResult<void>> {
   try {
     await apiRequest(`/rooms/${roomId}`, {

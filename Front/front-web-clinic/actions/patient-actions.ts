@@ -160,13 +160,35 @@ export async function searchPatientsAction(
 }
 
 export async function autocompletePatientsAction(
-  name: string
+  tenantId: string
 ): Promise<ActionResult<Patient[]>> { 
   try {
-    const patients = await apiRequest<Patient[]>('/patients/autocomplete', {
+    if (!tenantId) {
+      return {
+        success: false,
+        error: 'ID da clínica (tenantId) é obrigatório',
+      };
+    }
+
+    // Buscar todos os pacientes do tenant (com limite maior para autocomplete)
+    const response = await apiRequest<any>('/patients', {
       method: 'GET',
-      params: { name },
+      params: { 
+        tenantId, 
+        page: 0, 
+        size: 100, // Limite maior para autocomplete
+        sort: 'firstName,asc' 
+      },
     });
+
+    let patients: Patient[] = [];
+    
+    if (response?.content) {
+      patients = response.content.map((patient: any) => ({
+        ...patient,
+        fullName: patient.firstName || '',
+      }));
+    }
 
     return {
       success: true,

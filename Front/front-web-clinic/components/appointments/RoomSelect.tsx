@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react';
-import { getAllActiveRoomsAction } from '@/actions/room-actions';
+import { getRoomsByTenantAction } from '@/actions/room-actions';
+import { useAuthContext } from '@/contexts/AuthContext';
 import {
   Select,
   SelectContent,
@@ -17,13 +18,21 @@ interface RoomSelectProps {
 }
 
 export function RoomSelect({ value, onValueChange }: RoomSelectProps) {
+  const { user } = useAuthContext();
+  const tenantId = user?.clinicId || null;
+  
   const [rooms, setRooms] = useState<Room[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchRooms = async () => {
+      if (!tenantId) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
-        const result = await getAllActiveRoomsAction();
+        const result = await getRoomsByTenantAction(tenantId);
         if (result.success && result.data) {
           setRooms(result.data);
         }
@@ -35,7 +44,7 @@ export function RoomSelect({ value, onValueChange }: RoomSelectProps) {
     };
 
     fetchRooms();
-  }, []);
+  }, [tenantId]);
 
   return (
     <Select value={value} onValueChange={onValueChange}>
@@ -45,6 +54,10 @@ export function RoomSelect({ value, onValueChange }: RoomSelectProps) {
       <SelectContent>
         {isLoading ? (
           <div className="p-2 text-sm text-muted-foreground">Carregando...</div>
+        ) : !tenantId ? (
+          <div className="p-2 text-sm text-muted-foreground text-center">
+            Clínica não identificada. Faça login novamente.
+          </div>
         ) : rooms.length === 0 ? (
           <div className="p-2 text-sm text-muted-foreground">
             Nenhuma sala cadastrada
