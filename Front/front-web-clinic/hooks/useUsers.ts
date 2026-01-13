@@ -17,17 +17,18 @@ export function useUsersByTenant(
   size: number = 20,
   sort: string = 'firstName,asc',
   search?: string,
-  blocked?: boolean
+  blocked?: boolean,
+  role?: string
 ) {
   const queryClient = useQueryClient();
 
   const { data: result, isLoading, error, refetch } = useQuery({
-    queryKey: ['users', 'tenant', tenantId, page, size, sort, search, blocked],
+    queryKey: ['users', 'tenant', tenantId, page, size, sort, search, blocked, role],
     queryFn: async () => {
       if (!tenantId) {
         return { success: false, data: { content: [], totalElements: 0, totalPages: 0, size, number: page } };
       }
-      return await getUsersByTenantAction(tenantId, page, size, sort, search, blocked);
+      return await getUsersByTenantAction(tenantId, page, size, sort, search, blocked, role);
     },
     enabled: !!tenantId,
   });
@@ -100,5 +101,6 @@ export function useUsersByCurrentClinic(
   const { user } = useAuth();
   const clinicId = user?.clinicId || null;
   
-  return useUsersByTenant(clinicId, page, size, sort, search, blocked);
+  // Filtrar apenas usuários do tipo RECEPTION
+  return useUsersByTenant(clinicId, page, size, sort, search, blocked, 'RECEPTION');
 }

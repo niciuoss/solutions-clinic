@@ -18,7 +18,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     
     @Query("""
         SELECT DISTINCT u FROM users u 
-        WHERE u.id IN (SELECT utr.user.id FROM user_tenant_role utr WHERE utr.tenant.id = :tenantId)
+        WHERE u.id IN (SELECT utr.user.id FROM user_tenant_role utr WHERE utr.tenant.id = :tenantId
+            AND (:role IS NULL OR utr.role = :role))
         AND (:search IS NULL OR :search = '' OR 
              LOWER(CONCAT(COALESCE(u.firstName, ''), ' ', COALESCE(u.lastName, ''))) LIKE LOWER(CONCAT('%', :search, '%')) OR
              LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR
@@ -30,6 +31,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
         @Param("tenantId") UUID tenantId,
         @Param("search") String search,
         @Param("blocked") Boolean blocked,
+        @Param("role") com.jettech.api.solutions_clinic.model.entity.Role role,
         Pageable pageable
     );
 }

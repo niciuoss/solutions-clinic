@@ -52,7 +52,8 @@ public class UserController implements UserAPI {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, defaultValue = "firstName,asc") String sort,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Boolean blocked
+            @RequestParam(required = false) Boolean blocked,
+            @RequestParam(required = false) com.jettech.api.solutions_clinic.model.entity.Role role
     ) throws AuthenticationException {
         return getUsersByTenantUseCase.execute(new GetUsersByTenantRequest(
                 tenantId,
@@ -60,7 +61,8 @@ public class UserController implements UserAPI {
                 size,
                 sort,
                 search,
-                blocked
+                blocked,
+                role
         ));
     }
 

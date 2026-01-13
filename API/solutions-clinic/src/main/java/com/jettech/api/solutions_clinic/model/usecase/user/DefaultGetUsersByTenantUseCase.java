@@ -36,6 +36,7 @@ public class DefaultGetUsersByTenantUseCase implements GetUsersByTenantUseCase {
                 request.tenantId(),
                 request.search(),
                 request.blocked(),
+                request.role(),
                 pageable
         );
 

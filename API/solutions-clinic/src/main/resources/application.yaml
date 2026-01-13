@@ -26,7 +26,7 @@ stripe:
     key: ${STRIPE_API_KEY:}
     secret: ${STRIPE_API_SECRET:}
   webhook:
-    secret: ${STRIPE_WEBHOOK_SECRET:whsec_64d9394c2cb4ce231ed67df18d6484c45cdf5bf837213330244781ca1bf0140d}
+    secret: ${STRIPE_WEBHOOK_SECRET:}
     success:
       path: ${STRIPE_WEBHOOK_SUCCESS_PATH:/plan-selection/success}
     cancel:

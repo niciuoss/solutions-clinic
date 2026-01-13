@@ -97,7 +97,8 @@ export async function getUsersByTenantAction(
   size: number = 20,
   sort: string = 'firstName,asc',
   search?: string,
-  blocked?: boolean
+  blocked?: boolean,
+  role?: string
 ): Promise<ActionResult<PaginatedResponse<UserListItem>>> {
   try {
     if (!tenantId) {
@@ -117,6 +118,7 @@ export async function getUsersByTenantAction(
 
     if (search) params.search = search;
     if (blocked !== undefined) params.blocked = blocked;
+    if (role) params.role = role;
 
     // Buscar usuários paginados do backend
     const response = await apiRequest<PaginatedResponse<UserListItem>>(
