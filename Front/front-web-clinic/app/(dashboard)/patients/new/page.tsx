@@ -24,7 +24,6 @@ export default function NewPatientPage() {
           </p>
         </div>
       </div>
-
       <PatientForm />
     </div>
   );

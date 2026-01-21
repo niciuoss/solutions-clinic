@@ -56,7 +56,7 @@ public class DefaultProcessStripeWebhookUseCase implements ProcessStripeWebhookU
                 handleSubscriptionDeleted(event);
                 break;
             default:
-                log.debug("Evento não processado: {}", event.getType());
+                log.info("Evento recebido mas não processado (eventos suportados: checkout.session.completed, customer.subscription.updated, customer.subscription.deleted): type={}, id={}", event.getType(), event.getId());
                 break;
         }
     }
@@ -106,19 +106,24 @@ public class DefaultProcessStripeWebhookUseCase implements ProcessStripeWebhookU
         subscription.setStatus(SubscriptionStatus.ACTIVE);
         subscription = subscriptionRepository.save(subscription);
 
-        log.info("Subscription ativada - subscriptionId: {}, tenantId: {}", 
-                subscription.getId(), subscription.getTenant().getId());
+        log.info("Subscription ativada - subscriptionId: {}, tenantId: {}, status após save: {}",
+                subscription.getId(), subscription.getTenant().getId(), subscription.getStatus());
 
         // Atualizar tenant
+        log.info("Chamando updateTenantAfterPayment - subscription.status: {}", subscription.getStatus());
         updateTenantAfterPayment(subscription);
     }
 
     private void updateTenantAfterPayment(Subscription subscription) {
+        log.info("updateTenantAfterPayment - Iniciando. Subscription status: {}", subscription.getStatus());
+
         if (subscription.getStatus() != SubscriptionStatus.ACTIVE) {
+            log.warn("updateTenantAfterPayment - Subscription não está ACTIVE, saindo. Status atual: {}", subscription.getStatus());
             return;
         }
 
         Tenant tenant = subscription.getTenant();
+        log.info("updateTenantAfterPayment - Tenant encontrado: id={}, statusAtual={}", tenant.getId(), tenant.getStatus());
         tenant.setPlanType(subscription.getPlanType());
         
         if (tenant.getStatus() == TenantStatus.PENDING_SETUP) {

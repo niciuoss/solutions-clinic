@@ -5,6 +5,9 @@ import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckou
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionRequest;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionResponse;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.DefaultCreateCheckoutSessionUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.tenant.ActivatePlanBody;
+import com.jettech.api.solutions_clinic.model.usecase.tenant.ActivatePlanRequest;
+import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultActivatePlanUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultUpdateTenantPlanUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.TenantResponse;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanBody;
@@ -32,6 +35,7 @@ public class TenantController implements TenantAPI {
     private final DefaultUpdateTenantPlanUseCase updateTenantPlanUseCase;
     private final DefaultCreateCheckoutSessionUseCase createCheckoutSessionUseCase;
     private final DefaultAssociateUserToTenantUseCase associateUserToTenantUseCase;
+    private final DefaultActivatePlanUseCase activatePlanUseCase;
 
     @Override
     public TenantResponse updateTenantPlan(
@@ -72,5 +76,15 @@ public class TenantController implements TenantAPI {
         
         AssociateUserToTenantRequest request = new AssociateUserToTenantRequest(userId, tenantId, roleEnum);
         associateUserToTenantUseCase.execute(request);
+    }
+
+    @Override
+    public TenantResponse activatePlan(
+            @PathVariable UUID tenantId,
+            @Valid @RequestBody ActivatePlanBody body
+    ) throws AuthenticationException {
+        log.warn("ATIVACAO MANUAL - tenantId: {}, planType: {} - USE APENAS PARA TESTES!", tenantId, body.planType());
+        ActivatePlanRequest request = new ActivatePlanRequest(tenantId, body.planType());
+        return activatePlanUseCase.execute(request);
     }
 }

@@ -1,0 +1,39 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docs
+*.md
+!README.md
+
+# Temp files
+tmp*/
+
+# Backend build outputs
+API/solutions-clinic/build/
+API/solutions-clinic/.gradle/
+API/solutions-clinic/bin/
+API/solutions-clinic/out/
+
+# Frontend build outputs
+Front/front-web-clinic/node_modules/
+Front/front-web-clinic/.next/
+Front/front-web-clinic/out/
+Front/front-web-clinic/dist/

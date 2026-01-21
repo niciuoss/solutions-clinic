@@ -1,19 +1,32 @@
 'use server';
 
-import { apiRequest } from './_helpers';
-import type { 
+import { apiRequest, getClinicIdFromToken } from './_helpers';
+import type {
   Room,
   CreateRoomRequest,
+  UpdateRoomRequest,
   ActionResult,
 } from '@/types';
 
 export async function createRoomAction(
-  data: CreateRoomRequest
+  data: Omit<CreateRoomRequest, 'tenantId'>
 ): Promise<ActionResult<Room>> {
   try {
+    const tenantId = await getClinicIdFromToken();
+
+    if (!tenantId) {
+      return {
+        success: false,
+        error: 'ID da clínica não encontrado. Faça login novamente.',
+      };
+    }
+
     const room = await apiRequest<Room>('/rooms', {
       method: 'POST',
-      body: data,
+      body: {
+        ...data,
+        tenantId,
+      },
     });
 
     return {
@@ -24,6 +37,28 @@ export async function createRoomAction(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Erro ao criar sala',
+    };
+  }
+}
+
+export async function updateRoomAction(
+  roomId: string,
+  data: UpdateRoomRequest
+): Promise<ActionResult<Room>> {
+  try {
+    const room = await apiRequest<Room>(`/rooms/${roomId}`, {
+      method: 'PUT',
+      body: data,
+    });
+
+    return {
+      success: true,
+      data: room,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao atualizar sala',
     };
   }
 }
@@ -50,8 +85,18 @@ export async function getRoomByIdAction(
 
 export async function getAllActiveRoomsAction(): Promise<ActionResult<Room[]>> {
   try {
+    const tenantId = await getClinicIdFromToken();
+
+    if (!tenantId) {
+      return {
+        success: false,
+        error: 'ID da clínica não encontrado. Faça login novamente.',
+      };
+    }
+
     const rooms = await apiRequest<Room[]>('/rooms', {
       method: 'GET',
+      params: { tenantId, activeOnly: true },
     });
 
     return {
@@ -80,7 +125,7 @@ export async function getRoomsByTenantAction(
 
     const rooms = await apiRequest<Room[]>('/rooms', {
       method: 'GET',
-      params: { tenantId, activeOnly: String(activeOnly) },
+      params: { tenantId, activeOnly },
     });
 
     return {

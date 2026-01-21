@@ -329,12 +329,12 @@ export function PatientForm({ patient, onSuccess }: PatientFormProps) {
         </CardContent>
       </Card>
 
-      {/* Endere\u00e7o */}
+      {/* Endereço */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <MapPin className="h-5 w-5" />
-            Endere\u00e7o
+            Endereço
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -362,10 +362,10 @@ export function PatientForm({ patient, onSuccess }: PatientFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="addressNumber">N\u00famero</Label>
+            <Label htmlFor="addressNumber">Número</Label>
             <Input
               id="addressNumber"
-              placeholder="N\u00ba"
+              placeholder="Número"
               {...register('addressNumber')}
             />
           </div>
@@ -440,17 +440,17 @@ export function PatientForm({ patient, onSuccess }: PatientFormProps) {
         </CardContent>
       </Card>
 
-      {/* Informa\u00e7\u00f5es de Sa\u00fade */}
+      {/* Informações de Saúde */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Heart className="h-5 w-5" />
-            Informa\u00e7\u00f5es de Sa\u00fade
+            Informações de Saúde
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div>
-            <Label htmlFor="bloodType">Tipo Sangu\u00edneo</Label>
+            <Label htmlFor="bloodType">Tipo Sanguíneo</Label>
             <Select
               value={watch('bloodType') || ''}
               onValueChange={(value) => setValue('bloodType', value)}
@@ -483,17 +483,17 @@ export function PatientForm({ patient, onSuccess }: PatientFormProps) {
         </CardContent>
       </Card>
 
-      {/* Respons\u00e1vel (para menores de idade) */}
+      {/* Responsável (para menores de idade) */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             <Users className="h-5 w-5" />
-            Respons\u00e1vel (Menor de Idade)
+            Responsável (Menor de Idade)
           </CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
           <div>
-            <Label htmlFor="guardianName">Nome do Respons\u00e1vel</Label>
+            <Label htmlFor="guardianName">Nome do Responsável</Label>
             <Input
               id="guardianName"
               placeholder="Nome completo"
@@ -502,7 +502,7 @@ export function PatientForm({ patient, onSuccess }: PatientFormProps) {
           </div>
 
           <div>
-            <Label htmlFor="guardianPhone">Telefone do Respons\u00e1vel</Label>
+            <Label htmlFor="guardianPhone">Telefone do Responsável</Label>
             <Input
               id="guardianPhone"
               placeholder="(00) 00000-0000"

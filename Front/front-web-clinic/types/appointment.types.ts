@@ -1,5 +1,6 @@
 import { Patient } from './patient.types';
 import { Professional } from './professional.types';
+import { Room } from './room.types';
 
 export interface Appointment {
   id: string;
@@ -60,13 +61,19 @@ export interface Procedure {
   totalValue: number;
 }
 
-export interface Room {
+/* export interface Room {
   id: string;
   name: string;
   description?: string;
   capacity: number;
   isActive: boolean;
 }
+
+export interface CreateRoomRequest {
+  name: string;
+  description?: string;
+  capacity?: number;
+} */
 
 export interface CreateAppointmentRequest {
   patientId: string;
@@ -104,8 +111,3 @@ export interface FinishAppointmentRequest {
   observations?: string;
 }
 
-export interface CreateRoomRequest {
-  name: string;
-  description?: string;
-  capacity?: number;
-}

@@ -2,6 +2,7 @@ package com.jettech.api.solutions_clinic.web;
 
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionBody;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionResponse;
+import com.jettech.api.solutions_clinic.model.usecase.tenant.ActivatePlanBody;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.TenantResponse;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanBody;
 import io.swagger.v3.oas.annotations.Operation;
@@ -103,5 +104,34 @@ public interface TenantAPI {
             @PathVariable UUID tenantId,
             @PathVariable UUID userId,
             @PathVariable String role
+    ) throws AuthenticationException;
+
+    @PostMapping("/tenants/{tenantId}/activate")
+    @Operation(
+        summary = "Ativa um plano manualmente (apenas para testes)",
+        description = "Ativa um plano diretamente sem passar pelo fluxo de pagamento do Stripe. " +
+                      "IMPORTANTE: Este endpoint deve ser usado apenas em ambiente de desenvolvimento/teste. " +
+                      "Em producao, use o fluxo normal de checkout com o Stripe."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Plano ativado com sucesso",
+                content = @Content(schema = @Schema(implementation = TenantResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "400",
+                description = "Dados invalidos",
+                content = @Content
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "Tenant nao encontrado",
+                content = @Content
+            )
+    })
+    TenantResponse activatePlan(
+            @PathVariable UUID tenantId,
+            @Valid @RequestBody ActivatePlanBody body
     ) throws AuthenticationException;
 }

@@ -13,6 +13,9 @@ export * from './patient.types';
 // Professional Types
 export * from './professional.types';
 
+// Room Types
+export * from './room.types';
+
 // Appointment Types
 export * from './appointment.types';
 

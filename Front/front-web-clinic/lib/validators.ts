@@ -106,9 +106,9 @@ export const professionalWithUserSchema = z.object({
 
 // Room
 export const roomSchema = z.object({
-  name: z.string().min(1, 'Nome da sala é obrigatório'),
-  description: z.string().optional(),
-  capacity: z.number().min(1).default(1),
+  name: z.string().min(1, 'Nome da sala é obrigatório').max(100, 'Nome muito longo'),
+  description: z.string().max(500, 'Descrição muito longa').optional(),
+  capacity: z.number().min(1, 'Capacidade mínima é 1').max(100, 'Capacidade máxima é 100').optional(),
 });
 
 // SignUp - Clínica

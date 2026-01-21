@@ -126,13 +126,29 @@ Os preços estão configurados no `DefaultCreateCheckoutSessionUseCase`:
 Para testar em desenvolvimento:
 
 1. Use as chaves de teste do Stripe (começam com `pk_test_` e `sk_test_`)
-2. Use o Stripe CLI para testar webhooks localmente:
+2. **⚠️ IMPORTANTE: Para testar webhooks localmente, você DEVE usar o Stripe CLI:**
+   
+   **Instalar Stripe CLI:**
+   - Windows: `scoop install stripe` ou baixar do site oficial
+   - macOS: `brew install stripe/stripe-cli/stripe`
+   - Linux: Ver instruções no site oficial
+   
+   **Executar o Stripe CLI:**
    ```bash
    stripe listen --forward-to localhost:8080/v1/subscriptions/webhook
    ```
+   
+   **⚠️ O Stripe CLI gerará um webhook secret diferente!** Copie o secret gerado (começa com `whsec_`) e configure como variável de ambiente:
+   ```bash
+   export STRIPE_WEBHOOK_SECRET=whsec_xxxxxxxxxxxxx  # Cole o secret gerado pelo CLI
+   ```
+   
+   **Veja o guia completo em `STRIPE_WEBHOOK_SETUP.md` para instruções detalhadas.**
+
 3. Use cartões de teste do Stripe:
    - Sucesso: `4242 4242 4242 4242`
    - Falha: `4000 0000 0000 0002`
+   - Requer 3D Secure: `4000 0025 0000 3155`
 
 ## Eventos Processados
 
