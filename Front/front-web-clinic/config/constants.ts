@@ -32,6 +32,7 @@ export const API_ROUTES = {
   TENANTS: {
     UPDATE_PLAN: (tenantId: string) => `/tenants/${tenantId}/plan`,
     CREATE_CHECKOUT: (tenantId: string) => `/tenants/${tenantId}/checkout`,
+    START_TRIAL: (tenantId: string) => `/tenants/${tenantId}/trial`,
   },
   PATIENTS: "/patients",
   APPOINTMENTS: "/appointments",

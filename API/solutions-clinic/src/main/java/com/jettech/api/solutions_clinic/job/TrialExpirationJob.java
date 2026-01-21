@@ -29,8 +29,8 @@ public class TrialExpirationJob {
 
         LocalDate now = LocalDate.now();
 
-        // 1. Busca quem deve ser suspenso
-        List<Tenant> expiredTenants = tenantRepository.findExpiredTrials(TenantStatus.ACTIVE, now);
+        // 1. Busca quem deve ser suspenso (tenants com status TRIAL e trial expirado)
+        List<Tenant> expiredTenants = tenantRepository.findExpiredTrials(TenantStatus.TRIAL, now);
 
         if (expiredTenants.isEmpty()) {
             log.info("Nenhum tenant expirado encontrado hoje.");

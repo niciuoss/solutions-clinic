@@ -134,4 +134,32 @@ public interface TenantAPI {
             @PathVariable UUID tenantId,
             @Valid @RequestBody ActivatePlanBody body
     ) throws AuthenticationException;
+
+    @PostMapping("/tenants/{tenantId}/trial")
+    @Operation(
+        summary = "Inicia período de teste grátis",
+        description = "Ativa um período de teste grátis para o tenant. " +
+                      "O trial permite acesso completo ao sistema por um período limitado (padrão: 14 dias) " +
+                      "sem necessidade de pagamento. Após o término do período, o tenant será suspenso até escolher um plano pago."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                responseCode = "200",
+                description = "Período de teste iniciado com sucesso",
+                content = @Content(schema = @Schema(implementation = TenantResponse.class))
+            ),
+            @ApiResponse(
+                responseCode = "400",
+                description = "Dados inválidos ou clínica já possui plano ativo/trial",
+                content = @Content
+            ),
+            @ApiResponse(
+                responseCode = "404",
+                description = "Tenant não encontrado",
+                content = @Content
+            )
+    })
+    TenantResponse startTrial(
+            @PathVariable UUID tenantId
+    ) throws AuthenticationException;
 }

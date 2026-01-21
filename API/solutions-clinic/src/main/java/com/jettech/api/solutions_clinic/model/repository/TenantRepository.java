@@ -26,7 +26,7 @@ public interface TenantRepository extends JpaRepository<Tenant, UUID> {
     
     List<Tenant> findByStatusAndActive(TenantStatus status, boolean active);
 
-    @Query("SELECT t FROM tenant t WHERE t.status = :status AND t.planType = 'TRIAL' AND t.trialEndsAt < :now")
+    @Query("SELECT t FROM tenant t WHERE t.status = :status AND t.trialEndsAt < :now")
     List<Tenant> findExpiredTrials(
             @Param("status") TenantStatus status,
             @Param("now") LocalDate now

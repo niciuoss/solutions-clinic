@@ -422,3 +422,33 @@ export async function createCheckoutSessionAction(tenantId: string, planType: st
     };
   }
 }
+
+/**
+ * Inicia período de teste grátis
+ * Endpoint: POST /v1/tenants/{tenantId}/trial
+ */
+export async function startTrialAction(tenantId: string) {
+  try {
+    if (!tenantId) {
+      return {
+        success: false,
+        error: 'ID do tenant é obrigatório',
+      };
+    }
+
+    const response = await apiRequest<any>(API_ROUTES.TENANTS.START_TRIAL(tenantId), {
+      method: 'POST',
+      requireAuth: true,
+    });
+
+    return {
+      success: true,
+      data: response,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Erro ao iniciar período de teste',
+    };
+  }
+}

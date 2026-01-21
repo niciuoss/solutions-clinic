@@ -35,3 +35,6 @@ stripe:
 app:
   frontend:
     url: ${FRONTEND_URL:http://localhost:3000}
+  trial:
+    duration:
+      days: ${TRIAL_DURATION_DAYS:14}

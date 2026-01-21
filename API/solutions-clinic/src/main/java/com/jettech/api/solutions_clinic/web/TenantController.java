@@ -8,7 +8,9 @@ import com.jettech.api.solutions_clinic.model.usecase.subscription.DefaultCreate
 import com.jettech.api.solutions_clinic.model.usecase.tenant.ActivatePlanBody;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.ActivatePlanRequest;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultActivatePlanUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultStartTrialUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultUpdateTenantPlanUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.tenant.StartTrialRequest;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.TenantResponse;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanBody;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanRequest;
@@ -36,6 +38,7 @@ public class TenantController implements TenantAPI {
     private final DefaultCreateCheckoutSessionUseCase createCheckoutSessionUseCase;
     private final DefaultAssociateUserToTenantUseCase associateUserToTenantUseCase;
     private final DefaultActivatePlanUseCase activatePlanUseCase;
+    private final DefaultStartTrialUseCase startTrialUseCase;
 
     @Override
     public TenantResponse updateTenantPlan(
@@ -86,5 +89,14 @@ public class TenantController implements TenantAPI {
         log.warn("ATIVACAO MANUAL - tenantId: {}, planType: {} - USE APENAS PARA TESTES!", tenantId, body.planType());
         ActivatePlanRequest request = new ActivatePlanRequest(tenantId, body.planType());
         return activatePlanUseCase.execute(request);
+    }
+
+    @Override
+    public TenantResponse startTrial(
+            @PathVariable UUID tenantId
+    ) throws AuthenticationException {
+        log.info("Iniciando trial - tenantId: {}", tenantId);
+        StartTrialRequest request = new StartTrialRequest(tenantId);
+        return startTrialUseCase.execute(request);
     }
 }
