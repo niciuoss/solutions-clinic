@@ -173,6 +173,7 @@ export function PatientForm({ patient, onSuccess }: PatientFormProps) {
         whatsapp: data.whatsapp?.replace(/\D/g, '') || undefined,
         addressZipcode: data.addressZipcode?.replace(/\D/g, '') || undefined,
         email: data.email || undefined,
+        bloodType: data.bloodType?.trim() || undefined,
       };
 
       let result;
