@@ -57,7 +57,8 @@ type PatientFormData = z.infer<typeof patientFormSchema>;
 
 interface PatientFormProps {
   patient?: Patient;
-  onSuccess?: () => void;
+  /** Chamado ao salvar com sucesso. No create, recebe o paciente criado. */
+  onSuccess?: (patient?: Patient) => void;
 }
 
 // Funções de formatação para valores iniciais
@@ -192,7 +193,7 @@ export function PatientForm({ patient, onSuccess }: PatientFormProps) {
             : 'Paciente cadastrado com sucesso!'
         );
         if (onSuccess) {
-          onSuccess();
+          onSuccess(result.data);
         } else {
           router.push('/patients');
         }
