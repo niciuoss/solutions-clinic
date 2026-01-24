@@ -6,6 +6,9 @@ import com.jettech.api.solutions_clinic.model.usecase.patient.DefaultGetPatientB
 import com.jettech.api.solutions_clinic.model.usecase.patient.DefaultGetPatientsByTenantUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.patient.GetPatientsByTenantRequest;
 import com.jettech.api.solutions_clinic.model.usecase.patient.PatientResponse;
+import com.jettech.api.solutions_clinic.model.usecase.patient.UpdatePatientActiveBodyRequest;
+import com.jettech.api.solutions_clinic.model.usecase.patient.UpdatePatientActiveRequest;
+import com.jettech.api.solutions_clinic.model.usecase.patient.UpdatePatientActiveUseCase;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +30,7 @@ public class PatientController implements PatientAPI {
     private final DefaultCreatePatientUseCase createPatientUseCase;
     private final DefaultGetPatientByIdUseCase getPatientByIdUseCase;
     private final DefaultGetPatientsByTenantUseCase getPatientsByTenantUseCase;
+    private final UpdatePatientActiveUseCase updatePatientActiveUseCase;
 
     @Override
     public PatientResponse createPatient(@Valid @RequestBody CreatePatientRequest request) throws AuthenticationException {
@@ -45,6 +49,13 @@ public class PatientController implements PatientAPI {
     @Override
     public PatientResponse getPatientById(@PathVariable UUID id) throws AuthenticationException {
         return getPatientByIdUseCase.execute(id);
+    }
+
+    @Override
+    public PatientResponse updatePatientActive(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdatePatientActiveBodyRequest request) throws AuthenticationException {
+        return updatePatientActiveUseCase.execute(new UpdatePatientActiveRequest(id, request.active()));
     }
 }
 

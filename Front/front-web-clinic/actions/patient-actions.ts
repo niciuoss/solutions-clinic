@@ -46,10 +46,29 @@ export async function updatePatientAction(
   data: UpdatePatientRequest
 ): Promise<ActionResult<Patient>> { 
   try {
+    const isActiveOnly = typeof data.isActive === 'boolean' 
+      && Object.keys(data).length === 1;
+
+    if (isActiveOnly) {
+      const patient = await apiRequest<any>(`/patients/${patientId}/active`, {
+        method: 'PATCH',
+        body: { active: data.isActive },
+      });
+      const mappedPatient: Patient = {
+        ...patient,
+        fullName: patient.firstName || '',
+      };
+      return { success: true, data: mappedPatient };
+    }
+
     const requestData: any = { ...data };
     if (data.fullName) {
       requestData.firstName = data.fullName;
       delete requestData.fullName;
+    }
+    if (typeof data.isActive === 'boolean') {
+      requestData.active = data.isActive;
+      delete requestData.isActive;
     }
 
     const patient = await apiRequest<any>(`/patients/${patientId}`, {

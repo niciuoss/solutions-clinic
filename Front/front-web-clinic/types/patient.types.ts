@@ -57,4 +57,6 @@ export interface CreatePatientRequest {
   guardianRelationship?: string;
 }
 
-export type UpdatePatientRequest = Partial<CreatePatientRequest>;
+export type UpdatePatientRequest = Partial<CreatePatientRequest> & {
+  isActive?: boolean;
+};

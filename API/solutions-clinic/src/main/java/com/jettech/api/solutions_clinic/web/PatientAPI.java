@@ -2,6 +2,7 @@ package com.jettech.api.solutions_clinic.web;
 
 import com.jettech.api.solutions_clinic.model.usecase.patient.CreatePatientRequest;
 import com.jettech.api.solutions_clinic.model.usecase.patient.PatientResponse;
+import com.jettech.api.solutions_clinic.model.usecase.patient.UpdatePatientActiveBodyRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -11,6 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -75,5 +77,17 @@ public interface PatientAPI {
             )
     })
     PatientResponse getPatientById(@PathVariable UUID id) throws AuthenticationException;
+
+    @PatchMapping("/patients/{id}/active")
+    @Operation(summary = "Atualiza o status ativo de um paciente", description = "Ativa ou desativa um paciente no sistema.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Status do paciente atualizado com sucesso",
+                    content = @Content(schema = @Schema(implementation = PatientResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Paciente não encontrado", content = @Content)
+    })
+    PatientResponse updatePatientActive(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdatePatientActiveBodyRequest request
+    ) throws AuthenticationException;
 }
 
