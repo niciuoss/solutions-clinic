@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 public record CreateAppointmentRequest(
@@ -30,6 +31,8 @@ public record CreateAppointmentRequest(
     @NotNull(message = "O campo [totalValue] é obrigatório")
     @Min(value = 0, message = "O campo [totalValue] deve ser maior ou igual a zero")
     BigDecimal totalValue,
+    
+    List<UUID> procedureIds, // Lista de IDs de procedimentos
     
     @NotNull(message = "O campo [createdBy] é obrigatório")
     UUID createdBy

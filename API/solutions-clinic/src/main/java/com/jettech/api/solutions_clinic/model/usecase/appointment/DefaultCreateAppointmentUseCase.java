@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.naming.AuthenticationException;
+import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +27,7 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
     private final ProfessionalScheduleRepository professionalScheduleRepository;
+    private final ProcedureRepository procedureRepository;
 
     @Override
     @Transactional
@@ -52,15 +55,36 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
         User createdBy = userRepository.findById(request.createdBy())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.createdBy()));
 
+        // Validar e processar procedimentos se fornecidos
+        List<Procedure> procedures = new ArrayList<>();
+        int calculatedDurationMinutes = request.durationMinutes();
+        BigDecimal calculatedTotalValue = request.totalValue();
+
+        if (request.procedureIds() != null && !request.procedureIds().isEmpty()) {
+            procedures = validateAndLoadProcedures(request.procedureIds(), request.tenantId());
+            
+            // Calcular duração total baseada nos procedimentos
+            calculatedDurationMinutes = procedures.stream()
+                    .mapToInt(Procedure::getEstimatedDurationMinutes)
+                    .sum();
+            
+            // Calcular valor total baseado nos procedimentos (se totalValue não foi fornecido ou é zero)
+            if (request.totalValue() == null || request.totalValue().compareTo(BigDecimal.ZERO) == 0) {
+                calculatedTotalValue = procedures.stream()
+                        .map(Procedure::getBasePrice)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+            }
+        }
+
         // Validar horário disponível do profissional
-        validateProfessionalSchedule(professional.getId(), request.scheduledAt(), request.durationMinutes());
+        validateProfessionalSchedule(professional.getId(), request.scheduledAt(), calculatedDurationMinutes);
 
         // Validar conflito de horário com outros agendamentos do profissional
-        validateProfessionalAvailability(professional.getId(), request.scheduledAt(), request.durationMinutes(), null);
+        validateProfessionalAvailability(professional.getId(), request.scheduledAt(), calculatedDurationMinutes, null);
 
         // Validar conflito de horário com outros agendamentos da sala (se fornecida)
         if (room != null) {
-            validateRoomAvailability(room.getId(), request.scheduledAt(), request.durationMinutes(), null);
+            validateRoomAvailability(room.getId(), request.scheduledAt(), calculatedDurationMinutes, null);
         }
 
         // Criar Appointment
@@ -70,14 +94,26 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
         appointment.setProfessional(professional);
         appointment.setRoom(room);
         appointment.setScheduledAt(request.scheduledAt());
-        appointment.setDurationMinutes(request.durationMinutes());
+        appointment.setDurationMinutes(calculatedDurationMinutes);
         appointment.setStatus(AppointmentStatus.AGENDADO);
         appointment.setObservations(request.observations());
-        appointment.setTotalValue(request.totalValue());
+        appointment.setTotalValue(calculatedTotalValue);
         appointment.setPaymentStatus(PaymentStatus.PENDENTE);
         appointment.setCreatedBy(createdBy);
 
         appointment = appointmentRepository.save(appointment);
+
+        // Criar AppointmentProcedure para cada procedimento
+        if (!procedures.isEmpty()) {
+            for (Procedure procedure : procedures) {
+                AppointmentProcedure appointmentProcedure = new AppointmentProcedure();
+                appointmentProcedure.setAppointment(appointment);
+                appointmentProcedure.setProcedure(procedure);
+                appointmentProcedure.setFinalPrice(procedure.getBasePrice()); // Inicialmente usa o preço base
+                appointment.getProcedures().add(appointmentProcedure);
+            }
+            appointment = appointmentRepository.save(appointment);
+        }
 
         // Converter para Response
         return toResponse(appointment);
@@ -140,6 +176,23 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
                 throw new RuntimeException("Já existe um agendamento para este profissional neste horário");
             }
         }
+    }
+
+    private List<Procedure> validateAndLoadProcedures(List<UUID> procedureIds, UUID tenantId) {
+        List<Procedure> procedures = new ArrayList<>();
+        
+        for (UUID procedureId : procedureIds) {
+            Procedure procedure = procedureRepository.findByIdAndTenantId(procedureId, tenantId)
+                    .orElseThrow(() -> new RuntimeException("Procedimento não encontrado com ID: " + procedureId + " para o tenant: " + tenantId));
+            
+            if (!procedure.isActive()) {
+                throw new RuntimeException("O procedimento " + procedure.getName() + " está inativo");
+            }
+            
+            procedures.add(procedure);
+        }
+        
+        return procedures;
     }
 
     private void validateRoomAvailability(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {

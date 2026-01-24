@@ -13,6 +13,7 @@ export const ROUTES = {
   ATTENDANCE: '/attendance',
   MEDICAL_RECORDS: '/medical-records',
   PROFESSIONALS: '/professionals',
+  PROCEDURES: '/procedures',
   USERS: '/users',
   SETTINGS: '/settings',
 } as const;
@@ -37,6 +38,7 @@ export const API_ROUTES = {
   PATIENTS: "/patients",
   APPOINTMENTS: "/appointments",
   PROFESSIONALS: "/professionals",
+  PROCEDURES: "/procedures",
   USERS: "/users",
   ROOMS: "/rooms",
   MEDICAL_RECORDS: "/medical-records",

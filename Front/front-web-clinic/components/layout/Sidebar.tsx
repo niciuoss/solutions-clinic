@@ -17,6 +17,7 @@ import {
   Stethoscope,
   UsersRound,
   DoorOpen,
+  FileText,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { ROUTES } from '@/config/constants';
@@ -46,6 +47,12 @@ const navigation = [
     name: 'Profissionais',
     href: ROUTES.PROFESSIONALS,
     icon: Stethoscope,
+    adminOnly: true,
+  },
+  {
+    name: 'Procedimentos',
+    href: ROUTES.PROCEDURES,
+    icon: FileText,
     adminOnly: true,
   },
   {
