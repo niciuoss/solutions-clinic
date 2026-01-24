@@ -82,12 +82,7 @@ export interface CreateAppointmentRequest {
   scheduledAt: string;
   durationMinutes?: number;
   observations?: string;
-  procedures?: {
-    name: string;
-    description?: string;
-    value: number;
-    quantity: number;
-  }[];
+  procedureIds?: string[];
 }
 
 export interface UpdateAppointmentRequest {
@@ -97,12 +92,7 @@ export interface UpdateAppointmentRequest {
   scheduledAt?: string;
   durationMinutes?: number;
   observations?: string;
-  procedures?: {
-    name: string;
-    description?: string;
-    value: number;
-    quantity: number;
-  }[];
+  procedureIds?: string[];
 }
 
 export interface FinishAppointmentRequest {

@@ -28,6 +28,8 @@ import { Separator } from '@/components/ui/separator';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useAvailability } from '@/hooks/useAvailability';
 import { useProfessionalsByCurrentClinic } from '@/hooks/useProfessionals';
+import { useProcedures } from '@/hooks/useProcedures';
+import { useAuth } from '@/hooks/useAuth';
 import { ConflictDialog } from './ConflictDialog';
 import { PatientAutocomplete } from './PatientAutocomplete';
 import { RoomSelect } from './RoomSelect';
@@ -39,11 +41,13 @@ import {
   Trash2,
   AlertCircle,
   CheckCircle,
+  X,
 } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
 import type { CreateAppointmentRequest } from '@/types';
+import type { Procedure as ProcedureType } from '@/types/procedure.types';
 
 const appointmentSchema = z.object({
   patientId: z.string().min(1, 'Selecione um paciente'),
@@ -53,14 +57,7 @@ const appointmentSchema = z.object({
   time: z.string().min(1, 'Selecione um horário'),
   durationMinutes: z.number().min(15, 'Duração mínima de 15 minutos').optional(),
   observations: z.string().optional(),
-  procedures: z.array(
-    z.object({
-      name: z.string().min(1, 'Nome do procedimento é obrigatório'),
-      description: z.string().optional(),
-      value: z.number().optional(),
-      quantity: z.number().min(1).optional(),
-    })
-  ).optional(),
+  procedureIds: z.array(z.string()).optional(),
 });
 
 type AppointmentFormData = z.infer<typeof appointmentSchema>;
@@ -68,7 +65,14 @@ type AppointmentFormData = z.infer<typeof appointmentSchema>;
 export function NewAppointmentForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const { professionals, isLoading: loadingProfessionals } = useProfessionalsByCurrentClinic(0, 100);
+  const { procedures: proceduresData, isLoading: loadingProcedures } = useProcedures(
+    user?.clinicId || null,
+    0,
+    100,
+    { active: true }
+  );
   const { 
     createAppointment, 
     confirmConflict, 
@@ -83,6 +87,8 @@ export function NewAppointmentForm() {
     message: string;
   } | null>(null);
 
+  const [selectedProcedureId, setSelectedProcedureId] = useState<string>('');
+
   const {
     register,
     control,
@@ -94,14 +100,11 @@ export function NewAppointmentForm() {
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
       durationMinutes: 60,
-      procedures: [],
+      procedureIds: [],
     },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'procedures',
-  });
+  const selectedProcedureIds = watch('procedureIds') || [];
 
   // Observar campos para verificação de disponibilidade
   const professionalId = watch('professionalId');
@@ -150,6 +153,17 @@ export function NewAppointmentForm() {
     }
   }, [professionalId, date, time, durationMinutes, checkAvailability]);
 
+  const handleAddProcedure = () => {
+    if (selectedProcedureId && !selectedProcedureIds.includes(selectedProcedureId)) {
+      setValue('procedureIds', [...selectedProcedureIds, selectedProcedureId]);
+      setSelectedProcedureId('');
+    }
+  };
+
+  const handleRemoveProcedure = (procedureId: string) => {
+    setValue('procedureIds', selectedProcedureIds.filter(id => id !== procedureId));
+  };
+
   const onSubmit = async (data: AppointmentFormData) => {
     try {
       const scheduledAt = `${format(data.date, 'yyyy-MM-dd')}T${data.time}:00`;
@@ -161,7 +175,7 @@ export function NewAppointmentForm() {
         scheduledAt,
         durationMinutes: data.durationMinutes,
         observations: data.observations,
-        procedures: data.procedures,
+        procedureIds: data.procedureIds,
       };
 
       await createAppointment(requestData);
@@ -170,6 +184,18 @@ export function NewAppointmentForm() {
       // Erro tratado no hook
     }
   };
+
+  const formatDuration = (minutes: number): string => {
+    if (minutes < 60) {
+      return `${minutes} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
+  };
+
+  const availableProcedures: ProcedureType[] = proceduresData?.content || [];
+  const selectedProcedures = availableProcedures.filter(p => selectedProcedureIds.includes(p.id));
 
   // Gerar opções de horário (7h às 20h, intervalo de 15 minutos)
   const timeSlots = [];
@@ -349,76 +375,102 @@ export function NewAppointmentForm() {
 
         {/* Procedimentos */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader>
             <CardTitle>Procedimentos (Opcional)</CardTitle>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                append({ name: '', description: '', value: 0, quantity: 1 })
-              }
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar Procedimento
-            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
-            {fields.length === 0 ? (
+            {/* Seleção de Procedimento */}
+            <div className="flex items-center gap-2 w-fit">
+              <div className="w-[400px]">
+                <Select
+                  value={selectedProcedureId}
+                  onValueChange={setSelectedProcedureId}
+                  disabled={loadingProcedures}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={
+                      loadingProcedures 
+                        ? 'Carregando procedimentos...' 
+                        : 'Selecione um procedimento'
+                    } />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {loadingProcedures ? (
+                      <div className="p-2 text-sm text-muted-foreground flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Carregando...
+                      </div>
+                    ) : availableProcedures.length > 0 ? (
+                      availableProcedures
+                        .filter(p => !selectedProcedureIds.includes(p.id))
+                        .map((procedure) => (
+                          <SelectItem key={procedure.id} value={procedure.id}>
+                            {procedure.name} - {formatCurrency(procedure.basePrice)}
+                          </SelectItem>
+                        ))
+                    ) : (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        Nenhum procedimento cadastrado
+                      </div>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleAddProcedure}
+                disabled={!selectedProcedureId || loadingProcedures}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Lista de Procedimentos Selecionados */}
+            {selectedProcedures.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
                 Nenhum procedimento adicionado
               </p>
             ) : (
-              fields.map((field, index) => (
-                <div
-                  key={field.id}
-                  className="grid gap-4 md:grid-cols-[2fr,1fr,1fr,auto] p-4 border rounded-lg"
-                >
-                  <div className="space-y-2">
-                    <Label>Nome do Procedimento</Label>
-                    <Input
-                      {...register(`procedures.${index}.name`)}
-                      placeholder="Ex: Consulta, Exame, Tratamento"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Valor (R$)</Label>
-                    <Input
-                      type="number"
-                      {...register(`procedures.${index}.value`, {
-                        valueAsNumber: true,
-                      })}
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Quantidade</Label>
-                    <Input
-                      type="number"
-                      {...register(`procedures.${index}.quantity`, {
-                        valueAsNumber: true,
-                      })}
-                      placeholder="1"
-                      min="1"
-                    />
-                  </div>
-
-                  <div className="flex items-end">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {selectedProcedures.map((procedure) => (
+                  <div
+                    key={procedure.id}
+                    className="flex items-start justify-between p-3 border rounded-lg bg-muted/50"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="font-medium truncate">{procedure.name}</div>
+                      {procedure.description && (
+                        <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          {procedure.description}
+                        </div>
+                      )}
+                      <div className="flex flex-col gap-1 mt-2 text-sm">
+                        <span className="text-muted-foreground">
+                          Duração: {formatDuration(procedure.estimatedDurationMinutes)}
+                        </span>
+                        <span className="font-medium">
+                          {formatCurrency(procedure.basePrice)}
+                        </span>
+                        {procedure.professionalCommissionPercent && (
+                          <span className="text-muted-foreground">
+                            Comissão: {procedure.professionalCommissionPercent}%
+                          </span>
+                        )}
+                      </div>
+                    </div>
                     <Button
                       type="button"
                       variant="ghost"
                       size="icon"
-                      onClick={() => remove(index)}
+                      onClick={() => handleRemoveProcedure(procedure.id)}
+                      className="ml-2 flex-shrink-0"
                     >
-                      <Trash2 className="h-4 w-4 text-red-500" />
+                      <X className="h-4 w-4 text-destructive" />
                     </Button>
                   </div>
-                </div>
-              ))
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
