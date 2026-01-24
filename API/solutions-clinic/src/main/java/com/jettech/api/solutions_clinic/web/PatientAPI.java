@@ -37,8 +37,8 @@ public interface PatientAPI {
 
     @GetMapping("/patients")
     @Operation(
-        summary = "Lista pacientes de uma clínica com paginação",
-        description = "Retorna uma lista paginada de pacientes de uma clínica (tenant)."
+        summary = "Lista pacientes de uma clínica com paginação, busca e filtros",
+        description = "Retorna uma lista paginada de pacientes de uma clínica (tenant). Suporta busca por nome, CPF, telefone ou email e filtro por status (ativo/inativo)."
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -56,7 +56,9 @@ public interface PatientAPI {
             @RequestParam UUID tenantId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false, defaultValue = "firstName,asc") String sort
+            @RequestParam(required = false, defaultValue = "firstName,asc") String sort,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean active
     ) throws AuthenticationException;
 
     @GetMapping("/patients/{id}")

@@ -31,8 +31,16 @@ public class DefaultGetPatientsByTenantUseCase implements GetPatientsByTenantUse
         // Criar Pageable com ordenação
         Pageable pageable = createPageable(request.page(), request.size(), request.sort());
 
-        // Buscar pacientes paginados por tenant
-        Page<Patient> patientsPage = patientRepository.findByTenantId(request.tenantId(), pageable);
+        // Buscar pacientes com filtros (busca e status) ou listagem simples
+        Page<Patient> patientsPage = (request.search() != null && !request.search().isBlank())
+                || request.active() != null
+            ? patientRepository.findByTenantIdWithFilters(
+                request.tenantId(),
+                request.search() != null && !request.search().isBlank() ? request.search().trim() : null,
+                request.active(),
+                pageable
+            )
+            : patientRepository.findByTenantId(request.tenantId(), pageable);
 
         // Converter para Page<PatientResponse>
         return patientsPage.map(this::toResponse);

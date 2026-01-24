@@ -13,17 +13,31 @@ import {
 import type { CreatePatientRequest, UpdatePatientRequest } from '@/types';
 import { toast } from 'sonner';
 
-export function usePatients(tenantId: string | null, page: number = 0, size: number = 20) {
-  const queryClient = useQueryClient();
+export type PatientListFilters = {
+  search?: string;
+  active?: boolean | null; // null = todos, true = ativos, false = inativos
+};
 
-  // Listar todos os pacientes
+export function usePatients(
+  tenantId: string | null,
+  page: number = 0,
+  size: number = 20,
+  filters?: PatientListFilters
+) {
+  const queryClient = useQueryClient();
+  const search = filters?.search?.trim() ?? '';
+  const active = filters?.active;
+
   const { data: result, isLoading, error, refetch } = useQuery({
-    queryKey: ['patients', tenantId, page, size],
+    queryKey: ['patients', tenantId, page, size, search, active],
     queryFn: async () => {
       if (!tenantId) {
         return { success: false, data: { content: [], totalElements: 0, totalPages: 0, size, number: page } };
       }
-      return await getAllPatientsAction(tenantId, page, size);
+      return await getAllPatientsAction(tenantId, page, size, {
+        search: search || undefined,
+        active: active !== undefined && active !== null ? active : undefined,
+      });
     },
     enabled: !!tenantId,
   });
@@ -44,14 +58,19 @@ export function usePatients(tenantId: string | null, page: number = 0, size: num
 
   // Atualizar paciente
   const updateMutation = useMutation({
-    mutationFn: ({ patientId, data }: { patientId: string; data: UpdatePatientRequest }) =>
-      updatePatientAction(patientId, data),
+    mutationFn: async ({ patientId, data }: { patientId: string; data: UpdatePatientRequest }) => {
+      const result = await updatePatientAction(patientId, data);
+      if (!result.success) {
+        throw new Error(result.error ?? 'Erro ao atualizar paciente');
+      }
+      return result;
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['patients'] });
       toast.success('Paciente atualizado com sucesso!');
     },
-    onError: (error: any) => {
-      toast.error(error.message || 'Erro ao atualizar paciente');
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'Erro ao atualizar paciente');
     },
   });
 

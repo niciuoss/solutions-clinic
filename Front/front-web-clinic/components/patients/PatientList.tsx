@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react';
-import { usePatients, usePatientSearch } from '@/hooks/usePatients';
+import { usePatients } from '@/hooks/usePatients';
 import { useAuth } from '@/hooks/useAuth';
 import { useDebounce } from '@/hooks/useDebounce';
 import { Card } from '@/components/ui/card';
@@ -16,8 +16,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Search, Eye, Edit } from 'lucide-react';
+import { Search, Eye, Edit, Filter, X } from 'lucide-react';
 import Link from 'next/link';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -29,27 +36,48 @@ export function PatientList() {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
 
   const debouncedSearch = useDebounce(searchQuery, 500);
   const { user } = useAuth();
   const tenantId = user?.clinicId || null;
 
-  const isSearchMode = debouncedSearch.length >= 2;
+  const activeFilter =
+    statusFilter === 'all' ? undefined : statusFilter === 'active';
 
-  const { patients, isLoading: isLoadingAll, updatePatient } = usePatients(
+  const { patients, isLoading, updatePatient, isUpdating } = usePatients(
     tenantId,
     page,
-    PAGE_SIZE
-  );
-  const { data: searchData, isLoading: isSearching } = usePatientSearch(
-    debouncedSearch,
-    page,
-    PAGE_SIZE
+    PAGE_SIZE,
+    {
+      search: debouncedSearch || undefined,
+      active: activeFilter,
+    }
   );
 
-  const isLoading = isLoadingAll || isSearching;
-  const displayPatients = isSearchMode ? searchData?.content ?? [] : patients?.content ?? [];
-  const pagination = isSearchMode ? searchData : patients;
+  const displayPatients = patients?.content ?? [];
+  const pagination = patients;
+  const hasActiveFilters =
+    statusFilter !== 'all' || (debouncedSearch?.length ?? 0) > 0;
+
+  const clearFilters = useCallback(() => {
+    setSearchQuery('');
+    setStatusFilter('all');
+    setPage(0);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    setPage(0);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleStatusFilterChange = useCallback((value: string) => {
+    setStatusFilter(value as 'all' | 'active' | 'inactive');
+    setPage(0);
+    setSelectedIds(new Set());
+  }, []);
 
   const toggleSelection = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -82,7 +110,10 @@ export function PatientList() {
 
   const handleStatusToggle = useCallback(
     (patient: Patient) => {
-      updatePatient(patient.id, { isActive: !patient.isActive });
+      updatePatient({
+        patientId: patient.id,
+        data: { isActive: !patient.isActive },
+      });
     },
     [updatePatient]
   );
@@ -93,20 +124,56 @@ export function PatientList() {
 
   return (
     <div className="space-y-4">
-      {/* Search */}
+      {/* Busca e filtros */}
       <Card className="p-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nome, CPF ou telefone..."
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(0);
-              setSelectedIds(new Set());
-            }}
-            className="pl-10"
-          />
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Buscar por nome, CPF, telefone ou email..."
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">Filtros:</span>
+            </div>
+            <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="inactive">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="text-muted-foreground"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Limpar filtros
+              </Button>
+            )}
+          </div>
+          {pagination && pagination.totalElements > 0 && (
+            <div className="text-sm text-muted-foreground">
+              {pagination.totalElements}{' '}
+              {pagination.totalElements === 1 ? 'paciente encontrado' : 'pacientes encontrados'}
+              {pagination.totalPages > 1 && (
+                <span className="ml-2">
+                  (Página {pagination.number + 1} de {pagination.totalPages})
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </Card>
 
@@ -116,8 +183,8 @@ export function PatientList() {
           <EmptyState
             title="Nenhum paciente encontrado"
             description={
-              isSearchMode
-                ? 'Nenhum paciente corresponde à sua busca'
+              hasActiveFilters
+                ? 'Nenhum paciente corresponde à busca ou aos filtros. Tente ajustar.'
                 : 'Adicione o primeiro paciente da clínica'
             }
           />
@@ -172,6 +239,7 @@ export function PatientList() {
                         <Switch
                           checked={patient.isActive}
                           onCheckedChange={() => handleStatusToggle(patient)}
+                          disabled={isUpdating}
                           className="data-[state=checked]:bg-green-600"
                           aria-label={patient.isActive ? 'Desativar paciente' : 'Ativar paciente'}
                         />

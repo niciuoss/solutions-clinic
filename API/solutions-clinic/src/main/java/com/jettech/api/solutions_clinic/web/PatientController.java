@@ -42,8 +42,10 @@ public class PatientController implements PatientAPI {
             @RequestParam UUID tenantId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
-            @RequestParam(required = false, defaultValue = "firstName,asc") String sort) throws AuthenticationException {
-        return getPatientsByTenantUseCase.execute(new GetPatientsByTenantRequest(tenantId, page, size, sort));
+            @RequestParam(required = false, defaultValue = "firstName,asc") String sort,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean active) throws AuthenticationException {
+        return getPatientsByTenantUseCase.execute(new GetPatientsByTenantRequest(tenantId, page, size, sort, search, active));
     }
 
     @Override

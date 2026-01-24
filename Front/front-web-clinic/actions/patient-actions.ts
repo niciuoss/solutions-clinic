@@ -119,10 +119,11 @@ export async function getPatientByIdAction(
 }
 
 export async function getAllPatientsAction(
-  tenantId: string, 
-  page: number = 0, 
-  size: number = 20
-): Promise<ActionResult<PaginatedResponse<Patient>>> { 
+  tenantId: string,
+  page: number = 0,
+  size: number = 20,
+  opts?: { search?: string; active?: boolean | null }
+): Promise<ActionResult<PaginatedResponse<Patient>>> {
   try {
     if (!tenantId) {
       return {
@@ -131,9 +132,22 @@ export async function getAllPatientsAction(
       };
     }
 
+    const params: Record<string, string | number | boolean> = {
+      tenantId,
+      page,
+      size,
+      sort: 'firstName,asc',
+    };
+    if (opts?.search != null && opts.search.trim().length > 0) {
+      params.search = opts.search.trim();
+    }
+    if (opts?.active !== undefined && opts?.active !== null) {
+      params.active = opts.active;
+    }
+
     const response = await apiRequest<any>('/patients', {
       method: 'GET',
-      params: { tenantId, page, size, sort: 'firstName,asc' },
+      params,
     });
 
     if (response?.content) {
