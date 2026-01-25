@@ -2,6 +2,7 @@ package com.jettech.api.solutions_clinic.model.usecase.appointment;
 
 import com.jettech.api.solutions_clinic.model.entity.*;
 import com.jettech.api.solutions_clinic.model.repository.*;
+import com.jettech.api.solutions_clinic.model.service.FinancialSyncService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -23,6 +24,7 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
     private final ProfessionalRepository professionalRepository;
     private final RoomRepository roomRepository;
     private final ProfessionalScheduleRepository professionalScheduleRepository;
+    private final FinancialSyncService financialSyncService;
 
     @Override
     @Transactional
@@ -86,7 +88,35 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
             appointment.setTotalValue(request.totalValue());
         }
 
+        // Atualizar status de pagamento se fornecido
+        PaymentStatus oldPaymentStatus = appointment.getPaymentStatus();
+        if (request.paymentStatus() != null) {
+            appointment.setPaymentStatus(request.paymentStatus());
+            
+            // Se foi marcado como PAGO, definir paidAt
+            if (request.paymentStatus() == PaymentStatus.PAGO && appointment.getPaidAt() == null) {
+                appointment.setPaidAt(LocalDateTime.now());
+            }
+            
+            // Se foi cancelado, limpar paidAt
+            if (request.paymentStatus() == PaymentStatus.CANCELADO) {
+                appointment.setPaidAt(null);
+            }
+        }
+
+        // Atualizar método de pagamento se fornecido
+        if (request.paymentMethod() != null) {
+            appointment.setPaymentMethod(request.paymentMethod());
+        }
+
         appointment = appointmentRepository.save(appointment);
+
+        // Sincronizar transação financeira se o status de pagamento mudou para PAGO
+        if (request.paymentStatus() != null && 
+            request.paymentStatus() == PaymentStatus.PAGO && 
+            oldPaymentStatus != PaymentStatus.PAGO) {
+            financialSyncService.syncAppointmentPayment(appointment);
+        }
 
         return toResponse(appointment);
     }

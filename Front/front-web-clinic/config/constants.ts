@@ -15,6 +15,7 @@ export const ROUTES = {
   PROFESSIONALS: '/professionals',
   PROCEDURES: '/procedures',
   USERS: '/users',
+  FINANCIAL: '/financial',
   SETTINGS: '/settings',
 } as const;
 

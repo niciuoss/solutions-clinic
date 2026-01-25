@@ -1,5 +1,7 @@
 package com.jettech.api.solutions_clinic.model.usecase.appointment;
 
+import com.jettech.api.solutions_clinic.model.entity.PaymentMethod;
+import com.jettech.api.solutions_clinic.model.entity.PaymentStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
@@ -25,6 +27,10 @@ public record UpdateAppointmentRequest(
     String observations,
     
     @Min(value = 0, message = "O campo [totalValue] deve ser maior ou igual a zero")
-    BigDecimal totalValue
+    BigDecimal totalValue,
+    
+    PaymentStatus paymentStatus,
+    
+    PaymentMethod paymentMethod
 ) {
 }

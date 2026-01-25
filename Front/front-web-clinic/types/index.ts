@@ -30,3 +30,6 @@ export * from './procedure.types';
 
 // SignUp Types
 export * from './signup.types';
+
+// Financial Types
+export * from './financial.types';

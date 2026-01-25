@@ -18,6 +18,7 @@ import {
   UsersRound,
   DoorOpen,
   FileText,
+  DollarSign,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { ROUTES } from '@/config/constants';
@@ -65,6 +66,12 @@ const navigation = [
     name: 'Salas',
     href: '/rooms',
     icon: DoorOpen,
+    adminOnly: true,
+  },
+  {
+    name: 'Financeiro',
+    href: ROUTES.FINANCIAL,
+    icon: DollarSign,
     adminOnly: true,
   },
   {

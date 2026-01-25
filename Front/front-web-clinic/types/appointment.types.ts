@@ -93,6 +93,8 @@ export interface UpdateAppointmentRequest {
   durationMinutes?: number;
   observations?: string;
   procedureIds?: string[];
+  paymentStatus?: PaymentStatus;
+  paymentMethod?: PaymentMethod;
 }
 
 export interface FinishAppointmentRequest {

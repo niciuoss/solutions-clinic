@@ -15,6 +15,7 @@ const pageTitles: Record<string, string> = {
   '/professionals': 'Profissionais',
   '/users': 'Usuários',
   '/rooms': 'Salas',
+  '/financial': 'Financeiro',
   '/settings': 'Configurações',
 };
 
