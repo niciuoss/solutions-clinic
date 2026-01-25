@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.naming.AuthenticationException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -81,5 +82,34 @@ public interface AppointmentAPI {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(required = false) AppointmentStatus status,
             @RequestParam(required = false, defaultValue = "scheduledAt_desc") String orderBy
+    ) throws AuthenticationException;
+
+    @GetMapping("/appointments/check-availability")
+    @Operation(summary = "Verifica disponibilidade de horário", description = "Verifica se um horário específico está disponível para um profissional.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Disponibilidade verificada com sucesso",
+                    content = @Content(schema = @Schema(implementation = Boolean.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Profissional não encontrado", content = @Content)
+    })
+    Boolean checkAvailability(
+            @RequestParam UUID professionalId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam int durationMinutes,
+            @RequestParam(required = false) UUID appointmentId
+    ) throws AuthenticationException;
+
+    @GetMapping("/appointments/available-slots")
+    @Operation(summary = "Lista horários disponíveis", description = "Retorna todos os horários disponíveis de um profissional em uma data específica.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de horários disponíveis retornada com sucesso",
+                    content = @Content(schema = @Schema(implementation = String.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Profissional não encontrado", content = @Content)
+    })
+    List<String> getAvailableSlots(
+            @RequestParam UUID professionalId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(defaultValue = "60") int durationMinutes
     ) throws AuthenticationException;
 }

@@ -147,7 +147,10 @@ export async function apiRequest<T>(
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
-      searchParams.append(key, String(value));
+      // Ignorar valores undefined, null ou vazios
+      if (value !== undefined && value !== null && value !== '') {
+        searchParams.append(key, String(value));
+      }
     });
     url += `?${searchParams.toString()}`;
   }

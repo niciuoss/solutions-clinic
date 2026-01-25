@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.naming.AuthenticationException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -24,6 +25,8 @@ public class AppointmentController implements AppointmentAPI {
     private final DefaultGetAppointmentsByTenantUseCase getAppointmentsByTenantUseCase;
     private final DefaultUpdateAppointmentUseCase updateAppointmentUseCase;
     private final DefaultDeleteAppointmentUseCase deleteAppointmentUseCase;
+    private final DefaultCheckAvailabilityUseCase checkAvailabilityUseCase;
+    private final DefaultGetAvailableSlotsUseCase getAvailableSlotsUseCase;
 
     @Override
     public AppointmentResponse createAppointment(@Valid @RequestBody CreateAppointmentRequest request) throws AuthenticationException {
@@ -57,5 +60,22 @@ public class AppointmentController implements AppointmentAPI {
             @RequestParam(required = false) AppointmentStatus status,
             @RequestParam(required = false, defaultValue = "scheduledAt_desc") String orderBy) throws AuthenticationException {
         return getAppointmentsByTenantUseCase.execute(new GetAppointmentsByTenantRequest(tenantId, date, status, orderBy));
+    }
+
+    @Override
+    public Boolean checkAvailability(
+            @RequestParam UUID professionalId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam int durationMinutes,
+            @RequestParam(required = false) UUID appointmentId) throws AuthenticationException {
+        return checkAvailabilityUseCase.execute(new CheckAvailabilityRequest(professionalId, startTime, durationMinutes, appointmentId));
+    }
+
+    @Override
+    public List<String> getAvailableSlots(
+            @RequestParam UUID professionalId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(defaultValue = "60") int durationMinutes) throws AuthenticationException {
+        return getAvailableSlotsUseCase.execute(new GetAvailableSlotsRequest(professionalId, date, durationMinutes));
     }
 }

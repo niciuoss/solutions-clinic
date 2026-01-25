@@ -138,11 +138,18 @@ export function NewAppointmentForm() {
         );
 
         if (result.success) {
+          const isAvailable = result.data || false;
           setAvailabilityStatus({
-            isAvailable: result.data || false,
-            message: result.data
+            isAvailable,
+            message: isAvailable
               ? '✓ Horário disponível'
-              : '✗ Profissional já possui agendamento neste horário',
+              : '⚠ Horário não disponível. Verifique se o profissional possui agenda cadastrada para este dia e se o horário está dentro do horário de trabalho. Você pode agendar mesmo assim se desejar.',
+          });
+        } else {
+          // Se houver erro na verificação, mostrar mensagem de erro
+          setAvailabilityStatus({
+            isAvailable: false,
+            message: result.error || '✗ Erro ao verificar disponibilidade',
           });
         }
       }, 500);

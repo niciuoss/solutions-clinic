@@ -79,12 +79,30 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
         // Validar horário disponível do profissional
         validateProfessionalSchedule(professional.getId(), request.scheduledAt(), calculatedDurationMinutes);
 
-        // Validar conflito de horário com outros agendamentos do profissional
-        validateProfessionalAvailability(professional.getId(), request.scheduledAt(), calculatedDurationMinutes, null);
+        // Verificar conflito de horário com outros agendamentos do profissional
+        String professionalConflict = checkProfessionalAvailabilityConflict(
+                professional.getId(), 
+                request.scheduledAt(), 
+                calculatedDurationMinutes, 
+                null
+        );
+        
+        if (professionalConflict != null && !request.forceSchedule()) {
+            throw new RuntimeException(professionalConflict);
+        }
 
-        // Validar conflito de horário com outros agendamentos da sala (se fornecida)
+        // Verificar conflito de horário com outros agendamentos da sala (se fornecida)
         if (room != null) {
-            validateRoomAvailability(room.getId(), request.scheduledAt(), calculatedDurationMinutes, null);
+            String roomConflict = checkRoomAvailabilityConflict(
+                    room.getId(), 
+                    request.scheduledAt(), 
+                    calculatedDurationMinutes, 
+                    null
+            );
+            
+            if (roomConflict != null && !request.forceSchedule()) {
+                throw new RuntimeException(roomConflict);
+            }
         }
 
         // Criar Appointment
@@ -148,7 +166,7 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
         }
     }
 
-    private void validateProfessionalAvailability(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+    private String checkProfessionalAvailabilityConflict(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
         LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
         LocalDateTime searchStart = scheduledAt.minusHours(8); // Buscar até 8 horas antes
         LocalDateTime searchEnd = appointmentEnd.plusHours(1); // Buscar até 1 hora depois
@@ -173,8 +191,17 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
             // Verificar sobreposição: dois intervalos se sobrepõem se:
             // start1 < end2 && start2 < end1
             if (scheduledAt.isBefore(existingEnd) && existingStart.isBefore(appointmentEnd)) {
-                throw new RuntimeException("Já existe um agendamento para este profissional neste horário");
+                return "Já existe um agendamento para este profissional neste horário. Deseja agendar mesmo assim?";
             }
+        }
+        
+        return null; // Sem conflito
+    }
+
+    private void validateProfessionalAvailability(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+        String conflict = checkProfessionalAvailabilityConflict(professionalId, scheduledAt, durationMinutes, excludeAppointmentId);
+        if (conflict != null) {
+            throw new RuntimeException(conflict);
         }
     }
 
@@ -195,7 +222,7 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
         return procedures;
     }
 
-    private void validateRoomAvailability(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+    private String checkRoomAvailabilityConflict(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
         LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
         LocalDateTime searchStart = scheduledAt.minusHours(8); // Buscar até 8 horas antes
         LocalDateTime searchEnd = appointmentEnd.plusHours(1); // Buscar até 1 hora depois
@@ -220,8 +247,17 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
             // Verificar sobreposição: dois intervalos se sobrepõem se:
             // start1 < end2 && start2 < end1
             if (scheduledAt.isBefore(existingEnd) && existingStart.isBefore(appointmentEnd)) {
-                throw new RuntimeException("Já existe um agendamento para esta sala neste horário");
+                return "Já existe um agendamento para esta sala neste horário. Deseja agendar mesmo assim?";
             }
+        }
+        
+        return null; // Sem conflito
+    }
+
+    private void validateRoomAvailability(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+        String conflict = checkRoomAvailabilityConflict(roomId, scheduledAt, durationMinutes, excludeAppointmentId);
+        if (conflict != null) {
+            throw new RuntimeException(conflict);
         }
     }
 

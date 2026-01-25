@@ -27,6 +27,7 @@ import {
   Phone,
   Filter,
   X,
+  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -165,6 +166,14 @@ function ProfessionalCard({ professional }: ProfessionalCardProps) {
                 <Link href={`/professionals/${professional.id}/edit`}>
                   <Edit className="h-4 w-4 mr-2" />
                   Editar
+                </Link>
+              </Button>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <Button variant="outline" size="sm" className="flex-1" asChild>
+                <Link href={`/professionals/${professional.id}/schedule`}>
+                  <Clock className="h-4 w-4 mr-2" />
+                  Configurar Horários
                 </Link>
               </Button>
             </div>

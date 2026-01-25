@@ -35,6 +35,11 @@ public record CreateAppointmentRequest(
     List<UUID> procedureIds, // Lista de IDs de procedimentos
     
     @NotNull(message = "O campo [createdBy] é obrigatório")
-    UUID createdBy
+    UUID createdBy,
+    
+    Boolean forceSchedule // Se true, permite agendamento mesmo com conflito de horário
 ) {
+    public Boolean forceSchedule() {
+        return forceSchedule != null && forceSchedule;
+    }
 }

@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { checkAvailabilityAction, getAvailableSlotsAction } from '@/actions/appointment-actions';
 
 export function useAvailability() {
   const [isChecking, setIsChecking] = useState(false);
 
-  const checkAvailability = async (
+  const checkAvailability = useCallback(async (
     professionalId: string,
     startTime: string,
     durationMinutes: number,
@@ -25,7 +25,7 @@ export function useAvailability() {
     } finally {
       setIsChecking(false);
     }
-  };
+  }, []);
 
   const getAvailableSlots = async (
     professionalId: string,

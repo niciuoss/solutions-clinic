@@ -33,3 +33,6 @@ export * from './signup.types';
 
 // Financial Types
 export * from './financial.types';
+
+// Professional Schedule Types
+export * from './professional-schedule.types';

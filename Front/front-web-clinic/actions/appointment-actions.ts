@@ -276,16 +276,22 @@ export async function checkAvailabilityAction(
   appointmentId?: string
 ): Promise<ActionResult<boolean>> {
   try {
+    const params: Record<string, string | number> = {
+      professionalId,
+      startTime,
+      durationMinutes,
+    };
+    
+    // Só adiciona appointmentId se for fornecido
+    if (appointmentId) {
+      params.appointmentId = appointmentId;
+    }
+
     const isAvailable = await apiRequest<boolean>(
       '/appointments/check-availability',
       {
         method: 'GET',
-        params: {
-          professionalId,
-          startTime,
-          durationMinutes,
-          ...(appointmentId && { appointmentId }),
-        },
+        params,
       }
     );
 

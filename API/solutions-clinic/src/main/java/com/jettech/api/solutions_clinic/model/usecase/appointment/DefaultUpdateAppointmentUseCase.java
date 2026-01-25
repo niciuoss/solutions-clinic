@@ -68,10 +68,31 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
         // Validar horário disponível se horário ou profissional mudou
         if (request.scheduledAt() != null || request.professionalId() != null || request.durationMinutes() != null) {
             validateProfessionalSchedule(professionalId, scheduledAt, durationMinutes);
-            validateProfessionalAvailability(professionalId, scheduledAt, durationMinutes, appointment.getId());
             
+            // Verificar conflito de horário com outros agendamentos do profissional
+            String professionalConflict = checkProfessionalAvailabilityConflict(
+                    professionalId, 
+                    scheduledAt, 
+                    durationMinutes, 
+                    appointment.getId()
+            );
+            
+            if (professionalConflict != null && !request.forceSchedule()) {
+                throw new RuntimeException(professionalConflict);
+            }
+            
+            // Verificar conflito de horário com outros agendamentos da sala (se fornecida)
             if (roomId != null) {
-                validateRoomAvailability(roomId, scheduledAt, durationMinutes, appointment.getId());
+                String roomConflict = checkRoomAvailabilityConflict(
+                        roomId, 
+                        scheduledAt, 
+                        durationMinutes, 
+                        appointment.getId()
+                );
+                
+                if (roomConflict != null && !request.forceSchedule()) {
+                    throw new RuntimeException(roomConflict);
+                }
             }
         }
 
@@ -150,7 +171,7 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
         }
     }
 
-    private void validateProfessionalAvailability(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+    private String checkProfessionalAvailabilityConflict(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
         LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
         LocalDateTime searchStart = scheduledAt.minusHours(8);
         LocalDateTime searchEnd = appointmentEnd.plusHours(1);
@@ -172,12 +193,21 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
             LocalDateTime existingEnd = existingStart.plusMinutes(existing.getDurationMinutes());
 
             if (scheduledAt.isBefore(existingEnd) && existingStart.isBefore(appointmentEnd)) {
-                throw new RuntimeException("Já existe um agendamento para este profissional neste horário");
+                return "Já existe um agendamento para este profissional neste horário. Deseja agendar mesmo assim?";
             }
+        }
+        
+        return null; // Sem conflito
+    }
+
+    private void validateProfessionalAvailability(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+        String conflict = checkProfessionalAvailabilityConflict(professionalId, scheduledAt, durationMinutes, excludeAppointmentId);
+        if (conflict != null) {
+            throw new RuntimeException(conflict);
         }
     }
 
-    private void validateRoomAvailability(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+    private String checkRoomAvailabilityConflict(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
         LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
         LocalDateTime searchStart = scheduledAt.minusHours(8);
         LocalDateTime searchEnd = appointmentEnd.plusHours(1);
@@ -199,8 +229,17 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
             LocalDateTime existingEnd = existingStart.plusMinutes(existing.getDurationMinutes());
 
             if (scheduledAt.isBefore(existingEnd) && existingStart.isBefore(appointmentEnd)) {
-                throw new RuntimeException("Já existe um agendamento para esta sala neste horário");
+                return "Já existe um agendamento para esta sala neste horário. Deseja agendar mesmo assim?";
             }
+        }
+        
+        return null; // Sem conflito
+    }
+
+    private void validateRoomAvailability(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+        String conflict = checkRoomAvailabilityConflict(roomId, scheduledAt, durationMinutes, excludeAppointmentId);
+        if (conflict != null) {
+            throw new RuntimeException(conflict);
         }
     }
 

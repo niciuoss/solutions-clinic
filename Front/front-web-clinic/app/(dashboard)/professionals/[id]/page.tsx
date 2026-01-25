@@ -17,6 +17,7 @@ import {
   Loader2,
   UserCheck,
   UserX,
+  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -148,6 +149,12 @@ export default function ProfessionalDetailsPage() {
               <UserCheck className="mr-2 h-4 w-4" />
             )}
             {professional.isActive ? 'Desativar' : 'Ativar'}
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href={`/professionals/${professionalId}/schedule`}>
+              <Clock className="mr-2 h-4 w-4" />
+              Horários
+            </Link>
           </Button>
           <Button variant="outline" asChild>
             <Link href={`/professionals/${professionalId}/edit`}>

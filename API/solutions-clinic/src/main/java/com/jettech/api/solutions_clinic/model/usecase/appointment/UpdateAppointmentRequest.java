@@ -31,6 +31,11 @@ public record UpdateAppointmentRequest(
     
     PaymentStatus paymentStatus,
     
-    PaymentMethod paymentMethod
+    PaymentMethod paymentMethod,
+    
+    Boolean forceSchedule // Se true, permite agendamento mesmo com conflito de horário
 ) {
+    public Boolean forceSchedule() {
+        return forceSchedule != null && forceSchedule;
+    }
 }
