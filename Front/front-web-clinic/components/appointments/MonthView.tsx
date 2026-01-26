@@ -3,8 +3,8 @@
 import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useAppointmentsByDateRange } from '@/hooks/useAppointments';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { 
   format, 
@@ -26,6 +26,7 @@ import type { Appointment } from '@/types';
 
 export function MonthView() {
   const router = useRouter();
+  const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const monthStart = startOfMonth(currentMonth);
@@ -38,7 +39,11 @@ export function MonthView() {
   const startDate = format(calendarStart, "yyyy-MM-dd'T'00:00:00");
   const endDate = format(calendarEnd, "yyyy-MM-dd'T'23:59:59");
 
-  const { data: appointments = [], isLoading } = useAppointmentsByDateRange(startDate, endDate);
+  const { data: appointments = [], isLoading } = useAppointmentsByDateRange(
+    user?.clinicId ?? null,
+    startDate,
+    endDate
+  );
 
   // Agrupar agendamentos por dia
   const appointmentsByDay = useMemo(() => {

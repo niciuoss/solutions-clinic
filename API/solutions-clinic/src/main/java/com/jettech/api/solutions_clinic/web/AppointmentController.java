@@ -57,9 +57,11 @@ public class AppointmentController implements AppointmentAPI {
     public List<AppointmentResponse> getAppointmentsByTenant(
             @PathVariable UUID tenantId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) AppointmentStatus status,
             @RequestParam(required = false, defaultValue = "scheduledAt_desc") String orderBy) throws AuthenticationException {
-        return getAppointmentsByTenantUseCase.execute(new GetAppointmentsByTenantRequest(tenantId, date, status, orderBy));
+        return getAppointmentsByTenantUseCase.execute(new GetAppointmentsByTenantRequest(tenantId, date, startDate, endDate, status, orderBy));
     }
 
     @Override

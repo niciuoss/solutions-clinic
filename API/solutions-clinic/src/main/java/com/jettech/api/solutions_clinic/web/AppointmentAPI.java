@@ -71,7 +71,7 @@ public interface AppointmentAPI {
     void deleteAppointment(@PathVariable UUID id);
 
     @GetMapping("/tenants/{tenantId}/appointments")
-    @Operation(summary = "Lista agendamentos de uma clínica", description = "Retorna todos os agendamentos de uma clínica com filtros opcionais de data, status e ordenação.")
+    @Operation(summary = "Lista agendamentos de uma clínica", description = "Retorna todos os agendamentos de uma clínica com filtros opcionais de data, intervalo de datas, status e ordenação.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de agendamentos retornada com sucesso",
                     content = @Content(schema = @Schema(implementation = AppointmentResponse.class))),
@@ -80,6 +80,8 @@ public interface AppointmentAPI {
     List<AppointmentResponse> getAppointmentsByTenant(
             @PathVariable UUID tenantId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) AppointmentStatus status,
             @RequestParam(required = false, defaultValue = "scheduledAt_desc") String orderBy
     ) throws AuthenticationException;

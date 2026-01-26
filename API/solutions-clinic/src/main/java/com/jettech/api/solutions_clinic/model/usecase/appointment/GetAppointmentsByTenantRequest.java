@@ -8,6 +8,8 @@ import java.util.UUID;
 public record GetAppointmentsByTenantRequest(
     UUID tenantId,
     LocalDate date,
+    LocalDate startDate,
+    LocalDate endDate,
     AppointmentStatus status,
     String orderBy // scheduledAt, createdAt, patientName, professionalName
 ) {

@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppointmentsByDateRange } from '@/hooks/useAppointments';
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { 
   format, 
@@ -64,15 +65,14 @@ const END_HOUR = 20;
 
 export function ModernCalendar() {
   const router = useRouter();
+  const { user } = useAuth();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  useState(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
+  useEffect(() => {
+    const interval = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(interval);
-  });
+  }, []);
 
   const weekStart = startOfWeek(currentWeek, { locale: ptBR });
   const weekEnd = endOfWeek(currentWeek, { locale: ptBR });
@@ -81,7 +81,11 @@ export function ModernCalendar() {
   const startDate = format(weekStart, "yyyy-MM-dd'T'00:00:00");
   const endDate = format(weekEnd, "yyyy-MM-dd'T'23:59:59");
 
-  const { data: appointments = [], isLoading } = useAppointmentsByDateRange(startDate, endDate);
+  const { data: appointments = [], isLoading } = useAppointmentsByDateRange(
+    user?.clinicId ?? null,
+    startDate,
+    endDate
+  );
 
   const appointmentsByDay = useMemo(() => {
     const grouped: Record<string, Appointment[]> = {};
@@ -285,7 +289,7 @@ export function ModernCalendar() {
                                   {appointment.professional.user.fullName}
                                 </p>
                               )}
-                              {height > 80 && appointment.room && (
+                              {height > 80 && appointment.room?.name && (
                                 <Badge 
                                   variant="secondary" 
                                   className="mt-auto w-fit text-xs bg-white/20 text-white border-white/30"

@@ -172,22 +172,80 @@ export async function getAppointmentByIdAction(
 }
 
 export async function getAppointmentsByDateRangeAction(
+  tenantId: string,
   startDate: string,
   endDate: string
-): Promise<ActionResult<Appointment[]>> { // ✅ Tipagem explícita
+): Promise<ActionResult<Appointment[]>> {
   try {
-    const appointments = await apiRequest<Appointment[]>(
-      '/appointments/date-range',
+    const raw = await apiRequest<AppointmentResponseBackend[]>(
+      `/tenants/${tenantId}/appointments`,
       {
         method: 'GET',
-        params: { startDate, endDate },
+        params: {
+          startDate: startDate.slice(0, 10),
+          endDate: endDate.slice(0, 10),
+          orderBy: 'scheduledAt_asc',
+        },
       }
     );
+    const appointmentsResponse = Array.isArray(raw) ? raw : [];
 
-    return {
-      success: true,
-      data: appointments, // ✅ appointments JÁ é Appointment[]
-    };
+    const appointments: Appointment[] = await Promise.all(
+      appointmentsResponse.map(async (appt) => {
+        if ('patient' in appt && typeof (appt as any).patient === 'object') {
+          return appt as unknown as Appointment;
+        }
+        const { getPatientByIdAction } = await import('./patient-actions');
+        const { getProfessionalByIdAction } = await import('./professional-actions');
+        const [patientResult, professionalResult] = await Promise.all([
+          getPatientByIdAction(appt.patientId),
+          getProfessionalByIdAction(appt.professionalId),
+        ]);
+        const patient = patientResult.success ? patientResult.data : null;
+        const professional = professionalResult.success ? professionalResult.data : null;
+        if (!patient || !professional) {
+          return {
+            id: appt.id,
+            patient: { id: appt.patientId, fullName: '…' } as any,
+            professional: { id: appt.professionalId, user: { fullName: '…' }, specialty: '' } as any,
+            scheduledAt: appt.scheduledAt,
+            durationMinutes: appt.durationMinutes,
+            status: appt.status as any,
+            observations: appt.observations,
+            startedAt: appt.startedAt,
+            finishedAt: appt.finishedAt,
+            durationActualMinutes: appt.durationActualMinutes,
+            totalValue: appt.totalValue,
+            paymentMethod: appt.paymentMethod as any,
+            paymentStatus: appt.paymentStatus as any,
+            paidAt: appt.paidAt,
+            procedures: [],
+            createdAt: appt.createdAt,
+          } as Appointment;
+        }
+        return {
+          id: appt.id,
+          patient,
+          professional,
+          room: appt.roomId ? { id: appt.roomId } as any : undefined,
+          scheduledAt: appt.scheduledAt,
+          durationMinutes: appt.durationMinutes,
+          status: appt.status as any,
+          observations: appt.observations,
+          startedAt: appt.startedAt,
+          finishedAt: appt.finishedAt,
+          durationActualMinutes: appt.durationActualMinutes,
+          totalValue: appt.totalValue,
+          paymentMethod: appt.paymentMethod as any,
+          paymentStatus: appt.paymentStatus as any,
+          paidAt: appt.paidAt,
+          procedures: [],
+          createdAt: appt.createdAt,
+        } as Appointment;
+      })
+    );
+
+    return { success: true, data: appointments };
   } catch (error: any) {
     return {
       success: false,

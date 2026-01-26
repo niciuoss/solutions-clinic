@@ -30,7 +30,18 @@ public class DefaultGetAppointmentsByTenantUseCase implements GetAppointmentsByT
         List<Appointment> appointments;
 
         // Aplicar filtros
-        if (request.date() != null && request.status() != null) {
+        if (request.startDate() != null && request.endDate() != null) {
+            // Intervalo de datas (ex.: calendário semana/mês)
+            LocalDateTime start = request.startDate().atStartOfDay();
+            LocalDateTime end = request.endDate().atTime(LocalTime.MAX);
+            if (request.status() != null) {
+                appointments = appointmentRepository.findByTenantIdAndScheduledAtBetweenAndStatus(
+                        request.tenantId(), start, end, request.status());
+            } else {
+                appointments = appointmentRepository.findByTenantIdAndScheduledAtBetween(
+                        request.tenantId(), start, end);
+            }
+        } else if (request.date() != null && request.status() != null) {
             // Filtrar por data E status
             LocalDateTime startOfDay = request.date().atStartOfDay();
             LocalDateTime endOfDay = request.date().atTime(LocalTime.MAX);
@@ -77,7 +88,7 @@ public class DefaultGetAppointmentsByTenantUseCase implements GetAppointmentsByT
         }
 
         return switch (orderBy.toLowerCase()) {
-            case "scheduledat", "scheduled_at" -> appointments.stream()
+            case "scheduledat", "scheduled_at", "scheduledat_asc", "scheduled_at_asc" -> appointments.stream()
                     .sorted(Comparator.comparing(Appointment::getScheduledAt))
                     .collect(Collectors.toList());
             case "scheduledat_desc", "scheduled_at_desc" -> appointments.stream()

@@ -30,6 +30,7 @@ import { useAvailability } from '@/hooks/useAvailability';
 import { useProfessionalsByCurrentClinic } from '@/hooks/useProfessionals';
 import { useProcedures } from '@/hooks/useProcedures';
 import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 import { ConflictDialog } from './ConflictDialog';
 import { PatientAutocomplete } from './PatientAutocomplete';
 import { RoomSelect } from './RoomSelect';
@@ -173,15 +174,25 @@ export function NewAppointmentForm() {
 
   const onSubmit = async (data: AppointmentFormData) => {
     try {
+      if (!user?.id || !user?.clinicId) {
+        toast.error('Sessão inválida. Faça login novamente.');
+        return;
+      }
+
       const scheduledAt = `${format(data.date, 'yyyy-MM-dd')}T${data.time}:00`;
 
+      const totalValue = selectedProcedures.reduce((sum, p) => sum + (p.basePrice ?? 0), 0);
+
       const requestData: CreateAppointmentRequest = {
+        tenantId: user.clinicId,
+        createdBy: user.id,
         patientId: data.patientId,
         professionalId: data.professionalId,
         roomId: data.roomId,
         scheduledAt,
         durationMinutes: data.durationMinutes,
         observations: data.observations,
+        totalValue,
         procedureIds: data.procedureIds,
       };
 
@@ -505,7 +516,10 @@ export function NewAppointmentForm() {
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isCreating}>
+          <Button
+            type="submit"
+            disabled={isCreating || !user?.id || !user?.clinicId}
+          >
             {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Criar Agendamento
           </Button>

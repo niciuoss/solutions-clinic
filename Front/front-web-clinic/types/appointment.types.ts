@@ -76,12 +76,15 @@ export interface CreateRoomRequest {
 } */
 
 export interface CreateAppointmentRequest {
+  tenantId: string;
+  createdBy: string;
   patientId: string;
   professionalId: string;
   roomId?: string;
   scheduledAt: string;
   durationMinutes?: number;
   observations?: string;
+  totalValue: number;
   procedureIds?: string[];
 }
 

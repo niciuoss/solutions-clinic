@@ -161,14 +161,20 @@ export function useAppointment(appointmentId: string | null) {
   });
 }
 
-export function useAppointmentsByDateRange(startDate: string, endDate: string) {
+export function useAppointmentsByDateRange(
+  tenantId: string | null,
+  startDate: string,
+  endDate: string
+) {
   return useQuery({
-    queryKey: ['appointments', 'range', startDate, endDate],
+    queryKey: ['appointments', 'range', tenantId, startDate, endDate],
     queryFn: async () => {
-      const result = await getAppointmentsByDateRangeAction(startDate, endDate);
+      if (!tenantId) return [];
+      const result = await getAppointmentsByDateRangeAction(tenantId, startDate, endDate);
       return result.success ? result.data : [];
     },
-    enabled: !!startDate && !!endDate,
+    enabled: !!tenantId && !!startDate && !!endDate,
+    refetchInterval: 30_000,
   });
 }
 
