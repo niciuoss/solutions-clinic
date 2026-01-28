@@ -3,14 +3,14 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppointmentCalendar } from './AppointmentCalendar';
-import { ProfessionalAgenda } from './ProfessionalAgenda';
+import { ProfessionalAppointmentsTable } from './ProfessionalAppointmentsTable';
 import { AppointmentTable } from './AppointmentTable';
-import { useProfessionals } from '@/hooks/useProfessionals';
+import { useProfessionalsByCurrentClinic } from '@/hooks/useProfessionals';
 import { Calendar, Users, List } from 'lucide-react';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
 export function AppointmentTabs() {
-  const { professionals, isLoading } = useProfessionals();
+  const { professionals, isLoading } = useProfessionalsByCurrentClinic(0, 100);
   const [activeTab, setActiveTab] = useState('calendar');
 
   if (isLoading) {
@@ -52,7 +52,7 @@ export function AppointmentTabs() {
 
       <TabsContent value="professionals" className="space-y-4">
         {professionals && professionals.length > 0 ? (
-          <ProfessionalAgenda professionals={professionals} />
+          <ProfessionalAppointmentsTable professionals={professionals} />
         ) : (
           <div className="text-center py-12 text-muted-foreground">
             Nenhum profissional cadastrado

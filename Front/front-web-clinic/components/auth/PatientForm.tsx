@@ -16,11 +16,14 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { z } from 'zod';
 import type { CreatePatientRequest, Patient } from '@/types';
+
+export type PatientFormData = z.infer<typeof patientSchema>;
 
 interface PatientFormProps {
   patient?: Patient;
-  onSubmit: (data: CreatePatientRequest) => Promise<void>;
+  onSubmit: (data: PatientFormData) => Promise<void>;
   isLoading?: boolean;
 }
 
@@ -30,7 +33,7 @@ export function PatientForm({ patient, onSubmit, isLoading }: PatientFormProps) 
     handleSubmit,
     formState: { errors },
     setValue,
-  } = useForm<CreatePatientRequest>({
+  } = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: patient,
   });

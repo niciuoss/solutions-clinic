@@ -43,7 +43,7 @@ export function RoomForm({ room }: RoomFormProps) {
       if (room) {
         await updateRoom({ roomId: room.id, data });
       } else {
-        await createRoom(data);
+        await createRoom(data as any);
       }
       router.push('/rooms');
     } catch (error) {

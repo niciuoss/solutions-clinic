@@ -102,7 +102,7 @@ export function CreateCategoryDialog({
       await new Promise(resolve => setTimeout(resolve, 150));
 
       // Chamar callback com a categoria criada
-      if (onCategoryCreated) {
+      if (onCategoryCreated && category) {
         onCategoryCreated(category.id);
       }
       

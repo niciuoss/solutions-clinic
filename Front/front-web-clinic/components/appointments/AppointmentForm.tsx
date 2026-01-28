@@ -7,7 +7,9 @@ import { appointmentSchema } from '@/lib/validators';
 import { useAvailability } from '@/hooks/useAvailability';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertCircle, CheckCircle } from 'lucide-react';
-import type { CreateAppointmentRequest } from '@/types';
+import { z } from 'zod';
+
+type AppointmentFormData = z.input<typeof appointmentSchema>;
 
 export function AppointmentForm() {
   const { checkAvailability, isChecking } = useAvailability();
@@ -20,7 +22,7 @@ export function AppointmentForm() {
     register,
     watch,
     formState: { errors },
-  } = useForm<CreateAppointmentRequest>({
+  } = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
   });
 

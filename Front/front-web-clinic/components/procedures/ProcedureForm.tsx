@@ -57,7 +57,7 @@ export function ProcedureForm({ procedure, onSuccess }: ProcedureFormProps) {
     control,
     formState: { errors },
   } = useForm<ProcedureFormData>({
-    resolver: zodResolver(procedureFormSchema),
+    resolver: zodResolver(procedureFormSchema) as any,
     defaultValues: {
       name: procedure?.name || '',
       description: procedure?.description || '',

@@ -69,8 +69,8 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
 
   const isEditing = !!professional;
 
-  const form = useForm<ProfessionalFormData | ProfessionalUpdateFormData>({
-    resolver: zodResolver(isEditing ? professionalSchema : professionalWithUserSchema),
+  const form = useForm<any>({
+    resolver: zodResolver(isEditing ? professionalSchema : professionalWithUserSchema) as any,
     defaultValues: isEditing ? {
       userId: professional?.user?.id || '',
       specialty: professional?.specialty || '',
@@ -108,7 +108,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
 
       if (isEditing && professional) {
         // Atualizar profissional existente (mantém lógica antiga)
-        result = await updateProfessionalAction(professional.id, data as ProfessionalUpdateFormData);
+        result = await updateProfessionalAction(professional.id, data as any);
       } else {
         // Criar novo profissional com usuário
         const createData = data as ProfessionalFormData;
@@ -121,7 +121,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
           dataToSend.cpf = dataToSend.cpf.replace(/\D/g, '');
         }
         
-        result = await createProfessionalWithUserAction(dataToSend);
+        result = await createProfessionalWithUserAction(dataToSend as any);
       }
 
       if (result.success) {
@@ -171,7 +171,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   className={form.formState.errors.firstName ? 'border-red-500' : ''}
                 />
                 {form.formState.errors.firstName && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.firstName.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.firstName?.message as string}</p>
                 )}
               </div>
 
@@ -184,7 +184,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   className={form.formState.errors.lastName ? 'border-red-500' : ''}
                 />
                 {form.formState.errors.lastName && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.lastName.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.lastName?.message as string}</p>
                 )}
               </div>
 
@@ -201,7 +201,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   />
                 </div>
                 {form.formState.errors.email && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.email.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.email?.message as string}</p>
                 )}
               </div>
 
@@ -225,7 +225,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   </button>
                 </div>
                 {form.formState.errors.password && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.password.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.password?.message as string}</p>
                 )}
               </div>
 
@@ -249,7 +249,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   </button>
                 </div>
                 {form.formState.errors.confirmPassword && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.confirmPassword.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.confirmPassword?.message as string}</p>
                 )}
               </div>
 
@@ -270,7 +270,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   />
                 </div>
                 {form.formState.errors.phone && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.phone.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.phone?.message as string}</p>
                 )}
               </div>
 
@@ -288,7 +288,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   maxLength={14}
                 />
                 {form.formState.errors.cpf && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.cpf.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.cpf?.message as string}</p>
                 )}
               </div>
 
@@ -309,7 +309,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   />
                 </div>
                 {form.formState.errors.birthDate && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.birthDate.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.birthDate?.message as string}</p>
                 )}
               </div>
             </CardContent>
@@ -333,7 +333,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   className={form.formState.errors.specialty ? 'border-red-500' : ''}
                 />
                 {form.formState.errors.specialty && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.specialty.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.specialty?.message as string}</p>
                 )}
               </div>
             </CardContent>
@@ -370,7 +370,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
                   className={form.formState.errors.specialty ? 'border-red-500' : ''}
                 />
                 {form.formState.errors.specialty && (
-                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.specialty?.message}</p>
+                  <p className="mt-1 text-sm text-red-500">{form.formState.errors.specialty?.message as string}</p>
                 )}
               </div>
             </CardContent>
@@ -407,7 +407,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
               </SelectContent>
             </Select>
             {form.formState.errors.documentType && (
-              <p className="mt-1 text-sm text-red-500">{form.formState.errors.documentType.message}</p>
+              <p className="mt-1 text-sm text-red-500">{form.formState.errors.documentType?.message as string}</p>
             )}
           </div>
 
@@ -420,7 +420,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
               className={form.formState.errors.documentNumber ? 'border-red-500' : ''}
             />
             {form.formState.errors.documentNumber && (
-              <p className="mt-1 text-sm text-red-500">{form.formState.errors.documentNumber.message}</p>
+              <p className="mt-1 text-sm text-red-500">{form.formState.errors.documentNumber?.message as string}</p>
             )}
           </div>
 
@@ -488,7 +488,7 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
               className={form.formState.errors.bio ? 'border-red-500' : ''}
             />
             {form.formState.errors.bio && (
-              <p className="mt-1 text-sm text-red-500">{form.formState.errors.bio.message}</p>
+              <p className="mt-1 text-sm text-red-500">{form.formState.errors.bio?.message as string}</p>
             )}
             <p className="mt-1 text-sm text-muted-foreground">
               Esta informação será exibida no perfil do profissional.

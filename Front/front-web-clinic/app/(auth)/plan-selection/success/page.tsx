@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { CheckCircle2, Loader2 } from 'lucide-react';
 import { ROUTES } from '@/config/constants';
 import { useAuthContext } from '@/contexts/AuthContext';
 
-export default function PlanSelectionSuccessPage() {
+function PlanSelectionSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { refreshUser } = useAuthContext();
@@ -93,5 +93,22 @@ export default function PlanSelectionSuccessPage() {
         )}
       </Card>
     </div>
+  );
+}
+
+export default function PlanSelectionSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="w-full max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <Card>
+          <CardHeader className="text-center">
+            <Loader2 className="h-16 w-16 mx-auto mb-4 text-primary animate-spin" />
+            <CardTitle className="text-2xl">Carregando...</CardTitle>
+          </CardHeader>
+        </Card>
+      </div>
+    }>
+      <PlanSelectionSuccessContent />
+    </Suspense>
   );
 }

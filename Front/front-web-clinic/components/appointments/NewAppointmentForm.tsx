@@ -54,7 +54,7 @@ const appointmentSchema = z.object({
   patientId: z.string().min(1, 'Selecione um paciente'),
   professionalId: z.string().min(1, 'Selecione um profissional'),
   roomId: z.string().optional(),
-  date: z.date({ required_error: 'Selecione uma data' }),
+  date: z.date({ message: 'Selecione uma data' }),
   time: z.string().min(1, 'Selecione um horário'),
   durationMinutes: z.number().min(15, 'Duração mínima de 15 minutos').optional(),
   observations: z.string().optional(),

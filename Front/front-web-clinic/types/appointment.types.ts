@@ -1,6 +1,7 @@
 import { Patient } from './patient.types';
 import { Professional } from './professional.types';
 import { Room } from './room.types';
+import { PaymentMethod, PaymentStatus } from './financial.types';
 
 export interface Appointment {
   id: string;
@@ -24,7 +25,7 @@ export interface Appointment {
   paymentStatus: PaymentStatus;
   paidAt?: string;
   
-  procedures: Procedure[];
+  procedures: AppointmentProcedure[];
   createdAt: string;
 }
 
@@ -37,22 +38,9 @@ export enum AppointmentStatus {
   NAO_COMPARECEU = 'NAO_COMPARECEU',
 }
 
-export enum PaymentMethod {
-  PIX = 'PIX',
-  DEBITO = 'DEBITO',
-  CREDITO = 'CREDITO',
-  DINHEIRO = 'DINHEIRO',
-  BOLETO = 'BOLETO',
-  OUTRO = 'OUTRO',
-}
+// PaymentMethod and PaymentStatus are imported from financial.types.ts
 
-export enum PaymentStatus {
-  PENDENTE = 'PENDENTE',
-  PAGO = 'PAGO',
-  CANCELADO = 'CANCELADO',
-}
-
-export interface Procedure {
+export interface AppointmentProcedure {
   id: string;
   name: string;
   description?: string;
