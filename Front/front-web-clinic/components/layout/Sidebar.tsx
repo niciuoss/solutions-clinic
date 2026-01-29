@@ -7,85 +7,33 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
-  LayoutDashboard,
-  Users,
-  Calendar,
-  ClipboardList,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   UserCircle,
-  Settings,
   LogOut,
-  Stethoscope,
-  UsersRound,
-  DoorOpen,
-  FileText,
-  DollarSign,
+  Building2,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { ROUTES } from '@/config/constants';
-
-const navigation = [
-  {
-    name: 'Dashboard',
-    href: ROUTES.DASHBOARD,
-    icon: LayoutDashboard,
-  },
-  {
-    name: 'Pacientes',
-    href: ROUTES.PATIENTS,
-    icon: Users,
-  },
-  {
-    name: 'Agendamentos',
-    href: ROUTES.APPOINTMENTS,
-    icon: Calendar,
-  },
-  {
-    name: 'Prontuários',
-    href: ROUTES.MEDICAL_RECORDS,
-    icon: ClipboardList,
-  },
-  {
-    name: 'Profissionais',
-    href: ROUTES.PROFESSIONALS,
-    icon: Stethoscope,
-    adminOnly: true,
-  },
-  {
-    name: 'Procedimentos',
-    href: ROUTES.PROCEDURES,
-    icon: FileText,
-    adminOnly: true,
-  },
-  {
-    name: 'Usuários',
-    href: ROUTES.USERS,
-    icon: UsersRound,
-    adminOnly: true,
-  },
-  {
-    name: 'Salas',
-    href: '/rooms',
-    icon: DoorOpen,
-    adminOnly: true,
-  },
-  {
-    name: 'Financeiro',
-    href: ROUTES.FINANCIAL,
-    icon: DollarSign,
-    adminOnly: true,
-  },
-  {
-    name: 'Configurações',
-    href: ROUTES.SETTINGS,
-    icon: Settings,
-  },
-];
+import { NAV_ROUTES } from '@/config/navigation';
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, logout } = useAuthContext();
+  const { user, logout, switchClinic } = useAuthContext();
 
-  const isAdmin = user?.role === 'ADMIN_CLINIC';
+  const hasMultipleClinics = (user?.tenantRoles?.length ?? 0) > 1;
+  const currentTenant = user?.tenantRoles?.find((tr) => tr.tenantId === user.clinicId);
+
+  /** Itens visíveis conforme o role do usuário (fonte: config/navigation.ts) */
+  const visibleNavItems = NAV_ROUTES.filter(
+    (item) => user?.role && item.roles.includes(user.role)
+  );
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-sidebar">
@@ -117,14 +65,52 @@ export function Sidebar() {
             <p className="text-xs text-sidebar-foreground/70 truncate">{user?.email}</p>
           </div>
         </div>
+
+        {/* Seletor de clínica (quando o usuário tem mais de uma) */}
+        {hasMultipleClinics && (
+          <div className="mt-3">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-between text-sidebar-foreground border-sidebar-accent bg-sidebar-accent/20 hover:bg-sidebar-accent/40"
+                >
+                  <span className="flex items-center gap-2 truncate">
+                    <Building2 className="h-4 w-4 shrink-0" />
+                    {currentTenant?.tenantName ?? 'Clínica'}
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[--radix-dropdown-menu-trigger-width] min-w-48">
+                {user?.tenantRoles?.map((tr) => (
+                  <DropdownMenuItem
+                    key={tr.tenantId}
+                    onClick={() => {
+                      if (tr.tenantId === user?.clinicId) return;
+                      switchClinic(tr.tenantId);
+                    }}
+                    disabled={!tr.tenantActive}
+                  >
+                    {tr.tenantId === user?.clinicId ? (
+                      <Check className="mr-2 h-4 w-4" />
+                    ) : (
+                      <span className="mr-2 w-4 inline-block" />
+                    )}
+                    <span className="truncate">{tr.tenantName || tr.tenantId}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
 
-      {/* Navigation */}
+      {/* Navigation — itens filtrados por role (config/navigation.ts) */}
       <ScrollArea className="flex-1 px-3 py-4">
         <nav className="space-y-1">
-          {navigation.map((item) => {
-            if (item.adminOnly && !isAdmin) return null;
-
+          {visibleNavItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             const Icon = item.icon;
 
@@ -135,8 +121,7 @@ export function Sidebar() {
                 className={cn(
                   'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all',
                   isActive
-                    ?
-                      'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm'
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-sm'
                     : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/30 hover:text-sidebar-foreground'
                 )}
               >

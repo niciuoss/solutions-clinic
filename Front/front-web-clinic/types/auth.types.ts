@@ -1,5 +1,21 @@
-export type TenantStatus = 'PENDING_SETUP' | 'TRIAL' | 'ACTIVE' | 'SUSPENDED' | 'CANCELED';
-export type PlanType = 'BASIC' | 'PRO' | 'CUSTOM';
+export type TenantStatus =
+  | "PENDING_SETUP"
+  | "TRIAL"
+  | "ACTIVE"
+  | "SUSPENDED"
+  | "CANCELED";
+export type PlanType = "BASIC" | "PRO" | "CUSTOM";
+
+/** Uma clínica (tenant) em que o usuário tem vínculo; usado no seletor de troca de clínica */
+export interface UserTenantRole {
+  tenantId: string;
+  tenantName: string;
+  subdomain?: string;
+  tenantStatus?: TenantStatus;
+  planType?: PlanType;
+  tenantActive: boolean;
+  role: UserRole;
+}
 
 export interface User {
   id: string;
@@ -15,23 +31,25 @@ export interface User {
   emailVerified: boolean;
   lastLoginAt?: string;
   createdAt: string;
-  // Dados do Tenant
+  // Dados do Tenant atual
   tenantStatus?: TenantStatus;
   planType?: PlanType;
   trialEndsAt?: string;
+  /** Lista de clínicas em que o usuário tem vínculo (para troca de clínica) */
+  tenantRoles?: UserTenantRole[];
 }
 
 export enum UserRole {
-  ADMIN_CLINIC = 'ADMIN_CLINIC',
-  PROFISSIONAL_SAUDE = 'PROFISSIONAL_SAUDE',
-  RECEPCIONISTA = 'RECEPCIONISTA',
+  ADMIN_CLINIC = "ADMIN_CLINIC",
+  PROFISSIONAL_SAUDE = "PROFISSIONAL_SAUDE",
+  RECEPCIONISTA = "RECEPCIONISTA",
 }
 
 export enum Gender {
-  MASCULINO = 'MASCULINO',
-  FEMININO = 'FEMININO',
-  OUTRO = 'OUTRO',
-  NAO_INFORMADO = 'NAO_INFORMADO',
+  MASCULINO = "MASCULINO",
+  FEMININO = "FEMININO",
+  OUTRO = "OUTRO",
+  NAO_INFORMADO = "NAO_INFORMADO",
 }
 
 export interface AuthResponse {

@@ -1,11 +1,18 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { loginAction, logoutAction, setPasswordAction, getCurrentUserAction, getUserByIdAction } from '@/actions/auth-actions';
-import { ROUTES } from '@/config/constants';
-import type { User, UserRole } from '@/types';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import {
+  loginAction,
+  logoutAction,
+  setPasswordAction,
+  getCurrentUserAction,
+  getUserByIdAction,
+  switchTenantAction,
+} from "@/actions/auth-actions";
+import { ROUTES } from "@/config/constants";
+import type { User, UserRole } from "@/types";
+import { toast } from "sonner";
 
 export function useAuth() {
   const router = useRouter();
@@ -18,16 +25,16 @@ export function useAuth() {
     async function loadUser() {
       try {
         const result = await getCurrentUserAction();
-        
+
         if (result.success && result.data?.userId) {
           // Buscar dados completos do usuário
           const userResult = await getUserByIdAction(result.data.userId);
-          
+
           if (userResult.success && userResult.data) {
             const userData = userResult.data as User;
             setUser(userData);
             setIsAuthenticated(true);
-            
+
             // Validar status do tenant e redirecionar se necessário
             // Apenas na inicialização, não redireciona imediatamente para evitar loops
             // O redirecionamento após login é feito no método login()
@@ -47,7 +54,7 @@ export function useAuth() {
         setIsLoading(false);
       }
     }
-    
+
     loadUser();
   }, [router]);
 
@@ -55,45 +62,50 @@ export function useAuth() {
     try {
       setIsLoading(true);
       const result = await loginAction(email, password);
-      
+
       if (!result.success) {
-        toast.error(result.error || 'Erro ao fazer login');
+        toast.error(result.error || "Erro ao fazer login");
         setIsLoading(false);
         return result;
       }
-      
+
       // Buscar dados completos do usuário após login bem-sucedido
       if (result.data?.user?.id) {
         const userResult = await getUserByIdAction(result.data.user.id);
-        console.log("🚀 ~ login ~ userResult:", userResult)
-        
+
         if (userResult.success && userResult.data) {
           const userData = userResult.data as User;
           setUser(userData);
           setIsAuthenticated(true);
-          
+
           // Validar status do tenant e redirecionar conforme os requisitos
           const tenantStatus = userData.tenantStatus;
-          
-          if (tenantStatus === 'PENDING_SETUP') {
-            toast.info('Por favor, escolha um plano para continuar');
+
+          if (tenantStatus === "PENDING_SETUP") {
+            toast.info("Por favor, escolha um plano para continuar");
             router.push(ROUTES.PLAN_SELECTION);
             return result;
-          } else if (tenantStatus === 'ACTIVE') {
-            toast.success('Login realizado com sucesso!');
+          } else if (tenantStatus === "ACTIVE") {
+            toast.success("Login realizado com sucesso!");
             router.push(ROUTES.DASHBOARD);
             return result;
-          } else if (tenantStatus === 'TRIAL') {
+          } else if (tenantStatus === "TRIAL") {
             // TRIAL também pode acessar o dashboard
-            toast.success('Login realizado com sucesso! Período de teste ativo.');
+            toast.success(
+              "Login realizado com sucesso! Período de teste ativo.",
+            );
             router.push(ROUTES.DASHBOARD);
             return result;
-          } else if (tenantStatus === 'SUSPENDED') {
-            toast.error('Sua conta está suspensa. Entre em contato com o suporte.');
+          } else if (tenantStatus === "SUSPENDED") {
+            toast.error(
+              "Sua conta está suspensa. Entre em contato com o suporte.",
+            );
             router.push(ROUTES.PLAN_SELECTION);
             return result;
-          } else if (tenantStatus === 'CANCELED') {
-            toast.error('Sua conta foi cancelada. Entre em contato com o suporte.');
+          } else if (tenantStatus === "CANCELED") {
+            toast.error(
+              "Sua conta foi cancelada. Entre em contato com o suporte.",
+            );
             // Limpar estado local e redirecionar
             setUser(null);
             setIsAuthenticated(false);
@@ -102,12 +114,12 @@ export function useAuth() {
             return result;
           } else if (!tenantStatus) {
             // Se não tem status definido, considerar como PENDING_SETUP
-            toast.info('Por favor, escolha um plano para continuar');
+            toast.info("Por favor, escolha um plano para continuar");
             router.push(ROUTES.PLAN_SELECTION);
             return result;
           } else {
             // Status desconhecido, tratar como PENDING_SETUP por segurança
-            toast.info('Por favor, escolha um plano para continuar');
+            toast.info("Por favor, escolha um plano para continuar");
             router.push(ROUTES.PLAN_SELECTION);
             return result;
           }
@@ -125,14 +137,15 @@ export function useAuth() {
           };
           setUser(partialUser);
           setIsAuthenticated(true);
-          toast.success('Login realizado com sucesso!');
+          toast.success("Login realizado com sucesso!");
           router.push(ROUTES.DASHBOARD);
         }
       }
-      
+
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao fazer login';
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro ao fazer login";
       toast.error(errorMessage);
       setIsLoading(false);
       throw error;
@@ -141,22 +154,27 @@ export function useAuth() {
     }
   };
 
-  const definePassword = async (token: string, password: string, confirmPassword: string) => {
+  const definePassword = async (
+    token: string,
+    password: string,
+    confirmPassword: string,
+  ) => {
     try {
       setIsLoading(true);
       const result = await setPasswordAction(token, password, confirmPassword);
-      
+
       if (!result.success) {
-        toast.error(result.error || 'Erro ao definir senha');
+        toast.error(result.error || "Erro ao definir senha");
         return result;
       }
-      
-      toast.success('Senha definida com sucesso! Você já pode fazer login.');
+
+      toast.success("Senha definida com sucesso! Você já pode fazer login.");
       router.push(ROUTES.LOGIN);
-      
+
       return result;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Erro ao definir senha';
+      const errorMessage =
+        error instanceof Error ? error.message : "Erro ao definir senha";
       toast.error(errorMessage);
       throw error;
     } finally {
@@ -168,21 +186,21 @@ export function useAuth() {
     try {
       setIsLoading(true);
       const result = await logoutAction();
-      
+
       if (!result.success) {
-        toast.error('Erro ao fazer logout');
+        toast.error("Erro ao fazer logout");
         setIsLoading(false);
         return;
       }
-      
+
       // Limpar estado do usuário
       setUser(null);
       setIsAuthenticated(false);
-      
-      toast.success('Logout realizado com sucesso!');
+
+      toast.success("Logout realizado com sucesso!");
       router.push(ROUTES.LOGIN);
     } catch {
-      toast.error('Erro ao fazer logout');
+      toast.error("Erro ao fazer logout");
     } finally {
       setIsLoading(false);
     }
@@ -191,11 +209,11 @@ export function useAuth() {
   const refreshUser = async () => {
     try {
       const result = await getCurrentUserAction();
-      
+
       if (result.success && result.data?.userId) {
         // Buscar dados completos do usuário
         const userResult = await getUserByIdAction(result.data.userId);
-        
+
         if (userResult.success && userResult.data) {
           const userData = userResult.data as User;
           setUser(userData);
@@ -203,10 +221,28 @@ export function useAuth() {
           return { success: true, user: userData };
         }
       }
-      
+
       return { success: false };
     } catch (error) {
-      console.error('Erro ao atualizar dados do usuário:', error);
+      console.error("Erro ao atualizar dados do usuário:", error);
+      return { success: false };
+    }
+  };
+
+  const switchClinic = async (tenantId: string) => {
+    try {
+      const result = await switchTenantAction(tenantId);
+      if (!result.success) {
+        toast.error(result.error || "Erro ao trocar de clínica");
+        return { success: false };
+      }
+      toast.success("Clínica alterada com sucesso");
+      const refresh = await refreshUser();
+      return refresh;
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Erro ao trocar de clínica",
+      );
       return { success: false };
     }
   };
@@ -219,5 +255,6 @@ export function useAuth() {
     setPassword: definePassword,
     logout,
     refreshUser,
+    switchClinic,
   };
 }

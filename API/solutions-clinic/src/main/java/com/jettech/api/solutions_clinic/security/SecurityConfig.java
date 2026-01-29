@@ -50,7 +50,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/users").permitAll()
                             .requestMatchers("/auth/**").permitAll()
-                            .requestMatchers("/v1/auth/**").permitAll()
+                            .requestMatchers("/v1/auth/sign-in").permitAll()
                             .requestMatchers("/v1/subscriptions/webhook").permitAll()
                             .requestMatchers(
                                     "/swagger-ui.html",
@@ -63,7 +63,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) -> {
                             // Para rotas permitidas, permite que a requisição continue sem autenticação
                             String path = request.getRequestURI();
-                            if (path.startsWith("/v1/auth/") || 
+                            if (path.equals("/v1/auth/sign-in") ||
                                 path.startsWith("/auth/") || 
                                 path.equals("/users") ||
                                 path.equals("/v1/subscriptions/webhook")) {

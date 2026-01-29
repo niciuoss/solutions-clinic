@@ -1,27 +1,28 @@
 export const ROUTES = {
-  HOME: '/',
-  LOGIN: '/login',
-  SET_PASSWORD: '/set-password',
-  REGISTER: '/register',
-  REGISTER_CLINIC: '/register-clinic',
-  PLAN_SELECTION: '/plan-selection',
-  PLAN_SELECTION_SUCCESS: '/plan-selection/success',
-  
-  DASHBOARD: '/dashboard',
-  PATIENTS: '/patients',
-  APPOINTMENTS: '/appointments',
-  ATTENDANCE: '/attendance',
-  MEDICAL_RECORDS: '/medical-records',
-  PROFESSIONALS: '/professionals',
-  PROCEDURES: '/procedures',
-  USERS: '/users',
-  FINANCIAL: '/financial',
-  SETTINGS: '/settings',
+  HOME: "/",
+  LOGIN: "/login",
+  SET_PASSWORD: "/set-password",
+  REGISTER: "/register",
+  REGISTER_CLINIC: "/register-clinic",
+  PLAN_SELECTION: "/plan-selection",
+  PLAN_SELECTION_SUCCESS: "/plan-selection/success",
+
+  DASHBOARD: "/dashboard",
+  PATIENTS: "/patients",
+  APPOINTMENTS: "/appointments",
+  ATTENDANCE: "/attendance",
+  MEDICAL_RECORDS: "/medical-records",
+  PROFESSIONALS: "/professionals",
+  PROCEDURES: "/procedures",
+  USERS: "/users",
+  FINANCIAL: "/financial",
+  SETTINGS: "/settings",
 } as const;
 
 export const API_ROUTES = {
   AUTH: {
     SIGN_IN: "/auth/sign-in",
+    SWITCH_TENANT: "/auth/switch-tenant",
     SIGNUP_CLINIC_OWNER: "/auth/signup/clinic-owner",
     SIGNUP_SOLO: "/auth/signup/solo",
     REFRESH: "/auth/refresh",
@@ -46,7 +47,7 @@ export const API_ROUTES = {
 } as const;
 
 export const STORAGE_KEYS = {
-  ACCESS_TOKEN: '@solutionsclinic:accessToken',
-  REFRESH_TOKEN: '@solutionsclinic:refreshToken',
-  USER: '@solutionsclinic:user',
+  ACCESS_TOKEN: "@solutionsclinic:accessToken",
+  REFRESH_TOKEN: "@solutionsclinic:refreshToken",
+  USER: "@solutionsclinic:user",
 } as const;

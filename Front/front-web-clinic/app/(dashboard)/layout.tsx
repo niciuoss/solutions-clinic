@@ -1,27 +1,43 @@
 'use client'
 
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { usePathname } from 'next/navigation';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { ROUTES } from '@/config/constants';
+import { isPathAllowedForRole } from '@/config/navigation';
+import { toast } from 'sonner';
 
 const pageTitles: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/patients': 'Pacientes',
-  '/appointments': 'Agendamentos',
-  '/medical-records': 'Prontuários',
-  '/professionals': 'Profissionais',
-  '/users': 'Usuários',
+  [ROUTES.DASHBOARD]: 'Dashboard',
+  [ROUTES.PATIENTS]: 'Pacientes',
+  [ROUTES.APPOINTMENTS]: 'Agendamentos',
+  [ROUTES.MEDICAL_RECORDS]: 'Prontuários',
+  [ROUTES.PROFESSIONALS]: 'Profissionais',
+  [ROUTES.PROCEDURES]: 'Procedimentos',
+  [ROUTES.USERS]: 'Usuários',
   '/rooms': 'Salas',
-  '/financial': 'Financeiro',
-  '/settings': 'Configurações',
+  [ROUTES.FINANCIAL]: 'Financeiro',
+  [ROUTES.SETTINGS]: 'Configurações',
 };
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user } = useAuthContext();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  /** Proteção por role: redireciona para o dashboard se a rota não for permitida para o usuário */
+  useEffect(() => {
+    if (!user?.role) return;
+    if (!isPathAllowedForRole(pathname, user.role)) {
+      toast.error('Você não tem permissão para acessar esta página.');
+      router.replace(ROUTES.DASHBOARD);
+    }
+  }, [pathname, user?.role, router]);
 
   // Get page title
   const getPageTitle = () => {
