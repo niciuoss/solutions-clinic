@@ -9,6 +9,7 @@ export interface Procedure {
   active: boolean;
   createdAt: string;
   updatedAt: string;
+  professionalId?: string;
 }
 
 export interface CreateProcedureRequest {
@@ -18,6 +19,7 @@ export interface CreateProcedureRequest {
   estimatedDurationMinutes: number;
   basePrice: number;
   professionalCommissionPercent?: number;
+  professionalId?: string;
 }
 
 export type UpdateProcedureRequest = Partial<CreateProcedureRequest> & {

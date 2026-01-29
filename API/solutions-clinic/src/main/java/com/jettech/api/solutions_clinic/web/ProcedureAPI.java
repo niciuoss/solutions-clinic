@@ -60,7 +60,8 @@ public interface ProcedureAPI {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, defaultValue = "name,asc") String sort,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Boolean active
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) UUID professionalId
     ) throws AuthenticationException;
 
     @GetMapping("/procedures/{id}")

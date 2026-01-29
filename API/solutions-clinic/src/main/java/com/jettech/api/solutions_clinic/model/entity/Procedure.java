@@ -20,6 +20,10 @@ public class Procedure {
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant; // Multi-tenant
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "professional_id", nullable = false)
+    private Professional professional;
+
     @Column(nullable = false)
     private String name;
 

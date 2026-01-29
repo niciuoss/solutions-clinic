@@ -16,6 +16,8 @@ public interface ProfessionalRepository extends JpaRepository<Professional, UUID
     
     Optional<Professional> findByUserIdAndTenantId(UUID userId, UUID tenantId);
     
+    Optional<Professional> findByIdAndTenantId(UUID id, UUID tenantId);
+    
     List<Professional> findByTenantId(UUID tenantId);
     
     @Query("SELECT DISTINCT p FROM professionals p JOIN FETCH p.user JOIN FETCH p.tenant WHERE p.tenant.id = :tenantId")

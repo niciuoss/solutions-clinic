@@ -31,11 +31,14 @@ public class DefaultGetProceduresByTenantUseCase implements GetProceduresByTenan
         // Criar Pageable com ordenação
         Pageable pageable = createPageable(request.page(), request.size(), request.sort());
 
-        // Buscar procedimentos com filtros (busca e status) ou listagem simples
-        Page<Procedure> proceduresPage = (request.search() != null && !request.search().isBlank())
-                || request.active() != null
+        // Buscar procedimentos com filtros (profissional, busca e status) ou listagem simples
+        boolean useFilters = request.professionalId() != null
+                || (request.search() != null && !request.search().isBlank())
+                || request.active() != null;
+        Page<Procedure> proceduresPage = useFilters
             ? procedureRepository.findByTenantIdWithFilters(
                 request.tenantId(),
+                request.professionalId(),
                 request.search() != null && !request.search().isBlank() ? request.search().trim() : null,
                 request.active(),
                 pageable

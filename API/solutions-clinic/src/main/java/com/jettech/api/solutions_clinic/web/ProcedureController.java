@@ -34,8 +34,9 @@ public class ProcedureController implements ProcedureAPI {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, defaultValue = "name,asc") String sort,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Boolean active) throws AuthenticationException {
-        return getProceduresByTenantUseCase.execute(new GetProceduresByTenantRequest(tenantId, page, size, sort, search, active));
+            @RequestParam(required = false) Boolean active,
+            @RequestParam(required = false) UUID professionalId) throws AuthenticationException {
+        return getProceduresByTenantUseCase.execute(new GetProceduresByTenantRequest(tenantId, page, size, sort, search, active, professionalId));
     }
 
     @Override

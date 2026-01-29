@@ -8,6 +8,7 @@ public record GetProceduresByTenantRequest(
     int size,
     String sort,
     String search,
-    Boolean active
+    Boolean active,
+    UUID professionalId
 ) {
 }

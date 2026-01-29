@@ -26,6 +26,7 @@ public interface ProcedureRepository extends JpaRepository<Procedure, UUID> {
     @Query("""
         SELECT p FROM procedures p
         WHERE p.tenant.id = :tenantId
+        AND (:professionalId IS NULL OR p.professional.id = :professionalId)
         AND (:search IS NULL OR :search = '' OR
              LOWER(COALESCE(p.name, '')) LIKE LOWER(CONCAT('%', :search, '%')) OR
              LOWER(COALESCE(p.description, '')) LIKE LOWER(CONCAT('%', :search, '%')))
@@ -33,8 +34,11 @@ public interface ProcedureRepository extends JpaRepository<Procedure, UUID> {
         """)
     Page<Procedure> findByTenantIdWithFilters(
         @Param("tenantId") UUID tenantId,
+        @Param("professionalId") UUID professionalId,
         @Param("search") String search,
         @Param("active") Boolean active,
         Pageable pageable
     );
+
+    List<Procedure> findAllByTenantIdAndProfessionalId(UUID tenantId, UUID professionalId);
 }

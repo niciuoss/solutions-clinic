@@ -34,11 +34,11 @@ import { toast } from 'sonner';
 import { ConflictDialog } from './ConflictDialog';
 import { PatientAutocomplete } from './PatientAutocomplete';
 import { RoomSelect } from './RoomSelect';
-import { 
-  CalendarIcon, 
-  Clock, 
-  Loader2, 
-  Plus, 
+import {
+  CalendarIcon,
+  Clock,
+  Loader2,
+  Plus,
   Trash2,
   AlertCircle,
   CheckCircle,
@@ -67,29 +67,6 @@ export function NewAppointmentForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { professionals, isLoading: loadingProfessionals } = useProfessionalsByCurrentClinic(0, 100);
-  const { procedures: proceduresData, isLoading: loadingProcedures } = useProcedures(
-    user?.clinicId || null,
-    0,
-    100,
-    { active: true }
-  );
-  const { 
-    createAppointment, 
-    confirmConflict, 
-    cancelConflict, 
-    pendingConflict,
-    isCreating 
-  } = useAppointments();
-  const { checkAvailability, isChecking } = useAvailability();
-
-  const [availabilityStatus, setAvailabilityStatus] = useState<{
-    isAvailable: boolean;
-    message: string;
-  } | null>(null);
-
-  const [selectedProcedureId, setSelectedProcedureId] = useState<string>('');
-
   const {
     register,
     control,
@@ -105,13 +82,44 @@ export function NewAppointmentForm() {
     },
   });
 
+  const { professionals, isLoading: loadingProfessionals } = useProfessionalsByCurrentClinic(0, 100);
+  const professionalId = watch('professionalId');
+  const { procedures: proceduresData, isLoading: loadingProcedures } = useProcedures(
+    user?.clinicId || null,
+    0,
+    100,
+    { active: true, professionalId: professionalId || undefined },
+    { enabled: !!professionalId }
+  );
+  const {
+    createAppointment,
+    confirmConflict,
+    cancelConflict,
+    pendingConflict,
+    isCreating
+  } = useAppointments();
+  const { checkAvailability, isChecking } = useAvailability();
+
+  const [availabilityStatus, setAvailabilityStatus] = useState<{
+    isAvailable: boolean;
+    message: string;
+  } | null>(null);
+
+  const [selectedProcedureId, setSelectedProcedureId] = useState<string>('');
+
   const selectedProcedureIds = watch('procedureIds') || [];
 
   // Observar campos para verificação de disponibilidade
-  const professionalId = watch('professionalId');
+  // professionalId já foi observado acima
   const date = watch('date');
   const time = watch('time');
   const durationMinutes = watch('durationMinutes') || 60;
+
+  // Limpar procedimentos selecionados quando mudar o profissional
+  useEffect(() => {
+    setValue('procedureIds', []);
+    setSelectedProcedureId('');
+  }, [professionalId, setValue]);
 
   // Pré-preencher data se vier da URL
   useEffect(() => {
@@ -131,7 +139,7 @@ export function NewAppointmentForm() {
     if (professionalId && date && time) {
       const checkTimeout = setTimeout(async () => {
         const scheduledAt = `${format(date, 'yyyy-MM-dd')}T${time}:00`;
-        
+
         const result = await checkAvailability(
           professionalId,
           scheduledAt,
@@ -212,7 +220,7 @@ export function NewAppointmentForm() {
     return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
   };
 
-  const availableProcedures: ProcedureType[] = proceduresData?.content || [];
+  const availableProcedures: ProcedureType[] = professionalId ? (proceduresData?.content || []) : [];
   const selectedProcedures = availableProcedures.filter(p => selectedProcedureIds.includes(p.id));
 
   // Gerar opções de horário (7h às 20h, intervalo de 15 minutos)
@@ -397,52 +405,58 @@ export function NewAppointmentForm() {
             <CardTitle>Procedimentos (Opcional)</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Seleção de Procedimento */}
-            <div className="flex items-center gap-2 w-fit">
-              <div className="w-[400px]">
-                <Select
-                  value={selectedProcedureId}
-                  onValueChange={setSelectedProcedureId}
-                  disabled={loadingProcedures}
+            {/* Seleção de Procedimento (apenas do profissional selecionado) */}
+            {!professionalId ? (
+              <p className="text-sm text-muted-foreground">
+                Selecione um profissional acima para adicionar procedimentos.
+              </p>
+            ) : (
+              <div className="flex items-center gap-2 w-fit">
+                <div className="w-[400px]">
+                  <Select
+                    value={selectedProcedureId}
+                    onValueChange={setSelectedProcedureId}
+                    disabled={loadingProcedures}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={
+                        loadingProcedures
+                          ? 'Carregando procedimentos...'
+                          : 'Selecione um procedimento'
+                      } />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {loadingProcedures ? (
+                        <div className="p-2 text-sm text-muted-foreground flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Carregando...
+                        </div>
+                      ) : availableProcedures.length > 0 ? (
+                        availableProcedures
+                          .filter(p => !selectedProcedureIds.includes(p.id))
+                          .map((procedure) => (
+                            <SelectItem key={procedure.id} value={procedure.id}>
+                              {procedure.name} - {formatCurrency(procedure.basePrice)}
+                            </SelectItem>
+                          ))
+                      ) : (
+                        <div className="p-2 text-sm text-muted-foreground">
+                          Nenhum procedimento cadastrado para este profissional
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddProcedure}
+                  disabled={!selectedProcedureId || loadingProcedures}
                 >
-                  <SelectTrigger>
-                    <SelectValue placeholder={
-                      loadingProcedures 
-                        ? 'Carregando procedimentos...' 
-                        : 'Selecione um procedimento'
-                    } />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loadingProcedures ? (
-                      <div className="p-2 text-sm text-muted-foreground flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Carregando...
-                      </div>
-                    ) : availableProcedures.length > 0 ? (
-                      availableProcedures
-                        .filter(p => !selectedProcedureIds.includes(p.id))
-                        .map((procedure) => (
-                          <SelectItem key={procedure.id} value={procedure.id}>
-                            {procedure.name} - {formatCurrency(procedure.basePrice)}
-                          </SelectItem>
-                        ))
-                    ) : (
-                      <div className="p-2 text-sm text-muted-foreground">
-                        Nenhum procedimento cadastrado
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
+                  <Plus className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddProcedure}
-                disabled={!selectedProcedureId || loadingProcedures}
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
+            )}
 
             {/* Lista de Procedimentos Selecionados */}
             {selectedProcedures.length === 0 ? (

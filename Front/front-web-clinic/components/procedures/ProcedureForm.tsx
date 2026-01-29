@@ -41,9 +41,10 @@ interface ProcedureFormProps {
   procedure?: Procedure;
   /** Chamado ao salvar com sucesso. No create, recebe o procedimento criado. */
   onSuccess?: (procedure?: Procedure) => void;
+  professionalId?: string;
 }
 
-export function ProcedureForm({ procedure, onSuccess }: ProcedureFormProps) {
+export function ProcedureForm({ procedure, onSuccess, professionalId }: ProcedureFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -104,7 +105,7 @@ export function ProcedureForm({ procedure, onSuccess }: ProcedureFormProps) {
           toast.success('Procedimento atualizado com sucesso!');
           queryClient.invalidateQueries({ queryKey: ['procedures'] });
           queryClient.invalidateQueries({ queryKey: ['procedure', procedure.id] });
-          
+
           if (onSuccess) {
             onSuccess(result.data);
           } else {
@@ -121,12 +122,13 @@ export function ProcedureForm({ procedure, onSuccess }: ProcedureFormProps) {
           estimatedDurationMinutes: data.estimatedDurationMinutes,
           basePrice: data.basePrice,
           professionalCommissionPercent: data.professionalCommissionPercent,
+          professionalId: professionalId,
         });
 
         if (result.success && result.data) {
           toast.success('Procedimento cadastrado com sucesso!');
           queryClient.invalidateQueries({ queryKey: ['procedures'] });
-          
+
           if (onSuccess) {
             onSuccess(result.data);
           } else {

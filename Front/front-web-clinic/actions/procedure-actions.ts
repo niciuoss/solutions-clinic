@@ -93,7 +93,7 @@ export async function getAllProceduresAction(
   tenantId: string,
   page: number = 0,
   size: number = 20,
-  opts?: { search?: string; active?: boolean | null }
+  opts?: { search?: string; active?: boolean | null; professionalId?: string }
 ): Promise<ActionResult<PaginatedResponse<Procedure>>> {
   try {
     if (!tenantId) {
@@ -114,6 +114,9 @@ export async function getAllProceduresAction(
     }
     if (opts?.active !== undefined && opts?.active !== null) {
       params.active = opts.active;
+    }
+    if (opts?.professionalId) {
+      params.professionalId = opts.professionalId;
     }
 
     const response = await apiRequest<PaginatedResponse<Procedure>>('/procedures', {

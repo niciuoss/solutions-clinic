@@ -34,7 +34,12 @@ import { formatCurrency } from '@/lib/utils';
 
 const PAGE_SIZE = 10;
 
-export function ProcedureList() {
+interface ProcedureListProps {
+  professionalId?: string;
+  onEdit?: (procedure: Procedure) => void;
+}
+
+export function ProcedureList({ professionalId, onEdit }: ProcedureListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(0);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -56,6 +61,7 @@ export function ProcedureList() {
     {
       search: debouncedSearch || undefined,
       active: activeFilter,
+      professionalId,
     }
   );
 
@@ -259,8 +265,8 @@ export function ProcedureList() {
                       {formatCurrency(procedure.basePrice)}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {procedure.professionalCommissionPercent 
-                        ? `${procedure.professionalCommissionPercent}%` 
+                      {procedure.professionalCommissionPercent
+                        ? `${procedure.professionalCommissionPercent}%`
                         : '—'}
                     </TableCell>
                     <TableCell>
@@ -284,13 +290,19 @@ export function ProcedureList() {
                             <Eye className="h-4 w-4" />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/procedures/${procedure.id}/edit`}>
+                        {onEdit ? (
+                          <Button variant="ghost" size="icon" onClick={() => onEdit(procedure)}>
                             <Edit className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        <Button 
-                          variant="ghost" 
+                          </Button>
+                        ) : (
+                          <Button variant="ghost" size="icon" asChild>
+                            <Link href={`/procedures/${procedure.id}/edit`}>
+                              <Edit className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteClick(procedure)}
                           disabled={isDeleting}

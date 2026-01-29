@@ -6,6 +6,14 @@ import { getProfessionalByIdAction, updateProfessionalActiveAction } from '@/act
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   ArrowLeft,
   Edit,
@@ -18,11 +26,15 @@ import {
   UserCheck,
   UserX,
   Clock,
+  Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import type { Professional } from '@/types';
+import type { Procedure } from '@/types/procedure.types';
 import { DocumentType } from '@/types/professional.types';
+import { ProcedureList } from '@/components/procedures/ProcedureList';
+import { ProcedureForm } from '@/components/procedures/ProcedureForm';
 
 const documentTypeLabels: Record<DocumentType, string> = {
   [DocumentType.CRM]: 'CRM - Conselho Regional de Medicina',
@@ -51,6 +63,8 @@ export default function ProfessionalDetailsPage() {
   const [professional, setProfessional] = useState<Professional | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isProcedureFormOpen, setIsProcedureFormOpen] = useState(false);
+  const [editingProcedure, setEditingProcedure] = useState<Procedure | undefined>(undefined);
 
   useEffect(() => {
     async function loadProfessional() {
@@ -81,7 +95,7 @@ export default function ProfessionalDetailsPage() {
 
     const newStatus = !professional.isActive;
     const action = newStatus ? 'ativar' : 'desativar';
-    
+
     if (!confirm(`Tem certeza que deseja ${action} este profissional?`)) return;
 
     setIsUpdating(true);
@@ -165,69 +179,113 @@ export default function ProfessionalDetailsPage() {
         </div>
       </div>
 
-      {/* Informações do Usuário */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <User className="h-5 w-5" />
-            Informações do Usuário
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <InfoItem label="Nome Completo" value={professional.user.fullName} />
-          <div className="flex items-start gap-2">
-            <Mail className="h-4 w-4 mt-1 text-muted-foreground" />
-            <InfoItem label="Email" value={professional.user.email} />
-          </div>
-          {professional.user.phone && (
-            <div className="flex items-start gap-2">
-              <Phone className="h-4 w-4 mt-1 text-muted-foreground" />
-              <InfoItem label="Telefone" value={professional.user.phone} />
-            </div>
+      <Tabs defaultValue="info" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="info">Informações</TabsTrigger>
+          <TabsTrigger value="procedures">Procedimentos</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="info" className="space-y-6">
+          {/* Informações do Usuário */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="h-5 w-5" />
+                Informações do Usuário
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <InfoItem label="Nome Completo" value={professional.user.fullName} />
+              <div className="flex items-start gap-2">
+                <Mail className="h-4 w-4 mt-1 text-muted-foreground" />
+                <InfoItem label="Email" value={professional.user.email} />
+              </div>
+              {professional.user.phone && (
+                <div className="flex items-start gap-2">
+                  <Phone className="h-4 w-4 mt-1 text-muted-foreground" />
+                  <InfoItem label="Telefone" value={professional.user.phone} />
+                </div>
+              )}
+              <InfoItem
+                label="Status"
+                value={professional.user.isActive ? 'Ativo' : 'Inativo'}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Informações Profissionais */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <GraduationCap className="h-5 w-5" />
+                Informações Profissionais
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <InfoItem label="Especialidade" value={professional.specialty} />
+              <InfoItem
+                label="Tipo de Documento"
+                value={documentTypeLabels[professional.documentType] || professional.documentType}
+              />
+              <InfoItem label="Número do Documento" value={professional.documentNumber} />
+              <InfoItem
+                label="Estado do Documento (UF)"
+                value={professional.documentState || '-'}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Biografia */}
+          {professional.bio && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <FileText className="h-5 w-5" />
+                  Biografia
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm whitespace-pre-wrap">{professional.bio}</p>
+              </CardContent>
+            </Card>
           )}
-          <InfoItem 
-            label="Status" 
-            value={professional.user.isActive ? 'Ativo' : 'Inativo'} 
-          />
-        </CardContent>
-      </Card>
+        </TabsContent>
 
-      {/* Informações Profissionais */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <GraduationCap className="h-5 w-5" />
-            Informações Profissionais
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <InfoItem label="Especialidade" value={professional.specialty} />
-          <InfoItem 
-            label="Tipo de Documento" 
-            value={documentTypeLabels[professional.documentType] || professional.documentType} 
-          />
-          <InfoItem label="Número do Documento" value={professional.documentNumber} />
-          <InfoItem 
-            label="Estado do Documento (UF)" 
-            value={professional.documentState || '-'} 
-          />
-        </CardContent>
-      </Card>
+        <TabsContent value="procedures" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => {
+              setEditingProcedure(undefined);
+              setIsProcedureFormOpen(true);
+            }}>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Procedimento
+            </Button>
+          </div>
 
-      {/* Biografia */}
-      {professional.bio && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <FileText className="h-5 w-5" />
-              Biografia
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm whitespace-pre-wrap">{professional.bio}</p>
-          </CardContent>
-        </Card>
-      )}
+          <ProcedureList
+            professionalId={professionalId}
+            onEdit={(procedure) => {
+              setEditingProcedure(procedure);
+              setIsProcedureFormOpen(true);
+            }}
+          />
+
+          <Dialog open={isProcedureFormOpen} onOpenChange={setIsProcedureFormOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>
+                  {editingProcedure ? 'Editar Procedimento' : 'Novo Procedimento'}
+                </DialogTitle>
+              </DialogHeader>
+              <ProcedureForm
+                procedure={editingProcedure}
+                onSuccess={() => setIsProcedureFormOpen(false)}
+                professionalId={professionalId}
+              />
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

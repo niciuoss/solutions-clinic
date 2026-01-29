@@ -27,6 +27,8 @@ public record CreateProcedureRequest(
     BigDecimal basePrice,
     
     @Min(value = 0, message = "O campo [professionalCommissionPercent] deve ser maior ou igual a zero")
-    BigDecimal professionalCommissionPercent
+    BigDecimal professionalCommissionPercent,
+
+    UUID professionalId
 ) {
 }
