@@ -1,29 +1,28 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppointmentsByDateRange } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { 
-  format, 
-  startOfWeek, 
-  endOfWeek, 
-  addWeeks, 
+import {
+  format,
+  startOfWeek,
+  endOfWeek,
+  addWeeks,
   subWeeks,
   eachDayOfInterval,
   isSameDay,
   isToday,
   startOfDay,
   parseISO,
-  addHours,
-  differenceInMinutes,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import type { Appointment } from '@/types';
+import { AppointmentSheet } from './AppointmentSheet';
 
 // ✅ CORES MAIS VIBRANTES E VIVAS
 const statusConfig: Record<string, { label: string; bg: string; border: string }> = {
@@ -69,6 +68,11 @@ export function ModernCalendar() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  // State para o sheet de novo agendamento
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [selectedSlotDate, setSelectedSlotDate] = useState<Date | null>(null);
+  const [selectedSlotTime, setSelectedSlotTime] = useState<string | null>(null);
+
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(interval);
@@ -112,10 +116,18 @@ export function ModernCalendar() {
     router.push(`/appointments/${appointmentId}`);
   };
 
-  const handleTimeSlotClick = (day: Date, hour: number) => {
-    const dateTime = addHours(startOfDay(day), hour);
-    router.push(`/appointments/new?date=${format(dateTime, "yyyy-MM-dd'T'HH:mm:ss")}`);
-  };
+  const handleTimeSlotClick = useCallback((day: Date, hour: number) => {
+    const slotDate = startOfDay(day);
+    const slotTime = `${hour.toString().padStart(2, '0')}:00`;
+
+    setSelectedSlotDate(slotDate);
+    setSelectedSlotTime(slotTime);
+    setSheetOpen(true);
+  }, []);
+
+  const handleSheetSuccess = useCallback(() => {
+    // O hook já invalida os queries, mas podemos forçar um refetch
+  }, []);
 
   const getCurrentTimePosition = () => {
     const currentHour = currentTime.getHours();
@@ -248,13 +260,14 @@ export function ModernCalendar() {
                         dayIndex < weekDays.length - 1 ? 'border-r' : ''
                       } ${isToday(day) ? 'bg-blue-50/30' : ''}`}
                     >
-                      {/* Células de hora clicáveis */}
+                      {/* Células de hora clicáveis - duplo clique abre o formulário */}
                       {hours.map(hour => (
                         <div
                           key={hour}
                           className="border-b hover:bg-accent/50 cursor-pointer transition-colors"
                           style={{ height: `${HOUR_HEIGHT}px` }}
-                          onClick={() => handleTimeSlotClick(day, hour)}
+                          onDoubleClick={() => handleTimeSlotClick(day, hour)}
+                          title="Duplo clique para agendar"
                         />
                       ))}
 
@@ -321,6 +334,15 @@ export function ModernCalendar() {
           </div>
         </div>
       </Card>
+
+      {/* Sheet para novo agendamento */}
+      <AppointmentSheet
+        open={sheetOpen}
+        onOpenChange={setSheetOpen}
+        defaultDate={selectedSlotDate}
+        defaultTime={selectedSlotTime}
+        onSuccess={handleSheetSuccess}
+      />
     </div>
   );
 }
