@@ -1,8 +1,6 @@
 import { Metadata } from 'next';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { ProfessionalList } from '@/components/professionals/ProfessionalList';
+import { NewProfessionalButton } from '@/components/professionals/NewProfessionalButton';
 
 export const metadata: Metadata = {
   title: 'Profissionais - Solutions Clinic',
@@ -18,12 +16,7 @@ export default function ProfessionalsPage() {
             Gerencie os profissionais de saúde da clínica
           </p>
         </div>
-        <Button asChild>
-          <Link href="/professionals/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Profissional
-          </Link>
-        </Button>
+        <NewProfessionalButton />
       </div>
 
       <ProfessionalList />

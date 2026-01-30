@@ -1,8 +1,6 @@
 import { Metadata } from 'next';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { AppointmentTabs } from '@/components/appointments/AppointmentTabs';
+import { NewAppointmentButton } from '@/components/appointments/NewAppointmentButton';
 
 export const metadata: Metadata = {
   title: 'Agendamentos - Solutions Clinic',
@@ -18,12 +16,7 @@ export default function AppointmentsPage() {
             Visualize e gerencie os agendamentos da clínica
           </p>
         </div>
-        <Button asChild>
-          <Link href="/appointments/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Agendamento
-          </Link>
-        </Button>
+        <NewAppointmentButton />
       </div>
 
       <AppointmentTabs />
