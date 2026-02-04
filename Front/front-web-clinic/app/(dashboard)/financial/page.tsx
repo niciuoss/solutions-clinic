@@ -20,12 +20,12 @@ import { FinancialStats } from '@/components/financial/FinancialStats';
 import { FinancialCategoriesChart } from '@/components/financial/FinancialCategoriesChart';
 import { PendingTransactions } from '@/components/financial/PendingTransactions';
 import { FinancialTransactionsList } from '@/components/financial/FinancialTransactionsList';
-import Link from 'next/link';
-import { ROUTES } from '@/config/constants';
+import { FinancialTransactionDialog } from '@/components/financial/FinancialTransactionDialog';
 import { Plus } from 'lucide-react';
 
 export default function FinancialPage() {
   const { user } = useAuthContext();
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
     date.setDate(1); // Primeiro dia do mês
@@ -35,7 +35,7 @@ export default function FinancialPage() {
     return new Date().toISOString().split('T')[0];
   });
 
-  const { data: dashboard, isLoading } = useFinancialDashboard(
+  const { data: dashboard, isLoading, refetch } = useFinancialDashboard(
     user?.clinicId || null,
     startDate,
     endDate
@@ -50,13 +50,17 @@ export default function FinancialPage() {
             Acompanhe receitas, despesas e fluxo de caixa
           </p>
         </div>
-        <Button asChild>
-          <Link href={`${ROUTES.FINANCIAL}/new`}>
-            <Plus className="mr-2 h-4 w-4" />
-            Nova Transação
-          </Link>
+        <Button onClick={() => setDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Nova Transação
         </Button>
       </div>
+
+      <FinancialTransactionDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSuccess={() => refetch()}
+      />
 
       {/* Filtros de Data */}
       <Card>

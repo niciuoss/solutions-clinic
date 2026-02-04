@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppointmentsByDateRange } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
-import { useRouter } from 'next/navigation';
 import {
   format,
   startOfWeek,
@@ -23,6 +22,7 @@ import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import type { Appointment } from '@/types';
 import { AppointmentSheet } from './AppointmentSheet';
+import { AppointmentDetailsSheet } from './AppointmentDetailsSheet';
 
 // ✅ CORES MAIS VIBRANTES E VIVAS
 const statusConfig: Record<string, { label: string; bg: string; border: string }> = {
@@ -63,7 +63,6 @@ const START_HOUR = 7;
 const END_HOUR = 20;
 
 export function ModernCalendar() {
-  const router = useRouter();
   const { user } = useAuth();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -72,6 +71,10 @@ export function ModernCalendar() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedSlotDate, setSelectedSlotDate] = useState<Date | null>(null);
   const [selectedSlotTime, setSelectedSlotTime] = useState<string | null>(null);
+
+  // State para o sheet de detalhes do agendamento
+  const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -112,8 +115,9 @@ export function ModernCalendar() {
   const handleNextWeek = () => setCurrentWeek(addWeeks(currentWeek, 1));
   const handleToday = () => setCurrentWeek(new Date());
 
-  const handleAppointmentClick = (appointmentId: string) => {
-    router.push(`/appointments/${appointmentId}`);
+  const handleAppointmentClick = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setDetailsSheetOpen(true);
   };
 
   const handleTimeSlotClick = useCallback((day: Date, hour: number) => {
@@ -285,7 +289,7 @@ export function ModernCalendar() {
                               height: `${Math.max(height, 40)}px`,
                               zIndex: 10,
                             }}
-                            onClick={() => handleAppointmentClick(appointment.id)}
+                            onClick={() => handleAppointmentClick(appointment)}
                           >
                             <div className="flex flex-col h-full overflow-hidden text-white">
                               <div className="flex items-center gap-1 mb-1">
@@ -341,6 +345,14 @@ export function ModernCalendar() {
         onOpenChange={setSheetOpen}
         defaultDate={selectedSlotDate}
         defaultTime={selectedSlotTime}
+        onSuccess={handleSheetSuccess}
+      />
+
+      {/* Sheet para detalhes do agendamento */}
+      <AppointmentDetailsSheet
+        open={detailsSheetOpen}
+        onOpenChange={setDetailsSheetOpen}
+        appointment={selectedAppointment}
         onSuccess={handleSheetSuccess}
       />
     </div>

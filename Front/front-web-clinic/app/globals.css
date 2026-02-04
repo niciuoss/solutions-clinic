@@ -25,6 +25,8 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -66,6 +68,10 @@
     
     --destructive: oklch(0.577 0.245 27.325);
     --destructive-foreground: oklch(1 0 0);
+
+    /* ✅ SUCCESS/GREEN para botoes de acao positiva */
+    --success: oklch(0.6 0.15 145);
+    --success-foreground: oklch(1 0 0);
     
     /* ✅ BORDAS SUAVES - Cinza com opacidade */
     --border: oklch(0.922 0 0 / 0.4); /* 40% de opacidade */
@@ -121,6 +127,10 @@
     
     --destructive: oklch(0.704 0.191 22.216);
     --destructive-foreground: oklch(0.985 0 0);
+
+    /* ✅ SUCCESS/GREEN para botoes de acao positiva */
+    --success: oklch(0.65 0.15 145);
+    --success-foreground: oklch(0.985 0 0);
     
     /* ✅ BORDAS SUAVES no dark mode */
     --border: oklch(1 0 0 / 0.15);

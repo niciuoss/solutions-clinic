@@ -29,7 +29,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useAvailability } from '@/hooks/useAvailability';
 import { useProfessionalsByCurrentClinic } from '@/hooks/useProfessionals';
@@ -127,7 +126,6 @@ export function AppointmentDialog({
   const time = watch('time');
   const durationMinutes = watch('durationMinutes') || 60;
 
-  // Reset form and set default values when dialog opens
   useEffect(() => {
     if (open) {
       reset({
@@ -141,7 +139,6 @@ export function AppointmentDialog({
     }
   }, [open, defaultDate, defaultTime, reset]);
 
-  // Verificar disponibilidade em tempo real
   useEffect(() => {
     if (professionalId && date && time) {
       const checkTimeout = setTimeout(async () => {
@@ -229,7 +226,6 @@ export function AppointmentDialog({
   const availableProcedures: ProcedureType[] = proceduresData?.content || [];
   const selectedProcedures = availableProcedures.filter(p => selectedProcedureIds.includes(p.id));
 
-  // Gerar opções de horário (7h às 20h, intervalo de 15 minutos)
   const timeSlots = [];
   for (let hour = 7; hour < 20; hour++) {
     for (let minute = 0; minute < 60; minute += 15) {
@@ -241,8 +237,8 @@ export function AppointmentDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0 flex flex-col">
-          <DialogHeader className="p-6 pb-2">
+        <DialogContent className="sm:max-w-2xl p-0">
+          <DialogHeader className="p-6 pb-2 bg-background sticky top-0 z-10">
             <DialogTitle className="flex items-center gap-2">
               <CalendarPlus className="h-5 w-5" />
               Novo Agendamento
@@ -252,8 +248,8 @@ export function AppointmentDialog({
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="flex-1 px-6">
-            <form id="appointment-dialog-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-6">
+          <div className="px-6">
+            <form id="appointment-dialog-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Paciente */}
               <div className="space-y-2">
                 <Label>Paciente *</Label>
@@ -510,10 +506,10 @@ export function AppointmentDialog({
                 />
               </div>
             </form>
-          </ScrollArea>
+          </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t">
+          <div className="flex items-center justify-end gap-3 p-6 pt-4 border-t bg-background sticky bottom-0">
             <Button
               type="button"
               variant="outline"

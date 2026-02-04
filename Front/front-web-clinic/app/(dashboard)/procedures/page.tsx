@@ -1,14 +1,26 @@
-import { Metadata } from 'next';
+'use client'
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { ProcedureList } from '@/components/procedures/ProcedureList';
-
-export const metadata: Metadata = {
-  title: 'Procedimentos - Solutions Clinic',
-};
+import { ProcedureDialog } from '@/components/procedures/ProcedureDialog';
+import type { Procedure } from '@/types';
 
 export default function ProceduresPage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedProcedure, setSelectedProcedure] = useState<Procedure | undefined>();
+
+  const handleNewProcedure = () => {
+    setSelectedProcedure(undefined);
+    setDialogOpen(true);
+  };
+
+  const handleEditProcedure = (procedure: Procedure) => {
+    setSelectedProcedure(procedure);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -18,15 +30,19 @@ export default function ProceduresPage() {
             Gerencie os procedimentos da clínica
           </p>
         </div>
-        <Button asChild>
-          <Link href="/procedures/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Procedimento
-          </Link>
+        <Button onClick={handleNewProcedure}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Procedimento
         </Button>
       </div>
 
-      <ProcedureList />
+      <ProcedureList onEdit={handleEditProcedure} />
+
+      <ProcedureDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        procedure={selectedProcedure}
+      />
     </div>
   );
 }

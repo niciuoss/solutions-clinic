@@ -30,7 +30,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useAvailability } from '@/hooks/useAvailability';
 import { useProfessionalsByCurrentClinic } from '@/hooks/useProfessionals';
@@ -242,14 +241,14 @@ export function AppointmentSheet({
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
-          <SheetHeader className="p-6 pb-2">
+          <SheetHeader className="p-6 pb-2 flex-shrink-0">
             <SheetTitle>Novo Agendamento</SheetTitle>
             <SheetDescription>
               Preencha os dados para criar um novo agendamento.
             </SheetDescription>
           </SheetHeader>
 
-          <ScrollArea className="flex-1 px-6">
+          <div className="flex-1 min-h-0 overflow-y-auto px-6">
             <form id="appointment-sheet-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6 pb-6">
               {/* Paciente */}
               <div className="space-y-2">
@@ -507,9 +506,9 @@ export function AppointmentSheet({
                 />
               </div>
             </form>
-          </ScrollArea>
+          </div>
 
-          <SheetFooter className="p-6 pt-4 border-t">
+          <SheetFooter className="p-6 pt-4 border-t flex-shrink-0">
             <div className="flex items-center gap-3 w-full">
               <Button
                 type="button"

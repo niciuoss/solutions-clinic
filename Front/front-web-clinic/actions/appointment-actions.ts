@@ -152,16 +152,78 @@ export async function getAppointmentByIdAction(
   appointmentId: string
 ): Promise<ActionResult<Appointment>> {
   try {
-    const appointment = await apiRequest<Appointment>(
+    const appt = await apiRequest<AppointmentResponseBackend>(
       `/appointments/${appointmentId}`,
       {
         method: 'GET',
       }
     );
 
+    // Se já tem os dados completos (patient e professional como objetos)
+    if ('patient' in appt && typeof (appt as any).patient === 'object') {
+      return {
+        success: true,
+        data: appt as unknown as Appointment,
+      };
+    }
+
+    // Se não tiver, buscar os dados completos
+    const { getPatientByIdAction } = await import('./patient-actions');
+    const { getProfessionalByIdAction } = await import('./professional-actions');
+
+    const [patientResult, professionalResult] = await Promise.all([
+      getPatientByIdAction(appt.patientId),
+      getProfessionalByIdAction(appt.professionalId),
+    ]);
+
+    const patient = patientResult.success ? patientResult.data : null;
+    const professional = professionalResult.success ? professionalResult.data : null;
+
+    if (!patient || !professional) {
+      return {
+        success: true,
+        data: {
+          id: appt.id,
+          patient: { id: appt.patientId, fullName: 'Carregando...' } as any,
+          professional: { id: appt.professionalId, user: { fullName: 'Carregando...' }, specialty: '' } as any,
+          scheduledAt: appt.scheduledAt,
+          durationMinutes: appt.durationMinutes,
+          status: appt.status as any,
+          observations: appt.observations,
+          startedAt: appt.startedAt,
+          finishedAt: appt.finishedAt,
+          durationActualMinutes: appt.durationActualMinutes,
+          totalValue: appt.totalValue,
+          paymentMethod: appt.paymentMethod as any,
+          paymentStatus: appt.paymentStatus as any,
+          paidAt: appt.paidAt,
+          procedures: [],
+          createdAt: appt.createdAt,
+        } as Appointment,
+      };
+    }
+
     return {
       success: true,
-      data: appointment,
+      data: {
+        id: appt.id,
+        patient,
+        professional,
+        room: appt.roomId ? { id: appt.roomId } as any : undefined,
+        scheduledAt: appt.scheduledAt,
+        durationMinutes: appt.durationMinutes,
+        status: appt.status as any,
+        observations: appt.observations,
+        startedAt: appt.startedAt,
+        finishedAt: appt.finishedAt,
+        durationActualMinutes: appt.durationActualMinutes,
+        totalValue: appt.totalValue,
+        paymentMethod: appt.paymentMethod as any,
+        paymentStatus: appt.paymentStatus as any,
+        paidAt: appt.paidAt,
+        procedures: [],
+        createdAt: appt.createdAt,
+      } as Appointment,
     };
   } catch (error: any) {
     return {

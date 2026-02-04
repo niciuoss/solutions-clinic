@@ -1,14 +1,14 @@
-import { Metadata } from 'next';
+'use client'
+
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import Link from 'next/link';
 import { UserList } from '@/components/users/UserList';
-
-export const metadata: Metadata = {
-  title: 'Usuários - Solutions Clinic',
-};
+import { UserDialog } from '@/components/users/UserDialog';
 
 export default function UsersPage() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -18,15 +18,18 @@ export default function UsersPage() {
             Gerencie os usuários da clínica
           </p>
         </div>
-        <Button asChild>
-          <Link href="/users/new">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo Usuário
-          </Link>
+        <Button onClick={() => setDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Usuário
         </Button>
       </div>
 
       <UserList />
+
+      <UserDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+      />
     </div>
   );
 }
