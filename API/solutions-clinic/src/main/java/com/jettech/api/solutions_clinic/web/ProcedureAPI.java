@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Tag(name = "Procedimentos", description = "Endpoints para gerenciamento de procedimentos")
@@ -35,7 +35,7 @@ public interface ProcedureAPI {
             @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content),
             @ApiResponse(responseCode = "404", description = "Clínica não encontrada", content = @Content)
     })
-    ProcedureResponse createProcedure(@Valid @RequestBody CreateProcedureRequest request) throws AuthenticationException;
+    ProcedureResponse createProcedure(@Valid @RequestBody CreateProcedureRequest request) throws AuthenticationFailedException;
 
     @GetMapping("/procedures")
     @Operation(
@@ -62,7 +62,7 @@ public interface ProcedureAPI {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) UUID professionalId
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @GetMapping("/procedures/{id}")
     @Operation(
@@ -81,7 +81,7 @@ public interface ProcedureAPI {
                 content = @Content
             )
     })
-    ProcedureResponse getProcedureById(@PathVariable UUID id) throws AuthenticationException;
+    ProcedureResponse getProcedureById(@PathVariable UUID id) throws AuthenticationFailedException;
 
     @PutMapping("/procedures/{id}")
     @Operation(summary = "Atualiza um procedimento", description = "Atualiza os dados de um procedimento existente.")
@@ -94,7 +94,7 @@ public interface ProcedureAPI {
     ProcedureResponse updateProcedure(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateProcedureBodyRequest request
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @PatchMapping("/procedures/{id}/active")
     @Operation(summary = "Atualiza o status ativo de um procedimento", description = "Ativa ou desativa um procedimento no sistema.")
@@ -106,7 +106,7 @@ public interface ProcedureAPI {
     ProcedureResponse updateProcedureActive(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateProcedureActiveBodyRequest request
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @DeleteMapping("/procedures/{id}")
     @Operation(summary = "Exclui um procedimento", description = "Remove um procedimento do sistema. Não é possível excluir procedimentos que estão associados a agendamentos.")
@@ -115,5 +115,5 @@ public interface ProcedureAPI {
             @ApiResponse(responseCode = "404", description = "Procedimento não encontrado", content = @Content),
             @ApiResponse(responseCode = "400", description = "Não é possível excluir procedimento em uso", content = @Content)
     })
-    void deleteProcedure(@PathVariable UUID id) throws AuthenticationException;
+    void deleteProcedure(@PathVariable UUID id) throws AuthenticationFailedException;
 }

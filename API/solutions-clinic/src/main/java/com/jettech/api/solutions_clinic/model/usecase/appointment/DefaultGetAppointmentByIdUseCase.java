@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Service
@@ -16,7 +16,7 @@ public class DefaultGetAppointmentByIdUseCase implements GetAppointmentByIdUseCa
     private final AppointmentRepository appointmentRepository;
 
     @Override
-    public AppointmentResponse execute(UUID id) throws AuthenticationException {
+    public AppointmentResponse execute(UUID id) throws AuthenticationFailedException {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Agendamento não encontrado com ID: " + id));
 

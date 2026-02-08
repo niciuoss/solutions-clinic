@@ -13,7 +13,7 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -30,7 +30,7 @@ public interface FinancialAPI {
             @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content),
             @ApiResponse(responseCode = "404", description = "Clínica não encontrada", content = @Content)
     })
-    FinancialCategoryResponse createFinancialCategory(@Valid @RequestBody CreateFinancialCategoryRequest request) throws AuthenticationException;
+    FinancialCategoryResponse createFinancialCategory(@Valid @RequestBody CreateFinancialCategoryRequest request) throws AuthenticationFailedException;
 
     @GetMapping("/tenants/{tenantId}/financial/categories")
     @Operation(summary = "Lista categorias financeiras de uma clínica", description = "Retorna todas as categorias financeiras de uma clínica com filtros opcionais.")
@@ -43,7 +43,7 @@ public interface FinancialAPI {
             @PathVariable UUID tenantId,
             @RequestParam(required = false) TransactionType type,
             @RequestParam(required = false) Boolean active
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     // Transações Financeiras
     @PostMapping("/financial/transactions")
@@ -54,7 +54,7 @@ public interface FinancialAPI {
             @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content),
             @ApiResponse(responseCode = "404", description = "Clínica, categoria, agendamento ou profissional não encontrado", content = @Content)
     })
-    FinancialTransactionResponse createFinancialTransaction(@Valid @RequestBody CreateFinancialTransactionRequest request) throws AuthenticationException;
+    FinancialTransactionResponse createFinancialTransaction(@Valid @RequestBody CreateFinancialTransactionRequest request) throws AuthenticationFailedException;
 
     @GetMapping("/tenants/{tenantId}/financial/transactions")
     @Operation(summary = "Lista transações financeiras de uma clínica", description = "Retorna todas as transações financeiras de uma clínica com filtros opcionais.")
@@ -69,7 +69,7 @@ public interface FinancialAPI {
             @RequestParam(required = false) PaymentStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     // Dashboard Financeiro
     @GetMapping("/tenants/{tenantId}/financial/dashboard")
@@ -83,5 +83,5 @@ public interface FinancialAPI {
             @PathVariable UUID tenantId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 }

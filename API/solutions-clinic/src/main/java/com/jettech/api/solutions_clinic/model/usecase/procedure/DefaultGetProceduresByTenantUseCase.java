@@ -12,7 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -23,7 +23,7 @@ public class DefaultGetProceduresByTenantUseCase implements GetProceduresByTenan
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProcedureResponse> execute(GetProceduresByTenantRequest request) throws AuthenticationException {
+    public Page<ProcedureResponse> execute(GetProceduresByTenantRequest request) throws AuthenticationFailedException {
         // Validar se o tenant existe
         tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));

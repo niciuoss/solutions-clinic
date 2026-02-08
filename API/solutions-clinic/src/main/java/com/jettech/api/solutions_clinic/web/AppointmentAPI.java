@@ -14,7 +14,7 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,7 +32,7 @@ public interface AppointmentAPI {
             @ApiResponse(responseCode = "404", description = "Paciente, profissional, sala ou usuário não encontrado", content = @Content),
             @ApiResponse(responseCode = "409", description = "Conflito de horário", content = @Content)
     })
-    AppointmentResponse createAppointment(@Valid @RequestBody CreateAppointmentRequest request) throws AuthenticationException;
+    AppointmentResponse createAppointment(@Valid @RequestBody CreateAppointmentRequest request) throws AuthenticationFailedException;
 
     @GetMapping("/appointments/{id}")
     @Operation(summary = "Busca agendamento por ID", description = "Retorna os dados de um agendamento específico.")
@@ -41,7 +41,7 @@ public interface AppointmentAPI {
                     content = @Content(schema = @Schema(implementation = AppointmentResponse.class))),
             @ApiResponse(responseCode = "404", description = "Agendamento não encontrado", content = @Content)
     })
-    AppointmentResponse getAppointmentById(@PathVariable UUID id) throws AuthenticationException;
+    AppointmentResponse getAppointmentById(@PathVariable UUID id) throws AuthenticationFailedException;
 
     @GetMapping("/professionals/{professionalId}/appointments")
     @Operation(summary = "Lista agendamentos de um profissional", description = "Retorna todos os agendamentos cadastrados para um profissional.")
@@ -50,7 +50,7 @@ public interface AppointmentAPI {
                     content = @Content(schema = @Schema(implementation = AppointmentResponse.class))),
             @ApiResponse(responseCode = "404", description = "Profissional não encontrado", content = @Content)
     })
-    List<AppointmentResponse> getAppointmentsByProfessionalId(@PathVariable UUID professionalId) throws AuthenticationException;
+    List<AppointmentResponse> getAppointmentsByProfessionalId(@PathVariable UUID professionalId) throws AuthenticationFailedException;
 
     @PutMapping("/appointments")
     @Operation(summary = "Atualiza um agendamento", description = "Atualiza os dados de um agendamento existente. Valida horário disponível se houver mudanças.")
@@ -60,7 +60,7 @@ public interface AppointmentAPI {
             @ApiResponse(responseCode = "400", description = "Dados inválidos ou horário indisponível", content = @Content),
             @ApiResponse(responseCode = "404", description = "Agendamento não encontrado", content = @Content)
     })
-    AppointmentResponse updateAppointment(@Valid @RequestBody UpdateAppointmentRequest request) throws AuthenticationException;
+    AppointmentResponse updateAppointment(@Valid @RequestBody UpdateAppointmentRequest request) throws AuthenticationFailedException;
 
     @DeleteMapping("/appointments/{id}")
     @Operation(summary = "Cancela um agendamento", description = "Cancela um agendamento (marca como cancelado ao invés de deletar).")
@@ -84,7 +84,7 @@ public interface AppointmentAPI {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) AppointmentStatus status,
             @RequestParam(required = false, defaultValue = "scheduledAt_desc") String orderBy
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @GetMapping("/appointments/check-availability")
     @Operation(summary = "Verifica disponibilidade de horário", description = "Verifica se um horário específico está disponível para um profissional.")
@@ -99,7 +99,7 @@ public interface AppointmentAPI {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam int durationMinutes,
             @RequestParam(required = false) UUID appointmentId
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @GetMapping("/appointments/available-slots")
     @Operation(summary = "Lista horários disponíveis", description = "Retorna todos os horários disponíveis de um profissional em uma data específica.")
@@ -113,5 +113,5 @@ public interface AppointmentAPI {
             @RequestParam UUID professionalId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(defaultValue = "60") int durationMinutes
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 }

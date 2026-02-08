@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,12 +29,12 @@ public class RoomController implements RoomAPI {
     private final DefaultGetRoomsByTenantUseCase getRoomsByTenantUseCase;
 
     @Override
-    public RoomResponse createRoom(@Valid @RequestBody CreateRoomRequest request) throws AuthenticationException {
+    public RoomResponse createRoom(@Valid @RequestBody CreateRoomRequest request) throws AuthenticationFailedException {
         return createRoomUseCase.execute(request);
     }
 
     @Override
-    public RoomResponse getRoomById(@PathVariable UUID id) throws AuthenticationException {
+    public RoomResponse getRoomById(@PathVariable UUID id) throws AuthenticationFailedException {
         return getRoomByIdUseCase.execute(id);
     }
 
@@ -42,7 +42,7 @@ public class RoomController implements RoomAPI {
     public List<RoomResponse> getRoomsByTenant(
             @RequestParam UUID tenantId,
             @RequestParam(required = false, defaultValue = "true") boolean activeOnly
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         return getRoomsByTenantUseCase.execute(new GetRoomsByTenantRequest(tenantId, activeOnly));
     }
 }

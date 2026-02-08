@@ -12,7 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
@@ -34,7 +34,7 @@ public class DefaultAuthUserUseCase implements AuthUserUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public AuthUserResponse execute(AuthUserRequest authUserRequest) throws AuthenticationException {
+    public AuthUserResponse execute(AuthUserRequest authUserRequest) throws AuthenticationFailedException {
         var user = this.userRepository.findByEmail(authUserRequest.email()).orElseThrow(() -> {
             throw new UsernameNotFoundException("Username/password invalido");
         });
@@ -42,7 +42,7 @@ public class DefaultAuthUserUseCase implements AuthUserUseCase {
         var passwordMatches = passwordEncoder.matches(authUserRequest.password(), user.getPassword());
 
         if(!passwordMatches) {
-            throw new AuthenticationException();
+            throw new AuthenticationFailedException();
         }
 
         // Buscar o tenantId ativo do usuário (preferir tenant ativo, senão o primeiro disponível)

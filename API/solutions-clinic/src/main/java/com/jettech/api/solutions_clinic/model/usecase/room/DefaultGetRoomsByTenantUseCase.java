@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,7 +21,7 @@ public class DefaultGetRoomsByTenantUseCase implements GetRoomsByTenantUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RoomResponse> execute(GetRoomsByTenantRequest request) throws AuthenticationException {
+    public List<RoomResponse> execute(GetRoomsByTenantRequest request) throws AuthenticationFailedException {
         // Validar se o tenant existe
         tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Tag(name = "Tenants", description = "Endpoints para gerenciamento de tenants (clínicas)")
@@ -48,7 +48,7 @@ public interface TenantAPI {
     TenantResponse updateTenantPlan(
             @PathVariable UUID tenantId,
             @Valid @RequestBody UpdateTenantPlanBody body
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @PostMapping("/tenants/{tenantId}/checkout")
     @Operation(
@@ -75,7 +75,7 @@ public interface TenantAPI {
     CreateCheckoutSessionResponse createCheckoutSession(
             @PathVariable UUID tenantId,
             @Valid @RequestBody CreateCheckoutSessionBody body
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @PostMapping("/tenants/{tenantId}/users/{userId}/roles/{role}")
     @Operation(
@@ -104,7 +104,7 @@ public interface TenantAPI {
             @PathVariable UUID tenantId,
             @PathVariable UUID userId,
             @PathVariable String role
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @PostMapping("/tenants/{tenantId}/activate")
     @Operation(
@@ -133,7 +133,7 @@ public interface TenantAPI {
     TenantResponse activatePlan(
             @PathVariable UUID tenantId,
             @Valid @RequestBody ActivatePlanBody body
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @PostMapping("/tenants/{tenantId}/trial")
     @Operation(
@@ -161,5 +161,5 @@ public interface TenantAPI {
     })
     TenantResponse startTrial(
             @PathVariable UUID tenantId
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 }

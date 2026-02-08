@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,7 +17,7 @@ public class DefaultGetFinancialCategoriesByTenantUseCase implements GetFinancia
     private final FinancialCategoryRepository financialCategoryRepository;
 
     @Override
-    public List<FinancialCategoryResponse> execute(GetFinancialCategoriesByTenantRequest request) throws AuthenticationException {
+    public List<FinancialCategoryResponse> execute(GetFinancialCategoriesByTenantRequest request) throws AuthenticationFailedException {
         List<FinancialCategory> categories;
 
         if (request.type() != null && request.active() != null) {

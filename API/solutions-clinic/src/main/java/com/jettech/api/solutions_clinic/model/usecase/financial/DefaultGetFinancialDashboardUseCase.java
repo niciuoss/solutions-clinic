@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -20,7 +20,7 @@ public class DefaultGetFinancialDashboardUseCase implements GetFinancialDashboar
     private final FinancialTransactionRepository financialTransactionRepository;
 
     @Override
-    public FinancialDashboardResponse execute(GetFinancialDashboardRequest request) throws AuthenticationException {
+    public FinancialDashboardResponse execute(GetFinancialDashboardRequest request) throws AuthenticationFailedException {
         LocalDate startDate = request.startDate() != null ? request.startDate() : LocalDate.now().withDayOfMonth(1);
         LocalDate endDate = request.endDate() != null ? request.endDate() : LocalDate.now();
 

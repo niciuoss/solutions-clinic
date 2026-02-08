@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -20,7 +20,7 @@ public class DefaultCreateFinancialCategoryUseCase implements CreateFinancialCat
 
     @Override
     @Transactional
-    public FinancialCategoryResponse execute(CreateFinancialCategoryRequest request) throws AuthenticationException {
+    public FinancialCategoryResponse execute(CreateFinancialCategoryRequest request) throws AuthenticationFailedException {
         Tenant tenant = tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
 

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -17,7 +17,7 @@ public class DefaultUpdateProfessionalActiveUseCase implements UpdateProfessiona
 
     @Override
     @Transactional
-    public ProfessionalResponse execute(UpdateProfessionalActiveRequest request) throws AuthenticationException {
+    public ProfessionalResponse execute(UpdateProfessionalActiveRequest request) throws AuthenticationFailedException {
         Professional professional = professionalRepository.findById(request.id())
                 .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + request.id()));
 

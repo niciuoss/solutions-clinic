@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -20,7 +20,7 @@ public class DefaultGetAppointmentsByProfessionalIdUseCase implements GetAppoint
     private final ProfessionalRepository professionalRepository;
 
     @Override
-    public List<AppointmentResponse> execute(UUID professionalId) throws AuthenticationException {
+    public List<AppointmentResponse> execute(UUID professionalId) throws AuthenticationFailedException {
         // Validar se o profissional existe
         professionalRepository.findById(professionalId)
                 .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + professionalId));

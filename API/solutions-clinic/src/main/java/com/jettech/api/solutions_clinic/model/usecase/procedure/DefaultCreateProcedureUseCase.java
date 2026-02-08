@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Service
@@ -24,14 +24,14 @@ public class DefaultCreateProcedureUseCase implements CreateProcedureUseCase {
 
     @Override
     @Transactional
-    public ProcedureResponse execute(CreateProcedureRequest request) throws AuthenticationException {
+    public ProcedureResponse execute(CreateProcedureRequest request) throws AuthenticationFailedException {
         Tenant tenant = tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
                 
         // Obter usuário logado
         UUID userId = getUserIdFromContext();
         if (userId == null && request.professionalId() == null) {
-            throw new AuthenticationException("Usuário não identificado e profissional não informado");
+            throw new AuthenticationFailedException("Usuário não identificado e profissional não informado");
         }
         
         Professional professional;

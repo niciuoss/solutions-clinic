@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,22 +29,22 @@ public class AppointmentController implements AppointmentAPI {
     private final DefaultGetAvailableSlotsUseCase getAvailableSlotsUseCase;
 
     @Override
-    public AppointmentResponse createAppointment(@Valid @RequestBody CreateAppointmentRequest request) throws AuthenticationException {
+    public AppointmentResponse createAppointment(@Valid @RequestBody CreateAppointmentRequest request) throws AuthenticationFailedException {
         return createAppointmentUseCase.execute(request);
     }
 
     @Override
-    public AppointmentResponse getAppointmentById(@PathVariable UUID id) throws AuthenticationException {
+    public AppointmentResponse getAppointmentById(@PathVariable UUID id) throws AuthenticationFailedException {
         return getAppointmentByIdUseCase.execute(id);
     }
 
     @Override
-    public List<AppointmentResponse> getAppointmentsByProfessionalId(@PathVariable UUID professionalId) throws AuthenticationException {
+    public List<AppointmentResponse> getAppointmentsByProfessionalId(@PathVariable UUID professionalId) throws AuthenticationFailedException {
         return getAppointmentsByProfessionalIdUseCase.execute(professionalId);
     }
 
     @Override
-    public AppointmentResponse updateAppointment(@Valid @RequestBody UpdateAppointmentRequest request) throws AuthenticationException {
+    public AppointmentResponse updateAppointment(@Valid @RequestBody UpdateAppointmentRequest request) throws AuthenticationFailedException {
         return updateAppointmentUseCase.execute(request);
     }
 
@@ -60,7 +60,7 @@ public class AppointmentController implements AppointmentAPI {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(required = false) AppointmentStatus status,
-            @RequestParam(required = false, defaultValue = "scheduledAt_desc") String orderBy) throws AuthenticationException {
+            @RequestParam(required = false, defaultValue = "scheduledAt_desc") String orderBy) throws AuthenticationFailedException {
         return getAppointmentsByTenantUseCase.execute(new GetAppointmentsByTenantRequest(tenantId, date, startDate, endDate, status, orderBy));
     }
 
@@ -69,7 +69,7 @@ public class AppointmentController implements AppointmentAPI {
             @RequestParam UUID professionalId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
             @RequestParam int durationMinutes,
-            @RequestParam(required = false) UUID appointmentId) throws AuthenticationException {
+            @RequestParam(required = false) UUID appointmentId) throws AuthenticationFailedException {
         return checkAvailabilityUseCase.execute(new CheckAvailabilityRequest(professionalId, startTime, durationMinutes, appointmentId));
     }
 
@@ -77,7 +77,7 @@ public class AppointmentController implements AppointmentAPI {
     public List<String> getAvailableSlots(
             @RequestParam UUID professionalId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(defaultValue = "60") int durationMinutes) throws AuthenticationException {
+            @RequestParam(defaultValue = "60") int durationMinutes) throws AuthenticationFailedException {
         return getAvailableSlotsUseCase.execute(new GetAvailableSlotsRequest(professionalId, date, durationMinutes));
     }
 }

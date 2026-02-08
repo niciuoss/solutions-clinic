@@ -12,7 +12,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.List;
 import java.util.UUID;
 
@@ -28,7 +28,7 @@ public interface ProfessionalScheduleAPI {
             @ApiResponse(responseCode = "404", description = "Profissional não encontrado", content = @Content),
             @ApiResponse(responseCode = "409", description = "Já existe uma agenda para este profissional neste dia da semana", content = @Content)
     })
-    ProfessionalScheduleResponse createProfessionalSchedule(@Valid @RequestBody CreateProfessionalScheduleRequest request) throws AuthenticationException;
+    ProfessionalScheduleResponse createProfessionalSchedule(@Valid @RequestBody CreateProfessionalScheduleRequest request) throws AuthenticationFailedException;
 
     @GetMapping("/professional-schedules/{id}")
     @Operation(summary = "Busca agenda por ID", description = "Retorna os dados de uma agenda específica.")
@@ -37,7 +37,7 @@ public interface ProfessionalScheduleAPI {
                     content = @Content(schema = @Schema(implementation = ProfessionalScheduleResponse.class))),
             @ApiResponse(responseCode = "404", description = "Agenda não encontrada", content = @Content)
     })
-    ProfessionalScheduleResponse getProfessionalScheduleById(@PathVariable UUID id) throws AuthenticationException;
+    ProfessionalScheduleResponse getProfessionalScheduleById(@PathVariable UUID id) throws AuthenticationFailedException;
 
     @GetMapping("/professionals/{professionalId}/schedules")
     @Operation(summary = "Lista agendas de um profissional", description = "Retorna todas as agendas cadastradas para um profissional.")
@@ -46,7 +46,7 @@ public interface ProfessionalScheduleAPI {
                     content = @Content(schema = @Schema(implementation = ProfessionalScheduleResponse.class))),
             @ApiResponse(responseCode = "404", description = "Profissional não encontrado", content = @Content)
     })
-    List<ProfessionalScheduleResponse> getProfessionalSchedulesByProfessionalId(@PathVariable UUID professionalId) throws AuthenticationException;
+    List<ProfessionalScheduleResponse> getProfessionalSchedulesByProfessionalId(@PathVariable UUID professionalId) throws AuthenticationFailedException;
 
     @PutMapping("/professional-schedules")
     @Operation(summary = "Atualiza uma agenda", description = "Atualiza os dados de uma agenda existente.")
@@ -56,7 +56,7 @@ public interface ProfessionalScheduleAPI {
             @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content),
             @ApiResponse(responseCode = "404", description = "Agenda não encontrada", content = @Content)
     })
-    ProfessionalScheduleResponse updateProfessionalSchedule(@Valid @RequestBody UpdateProfessionalScheduleRequest request) throws AuthenticationException;
+    ProfessionalScheduleResponse updateProfessionalSchedule(@Valid @RequestBody UpdateProfessionalScheduleRequest request) throws AuthenticationFailedException;
 
     @DeleteMapping("/professional-schedules/{id}")
     @Operation(summary = "Deleta uma agenda", description = "Remove uma agenda do sistema.")

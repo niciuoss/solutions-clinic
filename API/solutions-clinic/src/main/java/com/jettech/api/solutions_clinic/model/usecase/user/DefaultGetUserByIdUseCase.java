@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -23,7 +23,7 @@ public class DefaultGetUserByIdUseCase implements GetUserByIdUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDetailResponse execute(UUID userId) throws AuthenticationException {
+    public UserDetailResponse execute(UUID userId) throws AuthenticationFailedException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + userId));
 

@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -41,7 +41,7 @@ public class UserController implements UserAPI {
     private final DefaultUpdateUserBlockedUseCase updateUserBlockedUseCase;
 
     @Override
-    public User createUser(@Valid @RequestBody CreateUserRequest in) throws AuthenticationException {
+    public User createUser(@Valid @RequestBody CreateUserRequest in) throws AuthenticationFailedException {
         return defaultCreateUserUseCase.execute(in);
     }
 
@@ -54,7 +54,7 @@ public class UserController implements UserAPI {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean blocked,
             @RequestParam(required = false) com.jettech.api.solutions_clinic.model.entity.Role role
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         return getUsersByTenantUseCase.execute(new GetUsersByTenantRequest(
                 tenantId,
                 page,
@@ -67,7 +67,7 @@ public class UserController implements UserAPI {
     }
 
     @Override
-    public UserDetailResponse getUserById(@PathVariable UUID id) throws AuthenticationException {
+    public UserDetailResponse getUserById(@PathVariable UUID id) throws AuthenticationFailedException {
         return getUserByIdUseCase.execute(id);
     }
 
@@ -75,7 +75,7 @@ public class UserController implements UserAPI {
     public UserResponse updateUser(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateUserBodyRequest request
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         return updateUserUseCase.execute(new UpdateUserRequest(
                 id,
                 request.firstName(),
@@ -88,7 +88,7 @@ public class UserController implements UserAPI {
     }
 
     @Override
-    public void deleteUser(@PathVariable UUID id) throws AuthenticationException {
+    public void deleteUser(@PathVariable UUID id) throws AuthenticationFailedException {
         deleteUserUseCase.execute(id);
     }
 
@@ -96,7 +96,7 @@ public class UserController implements UserAPI {
     public UserResponse updateUserBlocked(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateUserBlockedBodyRequest request
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         return updateUserBlockedUseCase.execute(new UpdateUserBlockedRequest(
                 id,
                 request.blocked()
@@ -104,7 +104,7 @@ public class UserController implements UserAPI {
     }
 
     @Override
-    public Map<String, Boolean> checkCpfExists(@PathVariable String cpf) throws AuthenticationException {
+    public Map<String, Boolean> checkCpfExists(@PathVariable String cpf) throws AuthenticationFailedException {
         boolean exists = ((DefaultUpdateUserUseCase) updateUserUseCase).checkCpfExists(cpf);
         Map<String, Boolean> response = new HashMap<>();
         response.put("exists", exists);

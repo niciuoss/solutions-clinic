@@ -15,7 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.Arrays;
 
 @Service
@@ -29,7 +29,7 @@ public class DefaultSignUpClinicOwnerUseCase implements SignUpClinicOwnerUseCase
 
     @Override
     @Transactional
-    public SignUpResponse execute(SignUpClinicOwnerRequest request) throws AuthenticationException {
+    public SignUpResponse execute(SignUpClinicOwnerRequest request) throws AuthenticationFailedException {
         // Validações
         validateEmailNotExists(request.email());
         validateCnpjNotExists(request.cnpj());

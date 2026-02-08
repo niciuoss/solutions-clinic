@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -17,7 +17,7 @@ public class DefaultUpdateUserUseCase implements UpdateUserUseCase {
 
     @Override
     @Transactional
-    public UserResponse execute(UpdateUserRequest request) throws AuthenticationException {
+    public UserResponse execute(UpdateUserRequest request) throws AuthenticationFailedException {
         User user = userRepository.findById(request.id())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.id()));
 

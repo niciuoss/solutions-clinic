@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -17,7 +17,7 @@ public class DefaultUpdateProcedureUseCase implements UpdateProcedureUseCase {
 
     @Override
     @Transactional
-    public ProcedureResponse execute(UpdateProcedureRequest request) throws AuthenticationException {
+    public ProcedureResponse execute(UpdateProcedureRequest request) throws AuthenticationFailedException {
         Procedure procedure = procedureRepository.findById(request.id())
                 .orElseThrow(() -> new RuntimeException("Procedimento não encontrado com ID: " + request.id()));
 

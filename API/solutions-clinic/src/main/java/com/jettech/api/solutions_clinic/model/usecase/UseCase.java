@@ -1,9 +1,9 @@
 package com.jettech.api.solutions_clinic.model.usecase;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 public interface UseCase<IN, OUT> {
 
-    OUT execute(IN in) throws AuthenticationException;
+    OUT execute(IN in) throws AuthenticationFailedException;
 
 }

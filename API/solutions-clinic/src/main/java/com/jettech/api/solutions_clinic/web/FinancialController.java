@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -26,7 +26,7 @@ public class FinancialController implements FinancialAPI {
     private final DefaultGetFinancialDashboardUseCase getFinancialDashboardUseCase;
 
     @Override
-    public FinancialCategoryResponse createFinancialCategory(@Valid @RequestBody CreateFinancialCategoryRequest request) throws AuthenticationException {
+    public FinancialCategoryResponse createFinancialCategory(@Valid @RequestBody CreateFinancialCategoryRequest request) throws AuthenticationFailedException {
         return createFinancialCategoryUseCase.execute(request);
     }
 
@@ -35,12 +35,12 @@ public class FinancialController implements FinancialAPI {
             @PathVariable UUID tenantId,
             @RequestParam(required = false) TransactionType type,
             @RequestParam(required = false) Boolean active
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         return getFinancialCategoriesByTenantUseCase.execute(new GetFinancialCategoriesByTenantRequest(tenantId, type, active));
     }
 
     @Override
-    public FinancialTransactionResponse createFinancialTransaction(@Valid @RequestBody CreateFinancialTransactionRequest request) throws AuthenticationException {
+    public FinancialTransactionResponse createFinancialTransaction(@Valid @RequestBody CreateFinancialTransactionRequest request) throws AuthenticationFailedException {
         return createFinancialTransactionUseCase.execute(request);
     }
 
@@ -51,7 +51,7 @@ public class FinancialController implements FinancialAPI {
             @RequestParam(required = false) PaymentStatus status,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         return getFinancialTransactionsByTenantUseCase.execute(
                 new GetFinancialTransactionsByTenantRequest(tenantId, type, status, startDate, endDate));
     }
@@ -61,7 +61,7 @@ public class FinancialController implements FinancialAPI {
             @PathVariable UUID tenantId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         return getFinancialDashboardUseCase.execute(new GetFinancialDashboardRequest(tenantId, startDate, endDate));
     }
 }

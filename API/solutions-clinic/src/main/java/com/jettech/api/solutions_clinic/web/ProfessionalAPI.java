@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Tag(name = "Profissionais", description = "Endpoints para gerenciamento de profissionais")
@@ -35,7 +35,7 @@ public interface ProfessionalAPI {
             @ApiResponse(responseCode = "404", description = "Usuário ou clínica não encontrado", content = @Content),
             @ApiResponse(responseCode = "409", description = "Profissional já existe para este usuário e clínica", content = @Content)
     })
-    ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationException;
+    ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationFailedException;
 
     @PostMapping("/clinics/{clinicId}/professionals")
     @Operation(summary = "Adiciona profissional a uma clínica", description = "Registra um profissional associando-o a uma clínica específica. A role SPECIALIST é criada automaticamente para o usuário no tenant.")
@@ -49,7 +49,7 @@ public interface ProfessionalAPI {
     ProfessionalResponse addProfessionalToClinic(
             @PathVariable UUID clinicId,
             @Valid @RequestBody AddProfessionalToClinicBodyRequest request
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @GetMapping("/professionals/{userId}/tenants")
     @Operation(summary = "Lista tenants vinculados a um profissional", description = "Retorna todos os tenants (clínicas) onde o usuário atua como profissional.")
@@ -58,7 +58,7 @@ public interface ProfessionalAPI {
                     content = @Content(schema = @Schema(implementation = ProfessionalTenantResponse.class))),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content)
     })
-    ProfessionalTenantResponse getProfessionalTenants(@PathVariable UUID userId) throws AuthenticationException;
+    ProfessionalTenantResponse getProfessionalTenants(@PathVariable UUID userId) throws AuthenticationFailedException;
 
     @GetMapping("/clinics/{clinicId}/professionals")
     @Operation(
@@ -85,7 +85,7 @@ public interface ProfessionalAPI {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) String documentType
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @PatchMapping("/professionals/{id}/active")
     @Operation(summary = "Atualiza o status ativo de um profissional", description = "Ativa ou desativa um profissional no sistema.")
@@ -97,7 +97,7 @@ public interface ProfessionalAPI {
     ProfessionalResponse updateProfessionalActive(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateProfessionalActiveBodyRequest request
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @PostMapping("/professionals/with-user")
     @Operation(summary = "Cria um novo profissional com usuário", description = "Cria um novo usuário e associa-o como profissional à clínica autenticada. A role SPECIALIST é criada automaticamente.")
@@ -108,6 +108,6 @@ public interface ProfessionalAPI {
             @ApiResponse(responseCode = "404", description = "Clínica não encontrada", content = @Content),
             @ApiResponse(responseCode = "409", description = "Email ou CPF já cadastrado", content = @Content)
     })
-    ProfessionalResponse createProfessionalWithUser(@Valid @RequestBody com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalWithUserRequest request) throws AuthenticationException;
+    ProfessionalResponse createProfessionalWithUser(@Valid @RequestBody com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalWithUserRequest request) throws AuthenticationFailedException;
 }
 

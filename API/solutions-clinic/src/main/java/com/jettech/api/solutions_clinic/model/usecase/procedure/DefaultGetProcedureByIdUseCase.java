@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Service
@@ -18,7 +18,7 @@ public class DefaultGetProcedureByIdUseCase implements GetProcedureByIdUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public ProcedureResponse execute(UUID id) throws AuthenticationException {
+    public ProcedureResponse execute(UUID id) throws AuthenticationFailedException {
         Procedure procedure = procedureRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Procedimento não encontrado com ID: " + id));
 

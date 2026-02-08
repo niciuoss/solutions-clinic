@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -20,7 +20,7 @@ public class DefaultCreateProfessionalScheduleUseCase implements CreateProfessio
 
     @Override
     @Transactional
-    public ProfessionalScheduleResponse execute(CreateProfessionalScheduleRequest request) throws AuthenticationException {
+    public ProfessionalScheduleResponse execute(CreateProfessionalScheduleRequest request) throws AuthenticationFailedException {
         // Validar se o profissional existe
         Professional professional = professionalRepository.findById(request.professionalId())
                 .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + request.professionalId()));

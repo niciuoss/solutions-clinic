@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -17,7 +17,7 @@ public class DefaultUpdateProfessionalScheduleUseCase implements UpdateProfessio
 
     @Override
     @Transactional
-    public ProfessionalScheduleResponse execute(UpdateProfessionalScheduleRequest request) throws AuthenticationException {
+    public ProfessionalScheduleResponse execute(UpdateProfessionalScheduleRequest request) throws AuthenticationFailedException {
         ProfessionalSchedule schedule = professionalScheduleRepository.findById(request.id())
                 .orElseThrow(() -> new RuntimeException("Agenda não encontrada com ID: " + request.id()));
 

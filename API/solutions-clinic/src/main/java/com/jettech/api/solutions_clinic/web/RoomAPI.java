@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.List;
 import java.util.UUID;
 
@@ -30,7 +30,7 @@ public interface RoomAPI {
             @ApiResponse(responseCode = "400", description = "Dados inválidos", content = @Content),
             @ApiResponse(responseCode = "404", description = "Clínica não encontrada", content = @Content)
     })
-    RoomResponse createRoom(@Valid @RequestBody CreateRoomRequest request) throws AuthenticationException;
+    RoomResponse createRoom(@Valid @RequestBody CreateRoomRequest request) throws AuthenticationFailedException;
 
     @GetMapping("/rooms/{id}")
     @Operation(
@@ -49,7 +49,7 @@ public interface RoomAPI {
                 content = @Content
             )
     })
-    RoomResponse getRoomById(@PathVariable UUID id) throws AuthenticationException;
+    RoomResponse getRoomById(@PathVariable UUID id) throws AuthenticationFailedException;
 
     @GetMapping("/rooms")
     @Operation(
@@ -71,6 +71,6 @@ public interface RoomAPI {
     List<RoomResponse> getRoomsByTenant(
             @RequestParam UUID tenantId,
             @RequestParam(required = false, defaultValue = "true") boolean activeOnly
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 }
 

@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,7 +18,7 @@ public class DefaultGetFinancialTransactionsByTenantUseCase implements GetFinanc
     private final FinancialTransactionRepository financialTransactionRepository;
 
     @Override
-    public List<FinancialTransactionResponse> execute(GetFinancialTransactionsByTenantRequest request) throws AuthenticationException {
+    public List<FinancialTransactionResponse> execute(GetFinancialTransactionsByTenantRequest request) throws AuthenticationFailedException {
         List<FinancialTransaction> transactions;
 
         if (request.startDate() != null && request.endDate() != null) {

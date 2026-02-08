@@ -10,7 +10,7 @@ import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -23,12 +23,12 @@ public class AuthUserController implements AuthUserAPI {
     private final DefaultSwitchTenantUseCase defaultSwitchTenantUseCase;
 
     @Override
-    public AuthUserResponse signIn(@Valid @RequestBody AuthUserRequest authUserRequest) throws AuthenticationException {
+    public AuthUserResponse signIn(@Valid @RequestBody AuthUserRequest authUserRequest) throws AuthenticationFailedException {
         return defaultAuthUserUseCase.execute(authUserRequest);
     }
 
     @Override
-    public AuthUserResponse switchTenant(@Valid @RequestBody SwitchTenantRequest request) throws AuthenticationException {
+    public AuthUserResponse switchTenant(@Valid @RequestBody SwitchTenantRequest request) throws AuthenticationFailedException {
         return defaultSwitchTenantUseCase.execute(request);
     }
 }

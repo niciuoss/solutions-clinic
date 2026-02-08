@@ -2,7 +2,7 @@ package com.jettech.api.solutions_clinic.model.usecase.user;
 
 import com.jettech.api.solutions_clinic.model.usecase.UseCase;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 /**
  * Troca o contexto de clínica (tenant) da sessão do usuário.

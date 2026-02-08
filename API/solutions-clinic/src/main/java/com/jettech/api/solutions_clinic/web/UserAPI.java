@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.Map;
 import java.util.UUID;
 
@@ -41,7 +41,7 @@ public interface UserAPI {
             @ApiResponse(responseCode = "409", description = "Email já existente", content = @Content),
             @ApiResponse(responseCode = "404", description = "Clínica não encontrada (quando tenantId é fornecido)", content = @Content)
     })
-    User createUser(@Valid @RequestBody CreateUserRequest user) throws AuthenticationException;
+    User createUser(@Valid @RequestBody CreateUserRequest user) throws AuthenticationFailedException;
 
     @GetMapping
     @Operation(
@@ -68,7 +68,7 @@ public interface UserAPI {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean blocked,
             @RequestParam(required = false) com.jettech.api.solutions_clinic.model.entity.Role role
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @GetMapping("/{id}")
     @Operation(
@@ -87,7 +87,7 @@ public interface UserAPI {
                 content = @Content
             )
     })
-    UserDetailResponse getUserById(@PathVariable UUID id) throws AuthenticationException;
+    UserDetailResponse getUserById(@PathVariable UUID id) throws AuthenticationFailedException;
 
     @PutMapping("/{id}")
     @Operation(summary = "Atualiza um usuário", description = "Atualiza os dados de um usuário existente.")
@@ -103,7 +103,7 @@ public interface UserAPI {
     UserResponse updateUser(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateUserBodyRequest request
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Deleta um usuário", description = "Remove um usuário do sistema.")
@@ -111,7 +111,7 @@ public interface UserAPI {
             @ApiResponse(responseCode = "200", description = "Usuário deletado com sucesso", content = @Content),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado", content = @Content)
     })
-    void deleteUser(@PathVariable UUID id) throws AuthenticationException;
+    void deleteUser(@PathVariable UUID id) throws AuthenticationFailedException;
 
     @PatchMapping("/{id}/blocked")
     @Operation(summary = "Bloqueia ou desbloqueia um usuário", description = "Atualiza o status de bloqueio de um usuário no sistema.")
@@ -126,7 +126,7 @@ public interface UserAPI {
     UserResponse updateUserBlocked(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateUserBlockedBodyRequest request
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @GetMapping("/check-cpf/{cpf}")
     @Operation(summary = "Verifica se um CPF já está cadastrado", description = "Verifica se um CPF já está cadastrado no sistema.")
@@ -137,6 +137,6 @@ public interface UserAPI {
                 content = @Content
             )
     })
-    Map<String, Boolean> checkCpfExists(@PathVariable String cpf) throws AuthenticationException;
+    Map<String, Boolean> checkCpfExists(@PathVariable String cpf) throws AuthenticationFailedException;
 }
 

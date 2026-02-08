@@ -12,7 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -30,7 +30,7 @@ public class DefaultActivatePlanUseCase implements ActivatePlanUseCase {
 
     @Override
     @Transactional
-    public TenantResponse execute(ActivatePlanRequest request) throws AuthenticationException {
+    public TenantResponse execute(ActivatePlanRequest request) throws AuthenticationFailedException {
         log.warn("ATIVACAO MANUAL DE PLANO - Este endpoint deve ser usado apenas para testes!");
 
         Tenant tenant = tenantRepository.findById(request.tenantId())

@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -28,7 +28,7 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
 
     @Override
     @Transactional
-    public AppointmentResponse execute(UpdateAppointmentRequest request) throws AuthenticationException {
+    public AppointmentResponse execute(UpdateAppointmentRequest request) throws AuthenticationFailedException {
         Appointment appointment = appointmentRepository.findById(request.id())
                 .orElseThrow(() -> new RuntimeException("Agendamento não encontrado com ID: " + request.id()));
 

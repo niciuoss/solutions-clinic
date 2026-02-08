@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @RestController
@@ -42,14 +42,14 @@ public class ProfessionalController implements ProfessionalAPI {
     private final DefaultUpdateProfessionalActiveUseCase updateProfessionalActiveUseCase;
 
     @Override
-    public ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationException {
+    public ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationFailedException {
         return createProfessionalUseCase.execute(request);
     }
 
     @Override
     public ProfessionalResponse addProfessionalToClinic(
             @PathVariable UUID clinicId,
-            @Valid @RequestBody AddProfessionalToClinicBodyRequest request) throws AuthenticationException {
+            @Valid @RequestBody AddProfessionalToClinicBodyRequest request) throws AuthenticationFailedException {
         return addProfessionalToClinicUseCase.execute(new AddProfessionalToClinicRequest(
                 request.userId(),
                 clinicId,
@@ -62,7 +62,7 @@ public class ProfessionalController implements ProfessionalAPI {
     }
 
     @Override
-    public ProfessionalTenantResponse getProfessionalTenants(@PathVariable UUID userId) throws AuthenticationException {
+    public ProfessionalTenantResponse getProfessionalTenants(@PathVariable UUID userId) throws AuthenticationFailedException {
         return getProfessionalTenantsUseCase.execute(userId);
     }
 
@@ -75,7 +75,7 @@ public class ProfessionalController implements ProfessionalAPI {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean active,
             @RequestParam(required = false) String documentType
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         DocumentType docType = null;
         if (documentType != null && !documentType.isEmpty()) {
             try {
@@ -99,7 +99,7 @@ public class ProfessionalController implements ProfessionalAPI {
     @Override
     public ProfessionalResponse updateProfessionalActive(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateProfessionalActiveBodyRequest request) throws AuthenticationException {
+            @Valid @RequestBody UpdateProfessionalActiveBodyRequest request) throws AuthenticationFailedException {
         return updateProfessionalActiveUseCase.execute(new UpdateProfessionalActiveRequest(
                 id,
                 request.active()
@@ -107,7 +107,7 @@ public class ProfessionalController implements ProfessionalAPI {
     }
 
     @Override
-    public ProfessionalResponse createProfessionalWithUser(@Valid @RequestBody CreateProfessionalWithUserRequest request) throws AuthenticationException {
+    public ProfessionalResponse createProfessionalWithUser(@Valid @RequestBody CreateProfessionalWithUserRequest request) throws AuthenticationFailedException {
         return createProfessionalWithUserUseCase.execute(request);
     }
 }

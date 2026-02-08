@@ -11,7 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @RestController
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -21,12 +21,12 @@ public class SignUpController implements SignUpAPI {
     private final DefaultSignUpSoloUseCase signUpSoloUseCase;
 
     @Override
-    public SignUpResponse signUpClinicOwner(@Valid @RequestBody SignUpClinicOwnerRequest request) throws AuthenticationException {
+    public SignUpResponse signUpClinicOwner(@Valid @RequestBody SignUpClinicOwnerRequest request) throws AuthenticationFailedException {
         return signUpClinicOwnerUseCase.execute(request);
     }
 
     @Override
-    public SignUpResponse signUpSolo(@Valid @RequestBody SignUpSoloRequest request) throws AuthenticationException {
+    public SignUpResponse signUpSolo(@Valid @RequestBody SignUpSoloRequest request) throws AuthenticationFailedException {
         return signUpSoloUseCase.execute(request);
     }
 }

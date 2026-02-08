@@ -14,7 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -27,7 +27,7 @@ public class DefaultAddProfessionalToClinicUseCase implements AddProfessionalToC
 
     @Override
     @Transactional
-    public ProfessionalResponse execute(AddProfessionalToClinicRequest request) throws AuthenticationException {
+    public ProfessionalResponse execute(AddProfessionalToClinicRequest request) throws AuthenticationFailedException {
         // Validar se o usuário existe
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.userId()));

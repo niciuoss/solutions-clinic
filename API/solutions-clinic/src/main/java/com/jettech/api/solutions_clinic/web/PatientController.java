@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @RestController
@@ -33,7 +33,7 @@ public class PatientController implements PatientAPI {
     private final UpdatePatientActiveUseCase updatePatientActiveUseCase;
 
     @Override
-    public PatientResponse createPatient(@Valid @RequestBody CreatePatientRequest request) throws AuthenticationException {
+    public PatientResponse createPatient(@Valid @RequestBody CreatePatientRequest request) throws AuthenticationFailedException {
         return createPatientUseCase.execute(request);
     }
 
@@ -44,19 +44,19 @@ public class PatientController implements PatientAPI {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, defaultValue = "firstName,asc") String sort,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) Boolean active) throws AuthenticationException {
+            @RequestParam(required = false) Boolean active) throws AuthenticationFailedException {
         return getPatientsByTenantUseCase.execute(new GetPatientsByTenantRequest(tenantId, page, size, sort, search, active));
     }
 
     @Override
-    public PatientResponse getPatientById(@PathVariable UUID id) throws AuthenticationException {
+    public PatientResponse getPatientById(@PathVariable UUID id) throws AuthenticationFailedException {
         return getPatientByIdUseCase.execute(id);
     }
 
     @Override
     public PatientResponse updatePatientActive(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdatePatientActiveBodyRequest request) throws AuthenticationException {
+            @Valid @RequestBody UpdatePatientActiveBodyRequest request) throws AuthenticationFailedException {
         return updatePatientActiveUseCase.execute(new UpdatePatientActiveRequest(id, request.active()));
     }
 }

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Service
@@ -18,7 +18,7 @@ public class DefaultGetRoomByIdUseCase implements GetRoomByIdUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public RoomResponse execute(UUID id) throws AuthenticationException {
+    public RoomResponse execute(UUID id) throws AuthenticationFailedException {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Sala não encontrada com ID: " + id));
 

@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.LocalDate;
 
 /**
@@ -29,7 +29,7 @@ public class DefaultStartTrialUseCase implements StartTrialUseCase {
 
     @Override
     @Transactional
-    public TenantResponse execute(StartTrialRequest request) throws AuthenticationException {
+    public TenantResponse execute(StartTrialRequest request) throws AuthenticationFailedException {
         log.info("Iniciando trial - tenantId: {}, duração: {} dias", request.tenantId(), trialDurationDays);
 
         Tenant tenant = tenantRepository.findById(request.tenantId())

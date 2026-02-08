@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -17,7 +17,7 @@ public class DefaultUpdatePatientActiveUseCase implements UpdatePatientActiveUse
 
     @Override
     @Transactional
-    public PatientResponse execute(UpdatePatientActiveRequest request) throws AuthenticationException {
+    public PatientResponse execute(UpdatePatientActiveRequest request) throws AuthenticationFailedException {
         Patient patient = patientRepository.findById(request.id())
                 .orElseThrow(() -> new RuntimeException("Paciente não encontrado com ID: " + request.id()));
 

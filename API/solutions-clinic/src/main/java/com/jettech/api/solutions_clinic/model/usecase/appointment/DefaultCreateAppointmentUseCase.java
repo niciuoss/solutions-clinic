@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -31,7 +31,7 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
 
     @Override
     @Transactional
-    public AppointmentResponse execute(CreateAppointmentRequest request) throws AuthenticationException {
+    public AppointmentResponse execute(CreateAppointmentRequest request) throws AuthenticationFailedException {
         // Validar se o tenant existe
         Tenant tenant = tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));

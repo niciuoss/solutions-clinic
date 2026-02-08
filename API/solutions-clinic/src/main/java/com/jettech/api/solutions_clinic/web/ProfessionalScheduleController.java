@@ -6,7 +6,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.List;
 import java.util.UUID;
 
@@ -22,22 +22,22 @@ public class ProfessionalScheduleController implements ProfessionalScheduleAPI {
     private final DefaultDeleteProfessionalScheduleUseCase deleteProfessionalScheduleUseCase;
 
     @Override
-    public ProfessionalScheduleResponse createProfessionalSchedule(@Valid @RequestBody CreateProfessionalScheduleRequest request) throws AuthenticationException {
+    public ProfessionalScheduleResponse createProfessionalSchedule(@Valid @RequestBody CreateProfessionalScheduleRequest request) throws AuthenticationFailedException {
         return createProfessionalScheduleUseCase.execute(request);
     }
 
     @Override
-    public ProfessionalScheduleResponse getProfessionalScheduleById(@PathVariable UUID id) throws AuthenticationException {
+    public ProfessionalScheduleResponse getProfessionalScheduleById(@PathVariable UUID id) throws AuthenticationFailedException {
         return getProfessionalScheduleByIdUseCase.execute(id);
     }
 
     @Override
-    public List<ProfessionalScheduleResponse> getProfessionalSchedulesByProfessionalId(@PathVariable UUID professionalId) throws AuthenticationException {
+    public List<ProfessionalScheduleResponse> getProfessionalSchedulesByProfessionalId(@PathVariable UUID professionalId) throws AuthenticationFailedException {
         return getProfessionalSchedulesByProfessionalIdUseCase.execute(professionalId);
     }
 
     @Override
-    public ProfessionalScheduleResponse updateProfessionalSchedule(@Valid @RequestBody UpdateProfessionalScheduleRequest request) throws AuthenticationException {
+    public ProfessionalScheduleResponse updateProfessionalSchedule(@Valid @RequestBody UpdateProfessionalScheduleRequest request) throws AuthenticationFailedException {
         return updateProfessionalScheduleUseCase.execute(request);
     }
 

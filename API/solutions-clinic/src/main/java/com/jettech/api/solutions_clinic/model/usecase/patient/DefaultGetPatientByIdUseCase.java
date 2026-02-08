@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Service
@@ -18,7 +18,7 @@ public class DefaultGetPatientByIdUseCase implements GetPatientByIdUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public PatientResponse execute(UUID id) throws AuthenticationException {
+    public PatientResponse execute(UUID id) throws AuthenticationFailedException {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Paciente não encontrado com ID: " + id));
 

@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Slf4j
@@ -44,7 +44,7 @@ public class TenantController implements TenantAPI {
     public TenantResponse updateTenantPlan(
             @PathVariable UUID tenantId,
             @Valid @RequestBody UpdateTenantPlanBody body
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         log.info("Recebendo atualização de plano - tenantId: {}, planType: {}", tenantId, body.planType());
         // Criar request com tenantId do path e planType do body
         UpdateTenantPlanRequest request = new UpdateTenantPlanRequest(tenantId, body.planType());
@@ -55,7 +55,7 @@ public class TenantController implements TenantAPI {
     public CreateCheckoutSessionResponse createCheckoutSession(
             @PathVariable UUID tenantId,
             @Valid @RequestBody CreateCheckoutSessionBody body
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         log.info("Criando sessão de checkout - tenantId: {}, planType: {}", tenantId, body.planType());
         CreateCheckoutSessionRequest request = new CreateCheckoutSessionRequest(tenantId, body.planType());
         return createCheckoutSessionUseCase.execute(request);
@@ -66,7 +66,7 @@ public class TenantController implements TenantAPI {
             @PathVariable UUID tenantId,
             @PathVariable UUID userId,
             @PathVariable String role
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         log.info("Associando usuário à clínica - tenantId: {}, userId: {}, role: {}", tenantId, userId, role);
         
         // Converter String para Role enum
@@ -85,7 +85,7 @@ public class TenantController implements TenantAPI {
     public TenantResponse activatePlan(
             @PathVariable UUID tenantId,
             @Valid @RequestBody ActivatePlanBody body
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         log.warn("ATIVACAO MANUAL - tenantId: {}, planType: {} - USE APENAS PARA TESTES!", tenantId, body.planType());
         ActivatePlanRequest request = new ActivatePlanRequest(tenantId, body.planType());
         return activatePlanUseCase.execute(request);
@@ -94,7 +94,7 @@ public class TenantController implements TenantAPI {
     @Override
     public TenantResponse startTrial(
             @PathVariable UUID tenantId
-    ) throws AuthenticationException {
+    ) throws AuthenticationFailedException {
         log.info("Iniciando trial - tenantId: {}", tenantId);
         StartTrialRequest request = new StartTrialRequest(tenantId);
         return startTrialUseCase.execute(request);

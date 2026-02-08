@@ -14,7 +14,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -35,23 +35,23 @@ public class DefaultSwitchTenantUseCase implements SwitchTenantUseCase {
 
     @Override
     @Transactional(readOnly = true)
-    public AuthUserResponse execute(SwitchTenantRequest request) throws AuthenticationException {
+    public AuthUserResponse execute(SwitchTenantRequest request) throws AuthenticationFailedException {
         UUID userId = getUserIdFromContext();
         if (userId == null) {
-            throw new AuthenticationException();
+            throw new AuthenticationFailedException();
         }
 
         userRepository.findById(userId)
-                .orElseThrow(() -> new AuthenticationException());
+                .orElseThrow(() -> new AuthenticationFailedException());
 
         List<UserTenantRole> userTenantRoles = userTenantRoleRepository.findByUser_IdAndTenant_Id(userId, request.tenantId());
         if (userTenantRoles.isEmpty()) {
-            throw new AuthenticationException();
+            throw new AuthenticationFailedException();
         }
 
         UserTenantRole selected = userTenantRoles.get(0);
         if (!selected.getTenant().isActive()) {
-            throw new AuthenticationException();
+            throw new AuthenticationFailedException();
         }
 
         var expiresIn = Instant.now().plus(Duration.ofDays(1));

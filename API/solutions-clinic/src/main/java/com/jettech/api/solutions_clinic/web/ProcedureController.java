@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @RestController
@@ -23,7 +23,7 @@ public class ProcedureController implements ProcedureAPI {
     private final DefaultDeleteProcedureUseCase deleteProcedureUseCase;
 
     @Override
-    public ProcedureResponse createProcedure(@Valid @RequestBody CreateProcedureRequest request) throws AuthenticationException {
+    public ProcedureResponse createProcedure(@Valid @RequestBody CreateProcedureRequest request) throws AuthenticationFailedException {
         return createProcedureUseCase.execute(request);
     }
 
@@ -35,19 +35,19 @@ public class ProcedureController implements ProcedureAPI {
             @RequestParam(required = false, defaultValue = "name,asc") String sort,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean active,
-            @RequestParam(required = false) UUID professionalId) throws AuthenticationException {
+            @RequestParam(required = false) UUID professionalId) throws AuthenticationFailedException {
         return getProceduresByTenantUseCase.execute(new GetProceduresByTenantRequest(tenantId, page, size, sort, search, active, professionalId));
     }
 
     @Override
-    public ProcedureResponse getProcedureById(@PathVariable UUID id) throws AuthenticationException {
+    public ProcedureResponse getProcedureById(@PathVariable UUID id) throws AuthenticationFailedException {
         return getProcedureByIdUseCase.execute(id);
     }
 
     @Override
     public ProcedureResponse updateProcedure(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateProcedureBodyRequest request) throws AuthenticationException {
+            @Valid @RequestBody UpdateProcedureBodyRequest request) throws AuthenticationFailedException {
         return updateProcedureUseCase.execute(new UpdateProcedureRequest(
                 id,
                 request.name(),
@@ -61,12 +61,12 @@ public class ProcedureController implements ProcedureAPI {
     @Override
     public ProcedureResponse updateProcedureActive(
             @PathVariable UUID id,
-            @Valid @RequestBody UpdateProcedureActiveBodyRequest request) throws AuthenticationException {
+            @Valid @RequestBody UpdateProcedureActiveBodyRequest request) throws AuthenticationFailedException {
         return updateProcedureActiveUseCase.execute(new UpdateProcedureActiveRequest(id, request.active()));
     }
 
     @Override
-    public void deleteProcedure(@PathVariable UUID id) throws AuthenticationException {
+    public void deleteProcedure(@PathVariable UUID id) throws AuthenticationFailedException {
         deleteProcedureUseCase.execute(id);
     }
 }

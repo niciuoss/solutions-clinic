@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,7 +40,7 @@ public interface SignUpAPI {
             content = @Content
         )
     })
-    SignUpResponse signUpClinicOwner(@Valid @RequestBody SignUpClinicOwnerRequest request) throws AuthenticationException;
+    SignUpResponse signUpClinicOwner(@Valid @RequestBody SignUpClinicOwnerRequest request) throws AuthenticationFailedException;
 
     @PostMapping("/solo")
     @Operation(
@@ -59,6 +59,6 @@ public interface SignUpAPI {
             content = @Content
         )
     })
-    SignUpResponse signUpSolo(@Valid @RequestBody SignUpSoloRequest request) throws AuthenticationException;
+    SignUpResponse signUpSolo(@Valid @RequestBody SignUpSoloRequest request) throws AuthenticationFailedException;
 }
 

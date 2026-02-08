@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Service
@@ -29,7 +29,7 @@ public class DefaultCreateProfessionalWithUserUseCase implements CreateProfessio
 
     @Override
     @Transactional
-    public ProfessionalResponse execute(CreateProfessionalWithUserRequest request) throws AuthenticationException {
+    public ProfessionalResponse execute(CreateProfessionalWithUserRequest request) throws AuthenticationFailedException {
         // Obter o tenantId do contexto de segurança (JWT token)
         // Por enquanto, vamos obter do token do usuário autenticado
         UUID tenantId = getTenantIdFromContext();

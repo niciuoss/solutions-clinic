@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.util.UUID;
 
 @Tag(name = "Pacientes", description = "Endpoints para gerenciamento de pacientes")
@@ -33,7 +33,7 @@ public interface PatientAPI {
             @ApiResponse(responseCode = "404", description = "Clínica não encontrada", content = @Content),
             @ApiResponse(responseCode = "409", description = "Paciente já existe com este CPF nesta clínica", content = @Content)
     })
-    PatientResponse createPatient(@Valid @RequestBody CreatePatientRequest request) throws AuthenticationException;
+    PatientResponse createPatient(@Valid @RequestBody CreatePatientRequest request) throws AuthenticationFailedException;
 
     @GetMapping("/patients")
     @Operation(
@@ -59,7 +59,7 @@ public interface PatientAPI {
             @RequestParam(required = false, defaultValue = "firstName,asc") String sort,
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Boolean active
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 
     @GetMapping("/patients/{id}")
     @Operation(
@@ -78,7 +78,7 @@ public interface PatientAPI {
                 content = @Content
             )
     })
-    PatientResponse getPatientById(@PathVariable UUID id) throws AuthenticationException;
+    PatientResponse getPatientById(@PathVariable UUID id) throws AuthenticationFailedException;
 
     @PatchMapping("/patients/{id}/active")
     @Operation(summary = "Atualiza o status ativo de um paciente", description = "Ativa ou desativa um paciente no sistema.")
@@ -90,6 +90,6 @@ public interface PatientAPI {
     PatientResponse updatePatientActive(
             @PathVariable UUID id,
             @Valid @RequestBody UpdatePatientActiveBodyRequest request
-    ) throws AuthenticationException;
+    ) throws AuthenticationFailedException;
 }
 

@@ -16,7 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +50,7 @@ public class DefaultCreateCheckoutSessionUseCase implements CreateCheckoutSessio
 
     @Override
     @Transactional
-    public CreateCheckoutSessionResponse execute(CreateCheckoutSessionRequest request) throws AuthenticationException {
+    public CreateCheckoutSessionResponse execute(CreateCheckoutSessionRequest request) throws AuthenticationFailedException {
         log.info("Criando sessão de checkout - tenantId: {}, planType: {}", request.tenantId(), request.planType());
 
         // Validar plano

@@ -7,7 +7,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
@@ -22,7 +22,7 @@ public class DefaultGetAppointmentsByTenantUseCase implements GetAppointmentsByT
     private final TenantRepository tenantRepository;
 
     @Override
-    public List<AppointmentResponse> execute(GetAppointmentsByTenantRequest request) throws AuthenticationException {
+    public List<AppointmentResponse> execute(GetAppointmentsByTenantRequest request) throws AuthenticationFailedException {
         // Validar se o tenant existe
         tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));

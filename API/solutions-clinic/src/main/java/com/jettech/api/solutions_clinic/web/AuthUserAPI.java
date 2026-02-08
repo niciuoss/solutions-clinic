@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 
-import javax.naming.AuthenticationException;
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,7 +32,7 @@ public interface AuthUserAPI {
                     content = @Content(schema = @Schema(implementation = AuthUserResponse.class))),
             @ApiResponse(responseCode = "401", description = "Credenciais inválidas", content = @Content)
     })
-    AuthUserResponse signIn(@Valid @RequestBody AuthUserRequest authUserRequest) throws AuthenticationException;
+    AuthUserResponse signIn(@Valid @RequestBody AuthUserRequest authUserRequest) throws AuthenticationFailedException;
 
     @PostMapping("/switch-tenant")
     @Operation(summary = "Troca de clínica", description = "Troca o contexto da sessão para outra clínica em que o usuário tem vínculo. Retorna um novo JWT com o clinicId escolhido. Requer autenticação.")
@@ -41,5 +41,5 @@ public interface AuthUserAPI {
                     content = @Content(schema = @Schema(implementation = AuthUserResponse.class))),
             @ApiResponse(responseCode = "401", description = "Não autenticado ou sem permissão na clínica", content = @Content)
     })
-    AuthUserResponse switchTenant(@Valid @RequestBody SwitchTenantRequest request) throws AuthenticationException;
+    AuthUserResponse switchTenant(@Valid @RequestBody SwitchTenantRequest request) throws AuthenticationFailedException;
 }
