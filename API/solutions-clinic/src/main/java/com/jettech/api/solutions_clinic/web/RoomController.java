@@ -1,9 +1,9 @@
 package com.jettech.api.solutions_clinic.web;
 
 import com.jettech.api.solutions_clinic.model.usecase.room.CreateRoomRequest;
-import com.jettech.api.solutions_clinic.model.usecase.room.DefaultCreateRoomUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.room.DefaultGetRoomByIdUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.room.DefaultGetRoomsByTenantUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.room.CreateRoomUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.room.GetRoomByIdUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.room.GetRoomsByTenantUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.room.GetRoomsByTenantRequest;
 import com.jettech.api.solutions_clinic.model.usecase.room.RoomResponse;
 import jakarta.validation.Valid;
@@ -24,9 +24,9 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class RoomController implements RoomAPI {
 
-    private final DefaultCreateRoomUseCase createRoomUseCase;
-    private final DefaultGetRoomByIdUseCase getRoomByIdUseCase;
-    private final DefaultGetRoomsByTenantUseCase getRoomsByTenantUseCase;
+    private final CreateRoomUseCase createRoomUseCase;
+    private final GetRoomByIdUseCase getRoomByIdUseCase;
+    private final GetRoomsByTenantUseCase getRoomsByTenantUseCase;
 
     @Override
     public RoomResponse createRoom(@Valid @RequestBody CreateRoomRequest request) throws AuthenticationFailedException {

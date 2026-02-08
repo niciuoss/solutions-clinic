@@ -15,12 +15,12 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ProcedureController implements ProcedureAPI {
 
-    private final DefaultCreateProcedureUseCase createProcedureUseCase;
-    private final DefaultGetProcedureByIdUseCase getProcedureByIdUseCase;
-    private final DefaultGetProceduresByTenantUseCase getProceduresByTenantUseCase;
-    private final DefaultUpdateProcedureUseCase updateProcedureUseCase;
-    private final DefaultUpdateProcedureActiveUseCase updateProcedureActiveUseCase;
-    private final DefaultDeleteProcedureUseCase deleteProcedureUseCase;
+    private final CreateProcedureUseCase createProcedureUseCase;
+    private final GetProcedureByIdUseCase getProcedureByIdUseCase;
+    private final GetProceduresByTenantUseCase getProceduresByTenantUseCase;
+    private final UpdateProcedureUseCase updateProcedureUseCase;
+    private final UpdateProcedureActiveUseCase updateProcedureActiveUseCase;
+    private final DeleteProcedureUseCase deleteProcedureUseCase;
 
     @Override
     public ProcedureResponse createProcedure(@Valid @RequestBody CreateProcedureRequest request) throws AuthenticationFailedException {

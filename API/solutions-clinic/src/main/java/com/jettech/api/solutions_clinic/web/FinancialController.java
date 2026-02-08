@@ -19,11 +19,11 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class FinancialController implements FinancialAPI {
 
-    private final DefaultCreateFinancialCategoryUseCase createFinancialCategoryUseCase;
-    private final DefaultGetFinancialCategoriesByTenantUseCase getFinancialCategoriesByTenantUseCase;
-    private final DefaultCreateFinancialTransactionUseCase createFinancialTransactionUseCase;
-    private final DefaultGetFinancialTransactionsByTenantUseCase getFinancialTransactionsByTenantUseCase;
-    private final DefaultGetFinancialDashboardUseCase getFinancialDashboardUseCase;
+    private final CreateFinancialCategoryUseCase createFinancialCategoryUseCase;
+    private final GetFinancialCategoriesByTenantUseCase getFinancialCategoriesByTenantUseCase;
+    private final CreateFinancialTransactionUseCase createFinancialTransactionUseCase;
+    private final GetFinancialTransactionsByTenantUseCase getFinancialTransactionsByTenantUseCase;
+    private final GetFinancialDashboardUseCase getFinancialDashboardUseCase;
 
     @Override
     public FinancialCategoryResponse createFinancialCategory(@Valid @RequestBody CreateFinancialCategoryRequest request) throws AuthenticationFailedException {

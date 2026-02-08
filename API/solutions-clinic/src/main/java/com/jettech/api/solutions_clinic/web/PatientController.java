@@ -1,9 +1,9 @@
 package com.jettech.api.solutions_clinic.web;
 
 import com.jettech.api.solutions_clinic.model.usecase.patient.CreatePatientRequest;
-import com.jettech.api.solutions_clinic.model.usecase.patient.DefaultCreatePatientUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.patient.DefaultGetPatientByIdUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.patient.DefaultGetPatientsByTenantUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.patient.CreatePatientUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.patient.GetPatientByIdUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.patient.GetPatientsByTenantUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.patient.GetPatientsByTenantRequest;
 import com.jettech.api.solutions_clinic.model.usecase.patient.PatientResponse;
 import com.jettech.api.solutions_clinic.model.usecase.patient.UpdatePatientActiveBodyRequest;
@@ -27,9 +27,9 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class PatientController implements PatientAPI {
 
-    private final DefaultCreatePatientUseCase createPatientUseCase;
-    private final DefaultGetPatientByIdUseCase getPatientByIdUseCase;
-    private final DefaultGetPatientsByTenantUseCase getPatientsByTenantUseCase;
+    private final CreatePatientUseCase createPatientUseCase;
+    private final GetPatientByIdUseCase getPatientByIdUseCase;
+    private final GetPatientsByTenantUseCase getPatientsByTenantUseCase;
     private final UpdatePatientActiveUseCase updatePatientActiveUseCase;
 
     @Override

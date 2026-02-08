@@ -15,11 +15,11 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ProfessionalScheduleController implements ProfessionalScheduleAPI {
 
-    private final DefaultCreateProfessionalScheduleUseCase createProfessionalScheduleUseCase;
-    private final DefaultGetProfessionalScheduleByIdUseCase getProfessionalScheduleByIdUseCase;
-    private final DefaultGetProfessionalSchedulesByProfessionalIdUseCase getProfessionalSchedulesByProfessionalIdUseCase;
-    private final DefaultUpdateProfessionalScheduleUseCase updateProfessionalScheduleUseCase;
-    private final DefaultDeleteProfessionalScheduleUseCase deleteProfessionalScheduleUseCase;
+    private final CreateProfessionalScheduleUseCase createProfessionalScheduleUseCase;
+    private final GetProfessionalScheduleByIdUseCase getProfessionalScheduleByIdUseCase;
+    private final GetProfessionalSchedulesByProfessionalIdUseCase getProfessionalSchedulesByProfessionalIdUseCase;
+    private final UpdateProfessionalScheduleUseCase updateProfessionalScheduleUseCase;
+    private final DeleteProfessionalScheduleUseCase deleteProfessionalScheduleUseCase;
 
     @Override
     public ProfessionalScheduleResponse createProfessionalSchedule(@Valid @RequestBody CreateProfessionalScheduleRequest request) throws AuthenticationFailedException {

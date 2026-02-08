@@ -1,7 +1,7 @@
 package com.jettech.api.solutions_clinic.web;
 
-import com.jettech.api.solutions_clinic.model.usecase.signup.DefaultSignUpClinicOwnerUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.signup.DefaultSignUpSoloUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.signup.SignUpClinicOwnerUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.signup.SignUpSoloUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.signup.SignUpClinicOwnerRequest;
 import com.jettech.api.solutions_clinic.model.usecase.signup.SignUpResponse;
 import com.jettech.api.solutions_clinic.model.usecase.signup.SignUpSoloRequest;
@@ -17,8 +17,8 @@ import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class SignUpController implements SignUpAPI {
 
-    private final DefaultSignUpClinicOwnerUseCase signUpClinicOwnerUseCase;
-    private final DefaultSignUpSoloUseCase signUpSoloUseCase;
+    private final SignUpClinicOwnerUseCase signUpClinicOwnerUseCase;
+    private final SignUpSoloUseCase signUpSoloUseCase;
 
     @Override
     public SignUpResponse signUpClinicOwner(@Valid @RequestBody SignUpClinicOwnerRequest request) throws AuthenticationFailedException {

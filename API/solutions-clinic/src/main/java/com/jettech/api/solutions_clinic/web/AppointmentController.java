@@ -19,14 +19,14 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class AppointmentController implements AppointmentAPI {
 
-    private final DefaultCreateAppointmentUseCase createAppointmentUseCase;
-    private final DefaultGetAppointmentByIdUseCase getAppointmentByIdUseCase;
-    private final DefaultGetAppointmentsByProfessionalIdUseCase getAppointmentsByProfessionalIdUseCase;
-    private final DefaultGetAppointmentsByTenantUseCase getAppointmentsByTenantUseCase;
-    private final DefaultUpdateAppointmentUseCase updateAppointmentUseCase;
-    private final DefaultDeleteAppointmentUseCase deleteAppointmentUseCase;
-    private final DefaultCheckAvailabilityUseCase checkAvailabilityUseCase;
-    private final DefaultGetAvailableSlotsUseCase getAvailableSlotsUseCase;
+    private final CreateAppointmentUseCase createAppointmentUseCase;
+    private final GetAppointmentByIdUseCase getAppointmentByIdUseCase;
+    private final GetAppointmentsByProfessionalIdUseCase getAppointmentsByProfessionalIdUseCase;
+    private final GetAppointmentsByTenantUseCase getAppointmentsByTenantUseCase;
+    private final UpdateAppointmentUseCase updateAppointmentUseCase;
+    private final DeleteAppointmentUseCase deleteAppointmentUseCase;
+    private final CheckAvailabilityUseCase checkAvailabilityUseCase;
+    private final GetAvailableSlotsUseCase getAvailableSlotsUseCase;
 
     @Override
     public AppointmentResponse createAppointment(@Valid @RequestBody CreateAppointmentRequest request) throws AuthenticationFailedException {

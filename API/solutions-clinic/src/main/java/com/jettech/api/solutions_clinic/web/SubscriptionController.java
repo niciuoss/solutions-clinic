@@ -1,6 +1,6 @@
 package com.jettech.api.solutions_clinic.web;
 
-import com.jettech.api.solutions_clinic.model.usecase.subscription.DefaultProcessStripeWebhookUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.subscription.ProcessStripeWebhookUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.ProcessStripeWebhookRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class SubscriptionController implements SubscriptionAPI {
 
-    private final DefaultProcessStripeWebhookUseCase processStripeWebhookUseCase;
+    private final ProcessStripeWebhookUseCase processStripeWebhookUseCase;
 
     @Value("${stripe.webhook.secret:}")
     private String webhookSecret;

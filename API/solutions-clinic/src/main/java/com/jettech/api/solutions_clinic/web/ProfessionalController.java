@@ -5,12 +5,12 @@ import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfession
 import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfessionalToClinicRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalWithUserRequest;
-import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultAddProfessionalToClinicUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultCreateProfessionalUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultCreateProfessionalWithUserUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultGetProfessionalsByClinicUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultGetProfessionalTenantsUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.professional.DefaultUpdateProfessionalActiveUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfessionalToClinicUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalWithUserUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.GetProfessionalsByClinicUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.GetProfessionalTenantsUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.professional.UpdateProfessionalActiveUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.professional.GetProfessionalsByClinicRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.ProfessionalResponse;
 import com.jettech.api.solutions_clinic.model.usecase.professional.ProfessionalTenantResponse;
@@ -34,12 +34,12 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class ProfessionalController implements ProfessionalAPI {
 
-    private final DefaultCreateProfessionalUseCase createProfessionalUseCase;
-    private final DefaultCreateProfessionalWithUserUseCase createProfessionalWithUserUseCase;
-    private final DefaultAddProfessionalToClinicUseCase addProfessionalToClinicUseCase;
-    private final DefaultGetProfessionalTenantsUseCase getProfessionalTenantsUseCase;
-    private final DefaultGetProfessionalsByClinicUseCase getProfessionalsByClinicUseCase;
-    private final DefaultUpdateProfessionalActiveUseCase updateProfessionalActiveUseCase;
+    private final CreateProfessionalUseCase createProfessionalUseCase;
+    private final CreateProfessionalWithUserUseCase createProfessionalWithUserUseCase;
+    private final AddProfessionalToClinicUseCase addProfessionalToClinicUseCase;
+    private final GetProfessionalTenantsUseCase getProfessionalTenantsUseCase;
+    private final GetProfessionalsByClinicUseCase getProfessionalsByClinicUseCase;
+    private final UpdateProfessionalActiveUseCase updateProfessionalActiveUseCase;
 
     @Override
     public ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationFailedException {

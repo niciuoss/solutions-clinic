@@ -1,12 +1,12 @@
 package com.jettech.api.solutions_clinic.web;
 
 import com.jettech.api.solutions_clinic.model.usecase.user.CreateUserRequest;
-import com.jettech.api.solutions_clinic.model.usecase.user.DefaultCreateUserUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.user.DefaultDeleteUserUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.user.DefaultGetUserByIdUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.user.DefaultGetUsersByTenantUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.user.DefaultUpdateUserBlockedUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.user.DefaultUpdateUserUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.user.CreateUserUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.user.DeleteUserUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.user.GetUserByIdUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.user.GetUsersByTenantUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.user.UpdateUserBlockedUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.user.UpdateUserUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.user.GetUsersByTenantRequest;
 import com.jettech.api.solutions_clinic.model.usecase.user.UpdateUserBlockedRequest;
 import com.jettech.api.solutions_clinic.model.usecase.user.UpdateUserBlockedBodyRequest;
@@ -33,16 +33,16 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class UserController implements UserAPI {
 
-    private final DefaultCreateUserUseCase defaultCreateUserUseCase;
-    private final DefaultGetUserByIdUseCase getUserByIdUseCase;
-    private final DefaultGetUsersByTenantUseCase getUsersByTenantUseCase;
-    private final DefaultUpdateUserUseCase updateUserUseCase;
-    private final DefaultDeleteUserUseCase deleteUserUseCase;
-    private final DefaultUpdateUserBlockedUseCase updateUserBlockedUseCase;
+    private final CreateUserUseCase createUserUseCase;
+    private final GetUserByIdUseCase getUserByIdUseCase;
+    private final GetUsersByTenantUseCase getUsersByTenantUseCase;
+    private final UpdateUserUseCase updateUserUseCase;
+    private final DeleteUserUseCase deleteUserUseCase;
+    private final UpdateUserBlockedUseCase updateUserBlockedUseCase;
 
     @Override
     public User createUser(@Valid @RequestBody CreateUserRequest in) throws AuthenticationFailedException {
-        return defaultCreateUserUseCase.execute(in);
+        return createUserUseCase.execute(in);
     }
 
     @Override
@@ -105,7 +105,7 @@ public class UserController implements UserAPI {
 
     @Override
     public Map<String, Boolean> checkCpfExists(@PathVariable String cpf) throws AuthenticationFailedException {
-        boolean exists = ((DefaultUpdateUserUseCase) updateUserUseCase).checkCpfExists(cpf);
+        boolean exists = updateUserUseCase.checkCpfExists(cpf);
         Map<String, Boolean> response = new HashMap<>();
         response.put("exists", exists);
         return response;

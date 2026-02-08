@@ -4,18 +4,18 @@ import com.jettech.api.solutions_clinic.model.entity.Role;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionBody;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionRequest;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionResponse;
-import com.jettech.api.solutions_clinic.model.usecase.subscription.DefaultCreateCheckoutSessionUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.subscription.CreateCheckoutSessionUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.ActivatePlanBody;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.ActivatePlanRequest;
-import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultActivatePlanUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultStartTrialUseCase;
-import com.jettech.api.solutions_clinic.model.usecase.tenant.DefaultUpdateTenantPlanUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.tenant.ActivatePlanUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.tenant.StartTrialUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.StartTrialRequest;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.TenantResponse;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanBody;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanRequest;
 import com.jettech.api.solutions_clinic.model.usecase.user.AssociateUserToTenantRequest;
-import com.jettech.api.solutions_clinic.model.usecase.user.DefaultAssociateUserToTenantUseCase;
+import com.jettech.api.solutions_clinic.model.usecase.user.AssociateUserToTenantUseCase;
 import jakarta.validation.Valid;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -34,11 +34,11 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class TenantController implements TenantAPI {
 
-    private final DefaultUpdateTenantPlanUseCase updateTenantPlanUseCase;
-    private final DefaultCreateCheckoutSessionUseCase createCheckoutSessionUseCase;
-    private final DefaultAssociateUserToTenantUseCase associateUserToTenantUseCase;
-    private final DefaultActivatePlanUseCase activatePlanUseCase;
-    private final DefaultStartTrialUseCase startTrialUseCase;
+    private final UpdateTenantPlanUseCase updateTenantPlanUseCase;
+    private final CreateCheckoutSessionUseCase createCheckoutSessionUseCase;
+    private final AssociateUserToTenantUseCase associateUserToTenantUseCase;
+    private final ActivatePlanUseCase activatePlanUseCase;
+    private final StartTrialUseCase startTrialUseCase;
 
     @Override
     public TenantResponse updateTenantPlan(
