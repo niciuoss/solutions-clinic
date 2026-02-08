@@ -1,5 +1,7 @@
 package com.jettech.api.solutions_clinic.model.usecase.appointment;
 
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.InvalidStateException;
 import com.jettech.api.solutions_clinic.model.entity.Procedure;
 import com.jettech.api.solutions_clinic.model.repository.ProcedureRepository;
 import lombok.AccessLevel;
@@ -22,10 +24,10 @@ public class ProcedureLoader {
 
         for (UUID procedureId : procedureIds) {
             Procedure procedure = procedureRepository.findByIdAndTenantId(procedureId, tenantId)
-                    .orElseThrow(() -> new RuntimeException("Procedimento não encontrado com ID: " + procedureId + " para o tenant: " + tenantId));
+                    .orElseThrow(() -> new EntityNotFoundException("Procedimento não encontrado com ID: " + procedureId + " para o tenant: " + tenantId));
 
             if (!procedure.isActive()) {
-                throw new RuntimeException("O procedimento " + procedure.getName() + " está inativo");
+                throw new InvalidStateException("O procedimento " + procedure.getName() + " está inativo");
             }
 
             procedures.add(procedure);

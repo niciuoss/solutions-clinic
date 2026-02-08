@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.UUID;
 
 @Service
@@ -20,7 +21,7 @@ public class DefaultGetRoomByIdUseCase implements GetRoomByIdUseCase {
     @Transactional(readOnly = true)
     public RoomResponse execute(UUID id) throws AuthenticationFailedException {
         Room room = roomRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Sala não encontrada com ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Sala", id));
 
         return new RoomResponse(
                 room.getId(),

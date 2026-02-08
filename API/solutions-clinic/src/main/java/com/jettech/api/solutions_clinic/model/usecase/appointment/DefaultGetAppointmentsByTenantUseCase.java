@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
@@ -25,7 +26,7 @@ public class DefaultGetAppointmentsByTenantUseCase implements GetAppointmentsByT
     public List<AppointmentResponse> execute(GetAppointmentsByTenantRequest request) throws AuthenticationFailedException {
         // Validar se o tenant existe
         tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 
         List<Appointment> appointments;
 

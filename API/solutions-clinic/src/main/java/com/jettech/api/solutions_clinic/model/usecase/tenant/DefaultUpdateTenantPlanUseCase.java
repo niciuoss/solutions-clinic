@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 
 @Slf4j
 @Service
@@ -23,7 +24,7 @@ public class DefaultUpdateTenantPlanUseCase implements UpdateTenantPlanUseCase {
     @Transactional
     public TenantResponse execute(UpdateTenantPlanRequest request) throws AuthenticationFailedException {
         Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
         log.info("id clinica {}", request.tenantId());
 
         // Atualizar o plano

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -56,13 +57,13 @@ public class DefaultSignUpSoloUseCase implements SignUpSoloUseCase {
 
     private void validateEmailNotExists(String email) {
         userRepository.findByEmail(email).ifPresent(user -> {
-            throw new RuntimeException("Email já está em uso: " + email);
+            throw new DuplicateEntityException("Email já está em uso: " + email);
         });
     }
 
     private void validateSubdomainNotExists(String subdomain) {
         tenantRepository.findBySubdomain(subdomain).ifPresent(tenant -> {
-            throw new RuntimeException("Subdomínio já está em uso: " + subdomain);
+            throw new DuplicateEntityException("Subdomínio já está em uso: " + subdomain);
         });
     }
 

@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.InvalidRequestException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -23,7 +25,7 @@ public class DefaultCreateFinancialTransactionUseCase implements CreateFinancial
     @Transactional
     public FinancialTransactionResponse execute(CreateFinancialTransactionRequest request) throws AuthenticationFailedException {
         Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 
         FinancialTransaction transaction = new FinancialTransaction();
         transaction.setTenant(tenant);
@@ -38,11 +40,11 @@ public class DefaultCreateFinancialTransactionUseCase implements CreateFinancial
         // Associar categoria se fornecida
         if (request.categoryId() != null) {
             FinancialCategory category = financialCategoryRepository.findById(request.categoryId())
-                    .orElseThrow(() -> new RuntimeException("Categoria não encontrada com ID: " + request.categoryId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Categoria", request.categoryId()));
             
             // Validar se o tipo da categoria corresponde ao tipo da transação
             if (category.getType() != request.type()) {
-                throw new RuntimeException("O tipo da categoria não corresponde ao tipo da transação");
+                throw new InvalidRequestException("O tipo da categoria não corresponde ao tipo da transação");
             }
             
             transaction.setCategory(category);
@@ -51,14 +53,14 @@ public class DefaultCreateFinancialTransactionUseCase implements CreateFinancial
         // Associar appointment se fornecido
         if (request.appointmentId() != null) {
             Appointment appointment = appointmentRepository.findById(request.appointmentId())
-                    .orElseThrow(() -> new RuntimeException("Agendamento não encontrado com ID: " + request.appointmentId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Agendamento", request.appointmentId()));
             transaction.setAppointment(appointment);
         }
 
         // Associar professional se fornecido
         if (request.professionalId() != null) {
             Professional professional = professionalRepository.findById(request.professionalId())
-                    .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + request.professionalId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Profissional", request.professionalId()));
             transaction.setProfessional(professional);
         }
 

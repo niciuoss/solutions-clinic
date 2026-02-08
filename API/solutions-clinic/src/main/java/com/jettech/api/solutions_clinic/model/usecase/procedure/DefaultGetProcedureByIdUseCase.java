@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.UUID;
 
 @Service
@@ -20,7 +21,7 @@ public class DefaultGetProcedureByIdUseCase implements GetProcedureByIdUseCase {
     @Transactional(readOnly = true)
     public ProcedureResponse execute(UUID id) throws AuthenticationFailedException {
         Procedure procedure = procedureRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Procedimento não encontrado com ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Procedimento", id));
 
         return new ProcedureResponse(
                 procedure.getId(),

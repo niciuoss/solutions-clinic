@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -22,12 +24,12 @@ public class DefaultCreatePatientUseCase implements CreatePatientUseCase {
     @Transactional
     public PatientResponse execute(CreatePatientRequest request) throws AuthenticationFailedException {
         Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 
         if (request.cpf() != null && !request.cpf().isEmpty()) {
             patientRepository.findByCpfAndTenantId(request.cpf(), request.tenantId())
                     .ifPresent(patient -> {
-                        throw new RuntimeException("Paciente já existe com este CPF nesta clínica");
+                        throw new DuplicateEntityException("Paciente já existe com este CPF nesta clínica");
                     });
         }
 

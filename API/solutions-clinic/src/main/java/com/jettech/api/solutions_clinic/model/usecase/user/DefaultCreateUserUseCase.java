@@ -7,6 +7,8 @@ import com.jettech.api.solutions_clinic.model.entity.UserTenantRole;
 import com.jettech.api.solutions_clinic.model.repository.TenantRepository;
 import com.jettech.api.solutions_clinic.model.repository.UserRepository;
 import com.jettech.api.solutions_clinic.model.repository.UserTenantRoleRepository;
+import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,7 +31,7 @@ public class DefaultCreateUserUseCase implements CreateUserUseCase {
         userRepository
                 .findByEmail(in.email())
                 .ifPresent((user) -> {
-                    throw new RuntimeException("Email already exists: " + in.email());
+                    throw new DuplicateEntityException("Email already exists: " + in.email());
                 });
 
         // Validar CPF duplicado (se informado)
@@ -37,7 +39,7 @@ public class DefaultCreateUserUseCase implements CreateUserUseCase {
             userRepository
                     .findByCpf(in.cpf())
                     .ifPresent((user) -> {
-                        throw new RuntimeException("CPF já está cadastrado: " + in.cpf());
+                        throw new DuplicateEntityException("CPF já está cadastrado: " + in.cpf());
                     });
         }
 
@@ -65,7 +67,7 @@ public class DefaultCreateUserUseCase implements CreateUserUseCase {
         // Se tenantId foi fornecido, criar role RECEPTION automaticamente
         if (in.tenantId() != null) {
             Tenant tenant = tenantRepository.findById(in.tenantId())
-                    .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + in.tenantId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Clínica", in.tenantId()));
             
             // Verificar se a associação já existe antes de criar
             if (!userTenantRoleRepository.existsByUserAndTenantAndRole(user, tenant, Role.RECEPTION)) {

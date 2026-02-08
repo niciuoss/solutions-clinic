@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AppointmentConflictException;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,22 +39,22 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
     @Transactional
     public AppointmentResponse execute(CreateAppointmentRequest request) throws AuthenticationFailedException {
         Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 
         Patient patient = patientRepository.findById(request.patientId())
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado com ID: " + request.patientId()));
+                .orElseThrow(() -> new EntityNotFoundException("Paciente", request.patientId()));
 
         Professional professional = professionalRepository.findById(request.professionalId())
-                .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + request.professionalId()));
+                .orElseThrow(() -> new EntityNotFoundException("Profissional", request.professionalId()));
 
         Room room = null;
         if (request.roomId() != null) {
             room = roomRepository.findById(request.roomId())
-                    .orElseThrow(() -> new RuntimeException("Sala não encontrada com ID: " + request.roomId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Sala", request.roomId()));
         }
 
         User createdBy = userRepository.findById(request.createdBy())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.createdBy()));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário", request.createdBy()));
 
         List<Procedure> procedures = new ArrayList<>();
         int calculatedDurationMinutes = request.durationMinutes();

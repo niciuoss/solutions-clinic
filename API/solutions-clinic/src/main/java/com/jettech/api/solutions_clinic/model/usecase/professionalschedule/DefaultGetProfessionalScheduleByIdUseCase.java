@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.UUID;
 
 @Service
@@ -18,7 +19,7 @@ public class DefaultGetProfessionalScheduleByIdUseCase implements GetProfessiona
     @Override
     public ProfessionalScheduleResponse execute(UUID id) throws AuthenticationFailedException {
         ProfessionalSchedule schedule = professionalScheduleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Agenda não encontrada com ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Agenda", id));
 
         return new ProfessionalScheduleResponse(
                 schedule.getId(),

@@ -10,6 +10,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -28,7 +30,7 @@ public class DefaultCheckAvailabilityUseCase implements CheckAvailabilityUseCase
     public Boolean execute(CheckAvailabilityRequest request) {
         // Validar se o profissional existe
         if (!professionalRepository.existsById(request.professionalId())) {
-            throw new RuntimeException("Profissional não encontrado com ID: " + request.professionalId());
+            throw new EntityNotFoundException("Profissional", request.professionalId());
         }
 
         LocalDateTime scheduledAt = request.startTime();

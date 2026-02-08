@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,7 +26,7 @@ public class DefaultGetUserByIdUseCase implements GetUserByIdUseCase {
     @Transactional(readOnly = true)
     public UserDetailResponse execute(UUID userId) throws AuthenticationFailedException {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário", userId));
 
         List<UserTenantRole> userTenantRoles = userTenantRoleRepository.findByUser_Id(userId);
 

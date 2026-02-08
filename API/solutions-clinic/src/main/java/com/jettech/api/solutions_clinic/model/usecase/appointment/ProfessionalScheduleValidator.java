@@ -1,5 +1,7 @@
 package com.jettech.api.solutions_clinic.model.usecase.appointment;
 
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.ScheduleValidationException;
 import com.jettech.api.solutions_clinic.model.entity.ProfessionalSchedule;
 import com.jettech.api.solutions_clinic.model.repository.ProfessionalScheduleRepository;
 import lombok.AccessLevel;
@@ -24,21 +26,21 @@ public class ProfessionalScheduleValidator {
 
         ProfessionalSchedule professionalSchedule = professionalScheduleRepository
                 .findByProfessionalIdAndDayOfWeek(professionalId, dayOfWeek)
-                .orElseThrow(() -> new RuntimeException("O profissional não possui agenda cadastrada para " + dayOfWeek));
+                .orElseThrow(() -> new EntityNotFoundException("O profissional não possui agenda cadastrada para " + dayOfWeek));
 
         if (scheduledTime.isBefore(professionalSchedule.getStartTime()) ||
                 endTime.toLocalTime().isAfter(professionalSchedule.getEndTime())) {
-            throw new RuntimeException("O horário agendado está fora do horário de trabalho do profissional");
+            throw new ScheduleValidationException("O horário agendado está fora do horário de trabalho do profissional");
         }
 
         if ((scheduledTime.isAfter(professionalSchedule.getLunchBreakStart()) && scheduledTime.isBefore(professionalSchedule.getLunchBreakEnd())) ||
                 (endTime.toLocalTime().isAfter(professionalSchedule.getLunchBreakStart()) && endTime.toLocalTime().isBefore(professionalSchedule.getLunchBreakEnd())) ||
                 (scheduledTime.isBefore(professionalSchedule.getLunchBreakStart()) && endTime.toLocalTime().isAfter(professionalSchedule.getLunchBreakEnd()))) {
-            throw new RuntimeException("O horário agendado está no intervalo de almoço do profissional");
+            throw new ScheduleValidationException("O horário agendado está no intervalo de almoço do profissional");
         }
 
         if (durationMinutes % professionalSchedule.getSlotDurationMinutes() != 0) {
-            throw new RuntimeException("A duração do agendamento deve ser múltipla de " + professionalSchedule.getSlotDurationMinutes() + " minutos");
+            throw new ScheduleValidationException("A duração do agendamento deve ser múltipla de " + professionalSchedule.getSlotDurationMinutes() + " minutos");
         }
     }
 }

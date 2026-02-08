@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.UUID;
 
 @Service
@@ -26,7 +27,7 @@ public class DefaultCreateProcedureUseCase implements CreateProcedureUseCase {
     @Transactional
     public ProcedureResponse execute(CreateProcedureRequest request) throws AuthenticationFailedException {
         Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
                 
         // Obter usuário logado
         UUID userId = getUserIdFromContext();
@@ -38,11 +39,11 @@ public class DefaultCreateProcedureUseCase implements CreateProcedureUseCase {
         if (request.professionalId() != null) {
             // Se foi informado o ID do profissional, busca diretamente (por exemplo, admin criando para um médico)
             professional = professionalRepository.findByIdAndTenantId(request.professionalId(), tenant.getId())
-                    .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + request.professionalId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Profissional", request.professionalId()));
         } else {
              // Buscar profissional associado ao usuário logado e tenant
             professional = professionalRepository.findByUserIdAndTenantId(userId, tenant.getId())
-                    .orElseThrow(() -> new RuntimeException("Profissional não encontrado para o usuário atual nesta clínica. Apenas profissionais podem criar procedimentos ou é necessário informar o ID do profissional."));
+                    .orElseThrow(() -> new EntityNotFoundException("Profissional não encontrado para o usuário atual nesta clínica. Apenas profissionais podem criar procedimentos ou é necessário informar o ID do profissional."));
         }
 
         Procedure procedure = new Procedure();

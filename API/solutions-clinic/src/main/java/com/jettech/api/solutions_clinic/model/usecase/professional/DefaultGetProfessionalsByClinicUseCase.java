@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -26,7 +27,7 @@ public class DefaultGetProfessionalsByClinicUseCase implements GetProfessionalsB
     public Page<ProfessionalResponse> execute(GetProfessionalsByClinicRequest request) throws AuthenticationFailedException {
         // Validar se a clínica existe
         tenantRepository.findById(request.clinicId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.clinicId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.clinicId()));
 
         // Criar Pageable com ordenação
         Pageable pageable = createPageable(request.page(), request.size(), request.sort());

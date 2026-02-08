@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -23,7 +24,7 @@ public class DefaultGetProfessionalSchedulesByProfessionalIdUseCase implements G
     public List<ProfessionalScheduleResponse> execute(UUID professionalId) throws AuthenticationFailedException {
         // Validar se o profissional existe
         professionalRepository.findById(professionalId)
-                .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + professionalId));
+                .orElseThrow(() -> new EntityNotFoundException("Profissional", professionalId));
 
         List<ProfessionalSchedule> schedules = professionalScheduleRepository.findByProfessionalId(professionalId);
 

@@ -6,6 +6,10 @@ import com.jettech.api.solutions_clinic.model.entity.UserTenantRole;
 import com.jettech.api.solutions_clinic.model.repository.TenantRepository;
 import com.jettech.api.solutions_clinic.model.repository.UserRepository;
 import com.jettech.api.solutions_clinic.model.repository.UserTenantRoleRepository;
+import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,15 +28,15 @@ public class DefaultAssociateUserToTenantUseCase implements AssociateUserToTenan
     public Void execute(AssociateUserToTenantRequest request) {
         // Validar se o usuário existe
         User user = userRepository.findById(request.userId())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.userId()));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário", request.userId()));
 
         // Validar se o tenant existe
         Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 
         // Validar se a associação já existe
         if (userTenantRoleRepository.existsByUserAndTenantAndRole(user, tenant, request.role())) {
-            throw new RuntimeException(
+            throw new DuplicateEntityException(
                     "Usuário já está associado à clínica com o papel " + request.role() + "."
             );
         }

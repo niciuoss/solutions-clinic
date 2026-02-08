@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -34,7 +35,7 @@ public class DefaultActivatePlanUseCase implements ActivatePlanUseCase {
         log.warn("ATIVACAO MANUAL DE PLANO - Este endpoint deve ser usado apenas para testes!");
 
         Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clinica nao encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 
         log.info("Ativando plano manualmente - tenantId: {}, planType: {}", request.tenantId(), request.planType());
 

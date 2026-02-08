@@ -10,6 +10,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AppointmentConflictException;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.InvalidStateException;
+import com.jettech.api.solutions_clinic.exception.ScheduleValidationException;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -36,32 +39,32 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
     @Transactional
     public AppointmentResponse execute(UpdateAppointmentRequest request) throws AuthenticationFailedException {
         Appointment appointment = appointmentRepository.findById(request.id())
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado com ID: " + request.id()));
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento", request.id()));
 
         // Não permitir atualização de agendamentos cancelados ou finalizados
         if (appointment.getStatus() == AppointmentStatus.CANCELADO || 
             appointment.getStatus() == AppointmentStatus.FINALIZADO) {
-            throw new RuntimeException("Não é possível atualizar um agendamento " + appointment.getStatus());
+            throw new InvalidStateException("Não é possível atualizar um agendamento " + appointment.getStatus());
         }
 
         // Atualizar paciente se fornecido
         if (request.patientId() != null) {
             Patient patient = patientRepository.findById(request.patientId())
-                    .orElseThrow(() -> new RuntimeException("Paciente não encontrado com ID: " + request.patientId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Paciente", request.patientId()));
             appointment.setPatient(patient);
         }
 
         // Atualizar profissional se fornecido
         if (request.professionalId() != null) {
             Professional professional = professionalRepository.findById(request.professionalId())
-                    .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + request.professionalId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Profissional", request.professionalId()));
             appointment.setProfessional(professional);
         }
 
         // Atualizar sala se fornecido
         if (request.roomId() != null) {
             Room room = roomRepository.findById(request.roomId())
-                    .orElseThrow(() -> new RuntimeException("Sala não encontrada com ID: " + request.roomId()));
+                    .orElseThrow(() -> new EntityNotFoundException("Sala", request.roomId()));
             appointment.setRoom(room);
         }
 
@@ -158,24 +161,24 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
         // Buscar agenda do profissional para o dia da semana
         ProfessionalSchedule schedule = professionalScheduleRepository
                 .findByProfessionalIdAndDayOfWeek(professionalId, dayOfWeek)
-                .orElseThrow(() -> new RuntimeException("O profissional não possui agenda cadastrada para " + dayOfWeek));
+                .orElseThrow(() -> new EntityNotFoundException("O profissional não possui agenda cadastrada para " + dayOfWeek));
 
         // Verificar se o horário está dentro do horário de trabalho
         if (scheduledTime.isBefore(schedule.getStartTime()) || 
             endTime.toLocalTime().isAfter(schedule.getEndTime())) {
-            throw new RuntimeException("O horário agendado está fora do horário de trabalho do profissional");
+            throw new ScheduleValidationException("O horário agendado está fora do horário de trabalho do profissional");
         }
 
         // Verificar se o horário não está no intervalo de almoço
         if ((scheduledTime.isAfter(schedule.getLunchBreakStart()) && scheduledTime.isBefore(schedule.getLunchBreakEnd())) ||
             (endTime.toLocalTime().isAfter(schedule.getLunchBreakStart()) && endTime.toLocalTime().isBefore(schedule.getLunchBreakEnd())) ||
             (scheduledTime.isBefore(schedule.getLunchBreakStart()) && endTime.toLocalTime().isAfter(schedule.getLunchBreakEnd()))) {
-            throw new RuntimeException("O horário agendado está no intervalo de almoço do profissional");
+            throw new ScheduleValidationException("O horário agendado está no intervalo de almoço do profissional");
         }
 
         // Verificar se a duração é compatível com o slotDurationMinutes
         if (durationMinutes % schedule.getSlotDurationMinutes() != 0) {
-            throw new RuntimeException("A duração do agendamento deve ser múltipla de " + schedule.getSlotDurationMinutes() + " minutos");
+            throw new ScheduleValidationException("A duração do agendamento deve ser múltipla de " + schedule.getSlotDurationMinutes() + " minutos");
         }
     }
 

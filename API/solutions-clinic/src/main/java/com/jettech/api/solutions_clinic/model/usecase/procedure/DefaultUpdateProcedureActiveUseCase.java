@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -19,7 +20,7 @@ public class DefaultUpdateProcedureActiveUseCase implements UpdateProcedureActiv
     @Transactional
     public ProcedureResponse execute(UpdateProcedureActiveRequest request) throws AuthenticationFailedException {
         Procedure procedure = procedureRepository.findById(request.id())
-                .orElseThrow(() -> new RuntimeException("Procedimento não encontrado com ID: " + request.id()));
+                .orElseThrow(() -> new EntityNotFoundException("Procedimento", request.id()));
 
         procedure.setActive(request.active());
         procedure = procedureRepository.save(procedure);

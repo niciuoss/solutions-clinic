@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.UUID;
 
 @Service
@@ -20,7 +21,7 @@ public class DefaultGetPatientByIdUseCase implements GetPatientByIdUseCase {
     @Transactional(readOnly = true)
     public PatientResponse execute(UUID id) throws AuthenticationFailedException {
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado com ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Paciente", id));
 
         return new PatientResponse(
                 patient.getId(),

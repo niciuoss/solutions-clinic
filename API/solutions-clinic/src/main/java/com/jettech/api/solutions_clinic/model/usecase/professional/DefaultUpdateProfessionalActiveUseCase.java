@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -19,7 +20,7 @@ public class DefaultUpdateProfessionalActiveUseCase implements UpdateProfessiona
     @Transactional
     public ProfessionalResponse execute(UpdateProfessionalActiveRequest request) throws AuthenticationFailedException {
         Professional professional = professionalRepository.findById(request.id())
-                .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + request.id()));
+                .orElseThrow(() -> new EntityNotFoundException("Profissional", request.id()));
 
         professional.setActive(request.active());
         professional = professionalRepository.save(professional);

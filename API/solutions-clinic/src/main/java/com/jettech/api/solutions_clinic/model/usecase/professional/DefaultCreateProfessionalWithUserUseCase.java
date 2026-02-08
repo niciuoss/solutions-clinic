@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.UUID;
 
 @Service
@@ -35,12 +37,12 @@ public class DefaultCreateProfessionalWithUserUseCase implements CreateProfessio
         UUID tenantId = getTenantIdFromContext();
         
         if (tenantId == null) {
-            throw new RuntimeException("Clínica não identificada. Faça login novamente.");
+            throw new EntityNotFoundException("Clínica não identificada. Faça login novamente.");
         }
 
         // Validar se o tenant/clínica existe
         Tenant tenant = tenantRepository.findById(tenantId)
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + tenantId));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", tenantId));
 
         // Criar o usuário primeiro
         CreateUserRequest createUserRequest = new CreateUserRequest(
@@ -59,7 +61,7 @@ public class DefaultCreateProfessionalWithUserUseCase implements CreateProfessio
         // Validar se já existe profissional com mesmo user e tenant
         professionalRepository.findByUserIdAndTenantId(user.getId(), tenantId)
                 .ifPresent(professional -> {
-                    throw new RuntimeException("Profissional já existe para este usuário e clínica");
+                    throw new DuplicateEntityException("Profissional já existe para este usuário e clínica");
                 });
 
         // Criar Professional

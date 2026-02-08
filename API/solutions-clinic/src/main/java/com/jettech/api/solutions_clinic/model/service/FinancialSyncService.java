@@ -1,5 +1,6 @@
 package com.jettech.api.solutions_clinic.model.service;
 
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.model.entity.*;
 import com.jettech.api.solutions_clinic.model.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -127,7 +128,7 @@ public class FinancialSyncService {
         return financialCategoryRepository.findByNameAndTenantId(categoryName, tenantId)
                 .orElseGet(() -> {
                     Tenant tenant = tenantRepository.findById(tenantId)
-                            .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + tenantId));
+                            .orElseThrow(() -> new EntityNotFoundException("Clínica", tenantId));
                     
                     FinancialCategory category = new FinancialCategory();
                     category.setTenant(tenant);

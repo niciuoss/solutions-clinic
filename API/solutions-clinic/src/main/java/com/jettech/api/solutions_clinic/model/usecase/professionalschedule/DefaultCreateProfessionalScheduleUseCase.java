@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.ScheduleValidationException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -23,13 +26,13 @@ public class DefaultCreateProfessionalScheduleUseCase implements CreateProfessio
     public ProfessionalScheduleResponse execute(CreateProfessionalScheduleRequest request) throws AuthenticationFailedException {
         // Validar se o profissional existe
         Professional professional = professionalRepository.findById(request.professionalId())
-                .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + request.professionalId()));
+                .orElseThrow(() -> new EntityNotFoundException("Profissional", request.professionalId()));
 
         // Validar se já existe agenda para este profissional neste dia da semana
         professionalScheduleRepository.findByProfessionalIdAndDayOfWeek(
                 request.professionalId(), request.dayOfWeek())
                 .ifPresent(schedule -> {
-                    throw new RuntimeException("Já existe uma agenda cadastrada para este profissional no " + request.dayOfWeek());
+                    throw new DuplicateEntityException("Já existe uma agenda cadastrada para este profissional no " + request.dayOfWeek());
                 });
 
         // Validar horários
@@ -65,15 +68,15 @@ public class DefaultCreateProfessionalScheduleUseCase implements CreateProfessio
     private void validateTimeRange(java.time.LocalTime startTime, java.time.LocalTime endTime,
                                    java.time.LocalTime lunchBreakStart, java.time.LocalTime lunchBreakEnd) {
         if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
-            throw new RuntimeException("O horário de início deve ser anterior ao horário de término");
+            throw new ScheduleValidationException("O horário de início deve ser anterior ao horário de término");
         }
 
         if (lunchBreakStart.isAfter(lunchBreakEnd) || lunchBreakStart.equals(lunchBreakEnd)) {
-            throw new RuntimeException("O horário de início do almoço deve ser anterior ao horário de término");
+            throw new ScheduleValidationException("O horário de início do almoço deve ser anterior ao horário de término");
         }
 
         if (lunchBreakStart.isBefore(startTime) || lunchBreakEnd.isAfter(endTime)) {
-            throw new RuntimeException("O horário de almoço deve estar dentro do horário de trabalho");
+            throw new ScheduleValidationException("O horário de almoço deve estar dentro do horário de trabalho");
         }
     }
 }

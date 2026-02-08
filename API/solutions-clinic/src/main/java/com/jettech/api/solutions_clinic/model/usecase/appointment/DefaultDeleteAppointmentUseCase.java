@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -21,7 +23,7 @@ public class DefaultDeleteAppointmentUseCase implements DeleteAppointmentUseCase
     @Transactional
     public void execute(UUID id) {
         Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Agendamento não encontrado com ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento", id));
 
         // Ao invés de deletar, marca como cancelado
         appointment.setStatus(AppointmentStatus.CANCELADO);

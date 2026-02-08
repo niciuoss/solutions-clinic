@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,7 @@ public class DefaultGetRoomsByTenantUseCase implements GetRoomsByTenantUseCase {
     public List<RoomResponse> execute(GetRoomsByTenantRequest request) throws AuthenticationFailedException {
         // Validar se o tenant existe
         tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 
         // Buscar salas por tenant
         List<Room> rooms;

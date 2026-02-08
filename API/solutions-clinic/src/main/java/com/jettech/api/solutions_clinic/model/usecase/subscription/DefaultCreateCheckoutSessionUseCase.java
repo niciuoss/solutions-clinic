@@ -17,6 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.InvalidRequestException;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,23 +58,23 @@ public class DefaultCreateCheckoutSessionUseCase implements CreateCheckoutSessio
 
         // Validar plano
         if (request.planType() == PlanType.CUSTOM) {
-            throw new RuntimeException("Plano personalizado não pode ser pago via checkout. Entre em contato com vendas.");
+            throw new InvalidRequestException("Plano personalizado não pode ser pago via checkout. Entre em contato com vendas.");
         }
 
         // Buscar tenant
         Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Tenant não encontrado: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Tenant", request.tenantId()));
 
         // Verificar se já existe assinatura ativa
         subscriptionRepository.findByTenantIdAndStatus(request.tenantId(), SubscriptionStatus.ACTIVE)
                 .ifPresent(sub -> {
-                    throw new RuntimeException("Já existe uma assinatura ativa para este tenant");
+                    throw new DuplicateEntityException("Já existe uma assinatura ativa para este tenant");
                 });
 
         // Obter preço do plano
         BigDecimal amount = PLAN_PRICES.get(request.planType());
         if (amount == null) {
-            throw new RuntimeException("Plano não suportado: " + request.planType());
+            throw new InvalidRequestException("Plano não suportado: " + request.planType());
         }
 
         String planName = PLAN_NAMES.get(request.planType());

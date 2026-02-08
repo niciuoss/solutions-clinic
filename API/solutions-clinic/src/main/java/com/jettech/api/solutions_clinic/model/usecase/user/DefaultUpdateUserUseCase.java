@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -19,7 +21,7 @@ public class DefaultUpdateUserUseCase implements UpdateUserUseCase {
     @Transactional
     public UserResponse execute(UpdateUserRequest request) throws AuthenticationFailedException {
         User user = userRepository.findById(request.id())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.id()));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário", request.id()));
 
         // Atualizar campos se fornecidos
         if (request.firstName() != null) {
@@ -37,7 +39,7 @@ public class DefaultUpdateUserUseCase implements UpdateUserUseCase {
             userRepository.findByCpf(request.cpf())
                     .ifPresent((existingUser) -> {
                         if (!existingUser.getId().equals(finalUser.getId())) {
-                            throw new RuntimeException("CPF já está cadastrado: " + request.cpf());
+                            throw new DuplicateEntityException("CPF já está cadastrado: " + request.cpf());
                         }
                     });
             user.setCpf(request.cpf());
@@ -54,7 +56,7 @@ public class DefaultUpdateUserUseCase implements UpdateUserUseCase {
             userRepository.findByEmail(request.email())
                     .ifPresent((existingUser) -> {
                         if (!existingUser.getId().equals(finalUser.getId())) {
-                            throw new RuntimeException("Email já está em uso: " + request.email());
+                            throw new DuplicateEntityException("Email já está em uso: " + request.email());
                         }
                     });
             user.setEmail(request.email());

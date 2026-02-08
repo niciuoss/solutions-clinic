@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+
 import java.util.UUID;
 
 @Service
@@ -21,7 +23,7 @@ public class DefaultDeleteProcedureUseCase implements DeleteProcedureUseCase {
     @Transactional
     public void execute(UUID id) {
         Procedure procedure = procedureRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Procedimento não encontrado com ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Procedimento", id));
 
         // Verificar se o procedimento está sendo usado em algum agendamento
         // Se estiver, não permitir exclusão (ou podemos apenas desativar)

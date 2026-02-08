@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.InvalidRequestException;
+
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -39,7 +41,7 @@ public class DefaultProcessStripeWebhookUseCase implements ProcessStripeWebhookU
             event = Webhook.constructEvent(request.payload(), request.signature(), request.webhookSecret());
         } catch (SignatureVerificationException e) {
             log.error("Erro ao verificar assinatura do webhook do Stripe", e);
-            throw new RuntimeException("Invalid signature", e);
+            throw new InvalidRequestException("Invalid signature", e);
         }
 
         log.info("Processando evento do Stripe - type: {}, id: {}", event.getType(), event.getId());

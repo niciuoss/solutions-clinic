@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.ScheduleValidationException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -19,7 +21,7 @@ public class DefaultUpdateProfessionalScheduleUseCase implements UpdateProfessio
     @Transactional
     public ProfessionalScheduleResponse execute(UpdateProfessionalScheduleRequest request) throws AuthenticationFailedException {
         ProfessionalSchedule schedule = professionalScheduleRepository.findById(request.id())
-                .orElseThrow(() -> new RuntimeException("Agenda não encontrada com ID: " + request.id()));
+                .orElseThrow(() -> new EntityNotFoundException("Agenda", request.id()));
 
         // Validar horários
         validateTimeRange(request.startTime(), request.endTime(), request.lunchBreakStart(), request.lunchBreakEnd());
@@ -50,15 +52,15 @@ public class DefaultUpdateProfessionalScheduleUseCase implements UpdateProfessio
     private void validateTimeRange(java.time.LocalTime startTime, java.time.LocalTime endTime,
                                    java.time.LocalTime lunchBreakStart, java.time.LocalTime lunchBreakEnd) {
         if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
-            throw new RuntimeException("O horário de início deve ser anterior ao horário de término");
+            throw new ScheduleValidationException("O horário de início deve ser anterior ao horário de término");
         }
 
         if (lunchBreakStart.isAfter(lunchBreakEnd) || lunchBreakStart.equals(lunchBreakEnd)) {
-            throw new RuntimeException("O horário de início do almoço deve ser anterior ao horário de término");
+            throw new ScheduleValidationException("O horário de início do almoço deve ser anterior ao horário de término");
         }
 
         if (lunchBreakStart.isBefore(startTime) || lunchBreakEnd.isAfter(endTime)) {
-            throw new RuntimeException("O horário de almoço deve estar dentro do horário de trabalho");
+            throw new ScheduleValidationException("O horário de almoço deve estar dentro do horário de trabalho");
         }
     }
 }

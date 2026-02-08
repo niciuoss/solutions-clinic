@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+
 import java.util.UUID;
 
 @Service
@@ -21,7 +23,7 @@ public class DefaultDeleteUserUseCase implements DeleteUserUseCase {
     @Transactional
     public void execute(UUID userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário", userId));
 
         // Primeiro, deletar todas as relações UserTenantRole
         userTenantRoleRepository.findByUser_Id(userId).forEach(userTenantRoleRepository::delete);

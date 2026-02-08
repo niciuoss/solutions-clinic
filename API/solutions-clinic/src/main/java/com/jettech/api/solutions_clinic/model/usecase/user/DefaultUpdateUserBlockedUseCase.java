@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -19,7 +20,7 @@ public class DefaultUpdateUserBlockedUseCase implements UpdateUserBlockedUseCase
     @Transactional
     public UserResponse execute(UpdateUserBlockedRequest request) throws AuthenticationFailedException {
         User user = userRepository.findById(request.id())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.id()));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário", request.id()));
 
         user.setBlocked(request.blocked());
         user = userRepository.save(user);

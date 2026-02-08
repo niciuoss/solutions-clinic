@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -25,7 +26,7 @@ public class DefaultGetProfessionalTenantsUseCase implements GetProfessionalTena
     public ProfessionalTenantResponse execute(UUID userId) throws AuthenticationFailedException {
         // Validar se o usuário existe
         userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + userId));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário", userId));
 
         // Buscar todos os profissionais do usuário
         List<Professional> professionals = professionalRepository.findByUserId(userId);

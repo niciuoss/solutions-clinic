@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -19,7 +20,7 @@ public class DefaultUpdatePatientActiveUseCase implements UpdatePatientActiveUse
     @Transactional
     public PatientResponse execute(UpdatePatientActiveRequest request) throws AuthenticationFailedException {
         Patient patient = patientRepository.findById(request.id())
-                .orElseThrow(() -> new RuntimeException("Paciente não encontrado com ID: " + request.id()));
+                .orElseThrow(() -> new EntityNotFoundException("Paciente", request.id()));
 
         patient.setActive(request.active());
         patient = patientRepository.save(patient);

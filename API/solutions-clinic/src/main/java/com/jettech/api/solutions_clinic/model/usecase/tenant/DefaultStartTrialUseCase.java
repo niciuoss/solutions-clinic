@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.InvalidStateException;
 import java.time.LocalDate;
 
 /**
@@ -33,16 +35,16 @@ public class DefaultStartTrialUseCase implements StartTrialUseCase {
         log.info("Iniciando trial - tenantId: {}, duração: {} dias", request.tenantId(), trialDurationDays);
 
         Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 
         // Verificar se já tem um plano ativo ou está em trial
         if (tenant.getStatus() == TenantStatus.ACTIVE || tenant.getStatus() == TenantStatus.TRIAL) {
-            throw new RuntimeException("A clínica já possui um plano ativo ou está em período de teste");
+            throw new InvalidStateException("A clínica já possui um plano ativo ou está em período de teste");
         }
 
         // Verificar se já teve trial anteriormente (opcional - pode remover se permitir múltiplos trials)
         if (tenant.getTrialEndsAt() != null && tenant.getTrialEndsAt().isAfter(LocalDate.now())) {
-            throw new RuntimeException("A clínica já está em período de teste");
+            throw new InvalidStateException("A clínica já está em período de teste");
         }
 
         // Definir data de término do trial

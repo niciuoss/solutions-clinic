@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+
 import java.util.UUID;
 
 @Service
@@ -19,7 +21,7 @@ public class DefaultDeleteProfessionalScheduleUseCase implements DeleteProfessio
     @Transactional
     public void execute(UUID id) {
         ProfessionalSchedule schedule = professionalScheduleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Agenda não encontrada com ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Agenda", id));
 
         professionalScheduleRepository.delete(schedule);
     }
