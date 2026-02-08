@@ -84,12 +84,13 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
         }
 
         if (room != null) {
+            final UUID roomId = room.getId();
             String roomConflict = availabilityConflictChecker.findConflict(
                     request.scheduledAt(),
                     calculatedDurationMinutes,
                     null,
                     (start, end) -> appointmentRepository.findByRoomIdAndScheduledAtBetweenAndStatusNot(
-                            room.getId(), start, end, AppointmentStatus.CANCELADO),
+                            roomId, start, end, AppointmentStatus.CANCELADO),
                     ROOM_CONFLICT_MESSAGE
             );
             if (roomConflict != null && !request.forceSchedule()) {
