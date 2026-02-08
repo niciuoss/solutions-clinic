@@ -10,9 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.jettech.api.solutions_clinic.exception.AppointmentConflictException;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.math.BigDecimal;
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -21,95 +18,84 @@ import java.util.UUID;
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase {
 
-    private static final int SEARCH_WINDOW_HOURS_BEFORE = 8;
-    private static final int SEARCH_WINDOW_HOURS_AFTER = 1;
+    private static final String PROFESSIONAL_CONFLICT_MESSAGE =
+            "Já existe um agendamento para este profissional neste horário. Deseja agendar mesmo assim?";
+    private static final String ROOM_CONFLICT_MESSAGE =
+            "Já existe um agendamento para esta sala neste horário. Deseja agendar mesmo assim?";
 
     private final AppointmentRepository appointmentRepository;
+    private final AvailabilityConflictChecker availabilityConflictChecker;
     private final PatientRepository patientRepository;
     private final ProfessionalRepository professionalRepository;
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
-    private final ProfessionalScheduleRepository professionalScheduleRepository;
-    private final ProcedureRepository procedureRepository;
+    private final ProfessionalScheduleValidator professionalScheduleValidator;
+    private final ProcedureLoader procedureLoader;
+    private final AppointmentResponseMapper appointmentResponseMapper;
 
     @Override
     @Transactional
     public AppointmentResponse execute(CreateAppointmentRequest request) throws AuthenticationFailedException {
-        // Validar se o tenant existe
         Tenant tenant = tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new RuntimeException("Clínica não encontrada com ID: " + request.tenantId()));
 
-        // Validar se o paciente existe
         Patient patient = patientRepository.findById(request.patientId())
                 .orElseThrow(() -> new RuntimeException("Paciente não encontrado com ID: " + request.patientId()));
 
-        // Validar se o profissional existe
         Professional professional = professionalRepository.findById(request.professionalId())
                 .orElseThrow(() -> new RuntimeException("Profissional não encontrado com ID: " + request.professionalId()));
 
-        // Validar se a sala existe (se fornecida)
         Room room = null;
         if (request.roomId() != null) {
             room = roomRepository.findById(request.roomId())
                     .orElseThrow(() -> new RuntimeException("Sala não encontrada com ID: " + request.roomId()));
         }
 
-        // Validar se o usuário criador existe
         User createdBy = userRepository.findById(request.createdBy())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado com ID: " + request.createdBy()));
 
-        // Validar e processar procedimentos se fornecidos
         List<Procedure> procedures = new ArrayList<>();
         int calculatedDurationMinutes = request.durationMinutes();
         BigDecimal calculatedTotalValue = request.totalValue();
 
         if (request.procedureIds() != null && !request.procedureIds().isEmpty()) {
-            procedures = validateAndLoadProcedures(request.procedureIds(), request.tenantId());
-            
-            // Calcular duração total baseada nos procedimentos
-            calculatedDurationMinutes = procedures.stream()
-                    .mapToInt(Procedure::getEstimatedDurationMinutes)
-                    .sum();
-            
-            // Calcular valor total baseado nos procedimentos (se totalValue não foi fornecido ou é zero)
+            ProcedureLoadResult loadResult = procedureLoader.loadAndValidate(request.procedureIds(), request.tenantId());
+            procedures = loadResult.procedures();
+            calculatedDurationMinutes = loadResult.totalDurationMinutes();
             if (request.totalValue() == null || request.totalValue().compareTo(BigDecimal.ZERO) == 0) {
-                calculatedTotalValue = procedures.stream()
-                        .map(Procedure::getBasePrice)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                calculatedTotalValue = loadResult.totalValueFromProcedures();
             }
         }
 
-        // Validar horário disponível do profissional
-        validateProfessionalSchedule(professional.getId(), request.scheduledAt(), calculatedDurationMinutes);
+        professionalScheduleValidator.validate(professional.getId(), request.scheduledAt(), calculatedDurationMinutes);
 
-        // Verificar conflito de horário com outros agendamentos do profissional
-        String professionalConflict = findProfessionalConflict(
-                professional.getId(), 
-                request.scheduledAt(), 
-                calculatedDurationMinutes, 
-                null
+        String professionalConflict = availabilityConflictChecker.findConflict(
+                request.scheduledAt(),
+                calculatedDurationMinutes,
+                null,
+                (start, end) -> appointmentRepository.findByProfessionalIdAndScheduledAtBetweenAndStatusNot(
+                        professional.getId(), start, end, AppointmentStatus.CANCELADO),
+                PROFESSIONAL_CONFLICT_MESSAGE
         );
-        
         if (professionalConflict != null && !request.forceSchedule()) {
             throw new AppointmentConflictException(professionalConflict);
         }
 
-        // Verificar conflito de horário com outros agendamentos da sala (se fornecida)
         if (room != null) {
-            String roomConflict = findRoomConflict(
-                    room.getId(), 
-                    request.scheduledAt(), 
-                    calculatedDurationMinutes, 
-                    null
+            String roomConflict = availabilityConflictChecker.findConflict(
+                    request.scheduledAt(),
+                    calculatedDurationMinutes,
+                    null,
+                    (start, end) -> appointmentRepository.findByRoomIdAndScheduledAtBetweenAndStatusNot(
+                            room.getId(), start, end, AppointmentStatus.CANCELADO),
+                    ROOM_CONFLICT_MESSAGE
             );
-            
             if (roomConflict != null && !request.forceSchedule()) {
                 throw new AppointmentConflictException(roomConflict);
             }
         }
 
-        // Criar Appointment
         Appointment appointment = new Appointment();
         appointment.setTenant(tenant);
         appointment.setPatient(patient);
@@ -125,168 +111,17 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
 
         appointment = appointmentRepository.save(appointment);
 
-        // Criar AppointmentProcedure para cada procedimento
         if (!procedures.isEmpty()) {
             for (Procedure procedure : procedures) {
                 AppointmentProcedure appointmentProcedure = new AppointmentProcedure();
                 appointmentProcedure.setAppointment(appointment);
                 appointmentProcedure.setProcedure(procedure);
-                appointmentProcedure.setFinalPrice(procedure.getBasePrice()); // Inicialmente usa o preço base
+                appointmentProcedure.setFinalPrice(procedure.getBasePrice());
                 appointment.getProcedures().add(appointmentProcedure);
             }
             appointment = appointmentRepository.save(appointment);
         }
 
-        // Converter para Response
-        return toResponse(appointment);
-    }
-
-    private void validateProfessionalSchedule(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes) {
-        DayOfWeek dayOfWeek = scheduledAt.getDayOfWeek();
-        LocalTime scheduledTime = scheduledAt.toLocalTime();
-        LocalDateTime endTime = scheduledAt.plusMinutes(durationMinutes);
-
-        // Buscar agenda do profissional para o dia da semana
-        ProfessionalSchedule schedule = professionalScheduleRepository
-                .findByProfessionalIdAndDayOfWeek(professionalId, dayOfWeek)
-                .orElseThrow(() -> new RuntimeException("O profissional não possui agenda cadastrada para " + dayOfWeek));
-
-        // Verificar se o horário está dentro do horário de trabalho
-        if (scheduledTime.isBefore(schedule.getStartTime()) || 
-            endTime.toLocalTime().isAfter(schedule.getEndTime())) {
-            throw new RuntimeException("O horário agendado está fora do horário de trabalho do profissional");
-        }
-
-        // Verificar se o horário não está no intervalo de almoço
-        if ((scheduledTime.isAfter(schedule.getLunchBreakStart()) && scheduledTime.isBefore(schedule.getLunchBreakEnd())) ||
-            (endTime.toLocalTime().isAfter(schedule.getLunchBreakStart()) && endTime.toLocalTime().isBefore(schedule.getLunchBreakEnd())) ||
-            (scheduledTime.isBefore(schedule.getLunchBreakStart()) && endTime.toLocalTime().isAfter(schedule.getLunchBreakEnd()))) {
-            throw new RuntimeException("O horário agendado está no intervalo de almoço do profissional");
-        }
-
-        // Verificar se a duração é compatível com o slotDurationMinutes
-        if (durationMinutes % schedule.getSlotDurationMinutes() != 0) {
-            throw new RuntimeException("A duração do agendamento deve ser múltipla de " + schedule.getSlotDurationMinutes() + " minutos");
-        }
-    }
-
-    private String findProfessionalConflict(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
-        LocalDateTime searchStart = scheduledAt.minusHours(SEARCH_WINDOW_HOURS_BEFORE);
-        LocalDateTime searchEnd = appointmentEnd.plusHours(SEARCH_WINDOW_HOURS_AFTER);
-
-        List<Appointment> existingAppointments = appointmentRepository
-                .findByProfessionalIdAndScheduledAtBetweenAndStatusNot(
-                        professionalId,
-                        searchStart,
-                        searchEnd,
-                        AppointmentStatus.CANCELADO
-                );
-
-        // Verificar conflitos com agendamentos existentes
-        for (Appointment existing : existingAppointments) {
-            if (excludeAppointmentId != null && existing.getId().equals(excludeAppointmentId)) {
-                continue;
-            }
-
-            LocalDateTime existingStart = existing.getScheduledAt();
-            LocalDateTime existingEnd = existingStart.plusMinutes(existing.getDurationMinutes());
-
-            // Verificar sobreposição: dois intervalos se sobrepõem se:
-            // start1 < end2 && start2 < end1
-            if (scheduledAt.isBefore(existingEnd) && existingStart.isBefore(appointmentEnd)) {
-                return "Já existe um agendamento para este profissional neste horário. Deseja agendar mesmo assim?";
-            }
-        }
-        
-        return null; // Sem conflito
-    }
-
-    private void validateProfessionalAvailability(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        String conflict = findProfessionalConflict(professionalId, scheduledAt, durationMinutes, excludeAppointmentId);
-        if (conflict != null) {
-            throw new AppointmentConflictException(conflict);
-        }
-    }
-
-    private List<Procedure> validateAndLoadProcedures(List<UUID> procedureIds, UUID tenantId) {
-        List<Procedure> procedures = new ArrayList<>();
-        
-        for (UUID procedureId : procedureIds) {
-            Procedure procedure = procedureRepository.findByIdAndTenantId(procedureId, tenantId)
-                    .orElseThrow(() -> new RuntimeException("Procedimento não encontrado com ID: " + procedureId + " para o tenant: " + tenantId));
-            
-            if (!procedure.isActive()) {
-                throw new RuntimeException("O procedimento " + procedure.getName() + " está inativo");
-            }
-            
-            procedures.add(procedure);
-        }
-        
-        return procedures;
-    }
-
-    private String findRoomConflict(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
-        LocalDateTime searchStart = scheduledAt.minusHours(SEARCH_WINDOW_HOURS_BEFORE);
-        LocalDateTime searchEnd = appointmentEnd.plusHours(SEARCH_WINDOW_HOURS_AFTER);
-
-        List<Appointment> existingAppointments = appointmentRepository
-                .findByRoomIdAndScheduledAtBetweenAndStatusNot(
-                        roomId,
-                        searchStart,
-                        searchEnd,
-                        AppointmentStatus.CANCELADO
-                );
-
-        // Verificar conflitos com agendamentos existentes
-        for (Appointment existing : existingAppointments) {
-            if (excludeAppointmentId != null && existing.getId().equals(excludeAppointmentId)) {
-                continue;
-            }
-
-            LocalDateTime existingStart = existing.getScheduledAt();
-            LocalDateTime existingEnd = existingStart.plusMinutes(existing.getDurationMinutes());
-
-            // Verificar sobreposição: dois intervalos se sobrepõem se:
-            // start1 < end2 && start2 < end1
-            if (scheduledAt.isBefore(existingEnd) && existingStart.isBefore(appointmentEnd)) {
-                return "Já existe um agendamento para esta sala neste horário. Deseja agendar mesmo assim?";
-            }
-        }
-        
-        return null; // Sem conflito
-    }
-
-    private void validateRoomAvailability(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        String conflict = findRoomConflict(roomId, scheduledAt, durationMinutes, excludeAppointmentId);
-        if (conflict != null) {
-            throw new AppointmentConflictException(conflict);
-        }
-    }
-
-    private AppointmentResponse toResponse(Appointment appointment) {
-        return new AppointmentResponse(
-                appointment.getId(),
-                appointment.getTenant().getId(),
-                appointment.getPatient().getId(),
-                appointment.getProfessional().getId(),
-                appointment.getRoom() != null ? appointment.getRoom().getId() : null,
-                appointment.getScheduledAt(),
-                appointment.getDurationMinutes(),
-                appointment.getStatus(),
-                appointment.getObservations(),
-                appointment.getCancelledAt(),
-                appointment.getStartedAt(),
-                appointment.getFinishedAt(),
-                appointment.getDurationActualMinutes(),
-                appointment.getTotalValue(),
-                appointment.getPaymentMethod(),
-                appointment.getPaymentStatus(),
-                appointment.getPaidAt(),
-                appointment.getCreatedBy().getId(),
-                appointment.getCreatedAt(),
-                appointment.getUpdatedAt()
-        );
+        return appointmentResponseMapper.toResponse(appointment);
     }
 }

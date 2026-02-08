@@ -13,17 +13,19 @@ import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase {
 
-    private static final int SEARCH_WINDOW_HOURS_BEFORE = 8;
-    private static final int SEARCH_WINDOW_HOURS_AFTER = 1;
+    private static final String PROFESSIONAL_CONFLICT_MESSAGE =
+            "Já existe um agendamento para este profissional neste horário. Deseja agendar mesmo assim?";
+    private static final String ROOM_CONFLICT_MESSAGE =
+            "Já existe um agendamento para esta sala neste horário. Deseja agendar mesmo assim?";
 
     private final AppointmentRepository appointmentRepository;
+    private final AvailabilityConflictChecker availabilityConflictChecker;
     private final PatientRepository patientRepository;
     private final ProfessionalRepository professionalRepository;
     private final RoomRepository roomRepository;
@@ -74,26 +76,28 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
             validateProfessionalSchedule(professionalId, scheduledAt, durationMinutes);
             
             // Verificar conflito de horário com outros agendamentos do profissional
-            String professionalConflict = findProfessionalConflict(
-                    professionalId, 
-                    scheduledAt, 
-                    durationMinutes, 
-                    appointment.getId()
+            String professionalConflict = availabilityConflictChecker.findConflict(
+                    scheduledAt,
+                    durationMinutes,
+                    appointment.getId(),
+                    (start, end) -> appointmentRepository.findByProfessionalIdAndScheduledAtBetweenAndStatusNot(
+                            professionalId, start, end, AppointmentStatus.CANCELADO),
+                    PROFESSIONAL_CONFLICT_MESSAGE
             );
-            
             if (professionalConflict != null && !request.forceSchedule()) {
                 throw new AppointmentConflictException(professionalConflict);
             }
-            
+
             // Verificar conflito de horário com outros agendamentos da sala (se fornecida)
             if (roomId != null) {
-                String roomConflict = findRoomConflict(
-                        roomId, 
-                        scheduledAt, 
-                        durationMinutes, 
-                        appointment.getId()
+                String roomConflict = availabilityConflictChecker.findConflict(
+                        scheduledAt,
+                        durationMinutes,
+                        appointment.getId(),
+                        (start, end) -> appointmentRepository.findByRoomIdAndScheduledAtBetweenAndStatusNot(
+                                roomId, start, end, AppointmentStatus.CANCELADO),
+                        ROOM_CONFLICT_MESSAGE
                 );
-                
                 if (roomConflict != null && !request.forceSchedule()) {
                     throw new AppointmentConflictException(roomConflict);
                 }
@@ -172,78 +176,6 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
         // Verificar se a duração é compatível com o slotDurationMinutes
         if (durationMinutes % schedule.getSlotDurationMinutes() != 0) {
             throw new RuntimeException("A duração do agendamento deve ser múltipla de " + schedule.getSlotDurationMinutes() + " minutos");
-        }
-    }
-
-    private String findProfessionalConflict(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
-        LocalDateTime searchStart = scheduledAt.minusHours(SEARCH_WINDOW_HOURS_BEFORE);
-        LocalDateTime searchEnd = appointmentEnd.plusHours(SEARCH_WINDOW_HOURS_AFTER);
-
-        List<Appointment> existingAppointments = appointmentRepository
-                .findByProfessionalIdAndScheduledAtBetweenAndStatusNot(
-                        professionalId,
-                        searchStart,
-                        searchEnd,
-                        AppointmentStatus.CANCELADO
-                );
-
-        for (Appointment existing : existingAppointments) {
-            if (excludeAppointmentId != null && existing.getId().equals(excludeAppointmentId)) {
-                continue;
-            }
-
-            LocalDateTime existingStart = existing.getScheduledAt();
-            LocalDateTime existingEnd = existingStart.plusMinutes(existing.getDurationMinutes());
-
-            if (scheduledAt.isBefore(existingEnd) && existingStart.isBefore(appointmentEnd)) {
-                return "Já existe um agendamento para este profissional neste horário. Deseja agendar mesmo assim?";
-            }
-        }
-        
-        return null; // Sem conflito
-    }
-
-    private void validateProfessionalAvailability(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        String conflict = findProfessionalConflict(professionalId, scheduledAt, durationMinutes, excludeAppointmentId);
-        if (conflict != null) {
-            throw new AppointmentConflictException(conflict);
-        }
-    }
-
-    private String findRoomConflict(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
-        LocalDateTime searchStart = scheduledAt.minusHours(SEARCH_WINDOW_HOURS_BEFORE);
-        LocalDateTime searchEnd = appointmentEnd.plusHours(SEARCH_WINDOW_HOURS_AFTER);
-
-        List<Appointment> existingAppointments = appointmentRepository
-                .findByRoomIdAndScheduledAtBetweenAndStatusNot(
-                        roomId,
-                        searchStart,
-                        searchEnd,
-                        AppointmentStatus.CANCELADO
-                );
-
-        for (Appointment existing : existingAppointments) {
-            if (excludeAppointmentId != null && existing.getId().equals(excludeAppointmentId)) {
-                continue;
-            }
-
-            LocalDateTime existingStart = existing.getScheduledAt();
-            LocalDateTime existingEnd = existingStart.plusMinutes(existing.getDurationMinutes());
-
-            if (scheduledAt.isBefore(existingEnd) && existingStart.isBefore(appointmentEnd)) {
-                return "Já existe um agendamento para esta sala neste horário. Deseja agendar mesmo assim?";
-            }
-        }
-        
-        return null; // Sem conflito
-    }
-
-    private void validateRoomAvailability(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        String conflict = findRoomConflict(roomId, scheduledAt, durationMinutes, excludeAppointmentId);
-        if (conflict != null) {
-            throw new AppointmentConflictException(conflict);
         }
     }
 
