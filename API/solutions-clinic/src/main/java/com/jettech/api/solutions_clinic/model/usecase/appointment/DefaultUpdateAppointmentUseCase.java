@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.AppointmentConflictException;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -18,6 +19,9 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase {
+
+    private static final int SEARCH_WINDOW_HOURS_BEFORE = 8;
+    private static final int SEARCH_WINDOW_HOURS_AFTER = 1;
 
     private final AppointmentRepository appointmentRepository;
     private final PatientRepository patientRepository;
@@ -70,7 +74,7 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
             validateProfessionalSchedule(professionalId, scheduledAt, durationMinutes);
             
             // Verificar conflito de horário com outros agendamentos do profissional
-            String professionalConflict = checkProfessionalAvailabilityConflict(
+            String professionalConflict = findProfessionalConflict(
                     professionalId, 
                     scheduledAt, 
                     durationMinutes, 
@@ -78,12 +82,12 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
             );
             
             if (professionalConflict != null && !request.forceSchedule()) {
-                throw new RuntimeException(professionalConflict);
+                throw new AppointmentConflictException(professionalConflict);
             }
             
             // Verificar conflito de horário com outros agendamentos da sala (se fornecida)
             if (roomId != null) {
-                String roomConflict = checkRoomAvailabilityConflict(
+                String roomConflict = findRoomConflict(
                         roomId, 
                         scheduledAt, 
                         durationMinutes, 
@@ -91,7 +95,7 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
                 );
                 
                 if (roomConflict != null && !request.forceSchedule()) {
-                    throw new RuntimeException(roomConflict);
+                    throw new AppointmentConflictException(roomConflict);
                 }
             }
         }
@@ -171,10 +175,10 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
         }
     }
 
-    private String checkProfessionalAvailabilityConflict(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+    private String findProfessionalConflict(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
         LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
-        LocalDateTime searchStart = scheduledAt.minusHours(8);
-        LocalDateTime searchEnd = appointmentEnd.plusHours(1);
+        LocalDateTime searchStart = scheduledAt.minusHours(SEARCH_WINDOW_HOURS_BEFORE);
+        LocalDateTime searchEnd = appointmentEnd.plusHours(SEARCH_WINDOW_HOURS_AFTER);
 
         List<Appointment> existingAppointments = appointmentRepository
                 .findByProfessionalIdAndScheduledAtBetweenAndStatusNot(
@@ -201,16 +205,16 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
     }
 
     private void validateProfessionalAvailability(UUID professionalId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        String conflict = checkProfessionalAvailabilityConflict(professionalId, scheduledAt, durationMinutes, excludeAppointmentId);
+        String conflict = findProfessionalConflict(professionalId, scheduledAt, durationMinutes, excludeAppointmentId);
         if (conflict != null) {
-            throw new RuntimeException(conflict);
+            throw new AppointmentConflictException(conflict);
         }
     }
 
-    private String checkRoomAvailabilityConflict(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
+    private String findRoomConflict(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
         LocalDateTime appointmentEnd = scheduledAt.plusMinutes(durationMinutes);
-        LocalDateTime searchStart = scheduledAt.minusHours(8);
-        LocalDateTime searchEnd = appointmentEnd.plusHours(1);
+        LocalDateTime searchStart = scheduledAt.minusHours(SEARCH_WINDOW_HOURS_BEFORE);
+        LocalDateTime searchEnd = appointmentEnd.plusHours(SEARCH_WINDOW_HOURS_AFTER);
 
         List<Appointment> existingAppointments = appointmentRepository
                 .findByRoomIdAndScheduledAtBetweenAndStatusNot(
@@ -237,9 +241,9 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
     }
 
     private void validateRoomAvailability(UUID roomId, LocalDateTime scheduledAt, int durationMinutes, UUID excludeAppointmentId) {
-        String conflict = checkRoomAvailabilityConflict(roomId, scheduledAt, durationMinutes, excludeAppointmentId);
+        String conflict = findRoomConflict(roomId, scheduledAt, durationMinutes, excludeAppointmentId);
         if (conflict != null) {
-            throw new RuntimeException(conflict);
+            throw new AppointmentConflictException(conflict);
         }
     }
 
