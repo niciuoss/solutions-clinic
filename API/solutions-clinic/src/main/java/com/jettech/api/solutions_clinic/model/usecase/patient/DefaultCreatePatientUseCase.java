@@ -13,6 +13,9 @@ import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -20,15 +23,17 @@ public class DefaultCreatePatientUseCase implements CreatePatientUseCase {
 
     private final PatientRepository patientRepository;
     private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public PatientResponse execute(CreatePatientRequest request) throws AuthenticationFailedException {
-        Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
+        UUID tenantId = tenantContext.getRequiredClinicId();
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", tenantId));
 
         if (request.cpf() != null && !request.cpf().isEmpty()) {
-            patientRepository.findByCpfAndTenantId(request.cpf(), request.tenantId())
+            patientRepository.findByCpfAndTenantId(request.cpf(), tenantId)
                     .ifPresent(patient -> {
                         throw new DuplicateEntityException(ApiError.DUPLICATE_PATIENT_CPF);
                     });

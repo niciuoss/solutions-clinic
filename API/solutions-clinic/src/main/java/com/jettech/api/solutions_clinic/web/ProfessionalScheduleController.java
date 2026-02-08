@@ -42,7 +42,7 @@ public class ProfessionalScheduleController implements ProfessionalScheduleAPI {
     }
 
     @Override
-    public void deleteProfessionalSchedule(@PathVariable UUID id) {
+    public void deleteProfessionalSchedule(@PathVariable UUID id) throws AuthenticationFailedException {
         deleteProfessionalScheduleUseCase.execute(id);
     }
 }

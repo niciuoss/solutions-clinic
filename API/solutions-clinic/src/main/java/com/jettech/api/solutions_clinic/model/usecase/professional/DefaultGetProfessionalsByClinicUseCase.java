@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -21,11 +22,12 @@ public class DefaultGetProfessionalsByClinicUseCase implements GetProfessionalsB
 
     private final ProfessionalRepository professionalRepository;
     private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional(readOnly = true)
     public Page<ProfessionalResponse> execute(GetProfessionalsByClinicRequest request) throws AuthenticationFailedException {
-        // Validar se a clínica existe
+        tenantContext.requireSameTenant(request.clinicId());
         tenantRepository.findById(request.clinicId())
                 .orElseThrow(() -> new EntityNotFoundException("Clínica", request.clinicId()));
 

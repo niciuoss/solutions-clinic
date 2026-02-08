@@ -13,6 +13,9 @@ import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -20,15 +23,15 @@ public class DefaultCreateFinancialCategoryUseCase implements CreateFinancialCat
 
     private final FinancialCategoryRepository financialCategoryRepository;
     private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public FinancialCategoryResponse execute(CreateFinancialCategoryRequest request) throws AuthenticationFailedException {
-        Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
-
-        // Verificar se já existe categoria com o mesmo nome
-        if (financialCategoryRepository.existsByNameAndTenantId(request.name(), request.tenantId())) {
+        UUID tenantId = tenantContext.getRequiredClinicId();
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", tenantId));
+        if (financialCategoryRepository.existsByNameAndTenantId(request.name(), tenantId)) {
             throw new DuplicateEntityException(ApiError.DUPLICATE_CATEGORY_NAME);
         }
 

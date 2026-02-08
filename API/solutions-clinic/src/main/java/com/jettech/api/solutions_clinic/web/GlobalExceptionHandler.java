@@ -72,6 +72,15 @@ public class GlobalExceptionHandler {
                 .body(errorBody(ApiError.AUTHENTICATION_FAILED.getErrorLabel(), message, HttpStatus.UNAUTHORIZED.value()));
     }
 
+    // --- 403 Forbidden ---
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<Map<String, Object>> handleForbidden(ForbiddenException ex) {
+        String message = resolveMessage(ex, ApiError.ACCESS_DENIED);
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(errorBody(ApiError.ACCESS_DENIED.getErrorLabel(), message, HttpStatus.FORBIDDEN.value()));
+    }
+
     // --- 404 Not Found ---
 
     @ExceptionHandler(EntityNotFoundException.class)

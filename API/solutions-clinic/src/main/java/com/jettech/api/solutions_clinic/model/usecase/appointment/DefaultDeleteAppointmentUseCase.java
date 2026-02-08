@@ -8,7 +8,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.ForbiddenException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -18,13 +21,16 @@ import java.util.UUID;
 public class DefaultDeleteAppointmentUseCase implements DeleteAppointmentUseCase {
 
     private final AppointmentRepository appointmentRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
-    public void execute(UUID id) {
+    public void execute(UUID id) throws AuthenticationFailedException {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Agendamento", id));
-
+        if (!appointment.getTenant().getId().equals(tenantContext.getRequiredClinicId())) {
+            throw new ForbiddenException();
+        }
         // Ao invés de deletar, marca como cancelado
         appointment.setStatus(AppointmentStatus.CANCELADO);
         appointment.setCancelledAt(LocalDateTime.now());

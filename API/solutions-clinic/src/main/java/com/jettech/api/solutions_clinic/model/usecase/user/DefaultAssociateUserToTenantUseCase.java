@@ -1,5 +1,6 @@
 package com.jettech.api.solutions_clinic.model.usecase.user;
 
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.model.entity.Tenant;
 import com.jettech.api.solutions_clinic.model.entity.User;
 import com.jettech.api.solutions_clinic.model.entity.UserTenantRole;
@@ -9,6 +10,7 @@ import com.jettech.api.solutions_clinic.model.repository.UserTenantRoleRepositor
 import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,11 +23,12 @@ public class DefaultAssociateUserToTenantUseCase implements AssociateUserToTenan
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
     private final UserTenantRoleRepository userTenantRoleRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
-    public Void execute(AssociateUserToTenantRequest request) {
-        // Validar se o usuário existe
+    public Void execute(AssociateUserToTenantRequest request) throws AuthenticationFailedException {
+        tenantContext.requireSameTenant(request.tenantId());
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new EntityNotFoundException("Usuário", request.userId()));
 

@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -21,11 +22,12 @@ public class DefaultGetPatientsByTenantUseCase implements GetPatientsByTenantUse
 
     private final PatientRepository patientRepository;
     private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional(readOnly = true)
     public Page<PatientResponse> execute(GetPatientsByTenantRequest request) throws AuthenticationFailedException {
-        // Validar se o tenant existe
+        tenantContext.requireSameTenant(request.tenantId());
         tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 

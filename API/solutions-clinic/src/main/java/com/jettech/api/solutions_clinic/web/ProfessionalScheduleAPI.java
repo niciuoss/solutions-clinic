@@ -64,5 +64,5 @@ public interface ProfessionalScheduleAPI {
             @ApiResponse(responseCode = "200", description = "Agenda deletada com sucesso", content = @Content),
             @ApiResponse(responseCode = "404", description = "Agenda não encontrada", content = @Content)
     })
-    void deleteProfessionalSchedule(@PathVariable UUID id);
+    void deleteProfessionalSchedule(@PathVariable UUID id) throws AuthenticationFailedException;
 }

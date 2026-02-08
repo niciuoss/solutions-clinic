@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.ForbiddenException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -19,12 +21,15 @@ public class DefaultGetAppointmentsByProfessionalIdUseCase implements GetAppoint
 
     private final AppointmentRepository appointmentRepository;
     private final ProfessionalRepository professionalRepository;
+    private final TenantContext tenantContext;
 
     @Override
     public List<AppointmentResponse> execute(UUID professionalId) throws AuthenticationFailedException {
-        // Validar se o profissional existe
-        professionalRepository.findById(professionalId)
+        var professional = professionalRepository.findById(professionalId)
                 .orElseThrow(() -> new EntityNotFoundException("Profissional", professionalId));
+        if (!professional.getTenant().getId().equals(tenantContext.getRequiredClinicId())) {
+            throw new ForbiddenException();
+        }
 
         List<Appointment> appointments = appointmentRepository.findByProfessionalId(professionalId);
 

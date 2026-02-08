@@ -21,6 +21,7 @@ import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.InvalidRequestException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -32,6 +33,7 @@ public class DefaultCreateCheckoutSessionUseCase implements CreateCheckoutSessio
 
     private final TenantRepository tenantRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final TenantContext tenantContext;
 
     @Value("${app.frontend.url:http://localhost:3000}")
     private String frontendUrl;
@@ -55,9 +57,9 @@ public class DefaultCreateCheckoutSessionUseCase implements CreateCheckoutSessio
     @Override
     @Transactional
     public CreateCheckoutSessionResponse execute(CreateCheckoutSessionRequest request) throws AuthenticationFailedException {
+        tenantContext.requireSameTenant(request.tenantId());
         log.info("Criando sessão de checkout - tenantId: {}, planType: {}", request.tenantId(), request.planType());
 
-        // Validar plano
         if (request.planType() == PlanType.CUSTOM) {
             throw new InvalidRequestException(ApiError.CUSTOM_PLAN_NO_CHECKOUT);
         }

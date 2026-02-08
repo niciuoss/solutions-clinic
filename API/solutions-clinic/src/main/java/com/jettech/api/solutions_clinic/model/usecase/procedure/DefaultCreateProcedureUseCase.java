@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.util.UUID;
 
 @Service
@@ -22,12 +23,14 @@ public class DefaultCreateProcedureUseCase implements CreateProcedureUseCase {
     private final ProcedureRepository procedureRepository;
     private final TenantRepository tenantRepository;
     private final ProfessionalRepository professionalRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public ProcedureResponse execute(CreateProcedureRequest request) throws AuthenticationFailedException {
-        Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
+        UUID tenantId = tenantContext.getRequiredClinicId();
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", tenantId));
                 
         // Obter usuário logado
         UUID userId = getUserIdFromContext();
@@ -37,12 +40,10 @@ public class DefaultCreateProcedureUseCase implements CreateProcedureUseCase {
         
         Professional professional;
         if (request.professionalId() != null) {
-            // Se foi informado o ID do profissional, busca diretamente (por exemplo, admin criando para um médico)
-            professional = professionalRepository.findByIdAndTenantId(request.professionalId(), tenant.getId())
+            professional = professionalRepository.findByIdAndTenantId(request.professionalId(), tenantId)
                     .orElseThrow(() -> new EntityNotFoundException("Profissional", request.professionalId()));
         } else {
-             // Buscar profissional associado ao usuário logado e tenant
-            professional = professionalRepository.findByUserIdAndTenantId(userId, tenant.getId())
+            professional = professionalRepository.findByUserIdAndTenantId(userId, tenantId)
                     .orElseThrow(() -> new EntityNotFoundException("Profissional não encontrado para o usuário atual nesta clínica. Apenas profissionais podem criar procedimentos ou é necessário informar o ID do profissional."));
         }
 

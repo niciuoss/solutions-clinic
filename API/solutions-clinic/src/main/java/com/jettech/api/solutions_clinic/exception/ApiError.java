@@ -20,6 +20,9 @@ public enum ApiError {
     // --- 401 Unauthorized ---
     AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "error.authenticationFailed", "Falha de autenticação."),
 
+    // --- 403 Forbidden ---
+    ACCESS_DENIED(HttpStatus.FORBIDDEN, "error.accessDenied", "Acesso negado a este recurso ou clínica."),
+
     // --- 404 Not Found ---
     NOT_FOUND(HttpStatus.NOT_FOUND, "error.notFound", "Recurso não encontrado."),
     ENTITY_NOT_FOUND(HttpStatus.NOT_FOUND, "error.entityNotFound", "%s não encontrado(a) com ID: %s."),

@@ -14,6 +14,7 @@ import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.InvalidStateException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.time.LocalDate;
 
 /**
@@ -26,6 +27,7 @@ import java.time.LocalDate;
 public class DefaultStartTrialUseCase implements StartTrialUseCase {
 
     private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
 
     @Value("${app.trial.duration.days:14}")
     private int trialDurationDays;
@@ -33,6 +35,7 @@ public class DefaultStartTrialUseCase implements StartTrialUseCase {
     @Override
     @Transactional
     public TenantResponse execute(StartTrialRequest request) throws AuthenticationFailedException {
+        tenantContext.requireSameTenant(request.tenantId());
         log.info("Iniciando trial - tenantId: {}, duração: {} dias", request.tenantId(), trialDurationDays);
 
         Tenant tenant = tenantRepository.findById(request.tenantId())

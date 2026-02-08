@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -28,10 +29,12 @@ public class DefaultActivatePlanUseCase implements ActivatePlanUseCase {
 
     private final TenantRepository tenantRepository;
     private final SubscriptionRepository subscriptionRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public TenantResponse execute(ActivatePlanRequest request) throws AuthenticationFailedException {
+        tenantContext.requireSameTenant(request.tenantId());
         log.warn("ATIVACAO MANUAL DE PLANO - Este endpoint deve ser usado apenas para testes!");
 
         Tenant tenant = tenantRepository.findById(request.tenantId())

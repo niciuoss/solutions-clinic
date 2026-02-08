@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 
 @Slf4j
 @Service
@@ -19,10 +20,12 @@ import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 public class DefaultUpdateTenantPlanUseCase implements UpdateTenantPlanUseCase {
 
     private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public TenantResponse execute(UpdateTenantPlanRequest request) throws AuthenticationFailedException {
+        tenantContext.requireSameTenant(request.tenantId());
         Tenant tenant = tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
         log.info("id clinica {}", request.tenantId());

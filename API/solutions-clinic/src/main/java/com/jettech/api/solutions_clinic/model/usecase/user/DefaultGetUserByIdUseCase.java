@@ -11,6 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.ForbiddenException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -21,6 +23,7 @@ public class DefaultGetUserByIdUseCase implements GetUserByIdUseCase {
 
     private final UserRepository userRepository;
     private final UserTenantRoleRepository userTenantRoleRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional(readOnly = true)
@@ -29,6 +32,12 @@ public class DefaultGetUserByIdUseCase implements GetUserByIdUseCase {
                 .orElseThrow(() -> new EntityNotFoundException("Usuário", userId));
 
         List<UserTenantRole> userTenantRoles = userTenantRoleRepository.findByUser_Id(userId);
+        UUID contextClinicId = tenantContext.getRequiredClinicId();
+        boolean hasAccessToClinic = userTenantRoles.stream()
+                .anyMatch(utr -> utr.getTenant().getId().equals(contextClinicId));
+        if (!hasAccessToClinic) {
+            throw new ForbiddenException();
+        }
 
         List<UserDetailResponse.TenantRoleInfo> tenantRoles = userTenantRoles.stream()
                 .map(utr -> new UserDetailResponse.TenantRoleInfo(

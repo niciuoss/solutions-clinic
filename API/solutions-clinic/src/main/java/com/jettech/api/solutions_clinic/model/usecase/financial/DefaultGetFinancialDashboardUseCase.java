@@ -18,9 +18,11 @@ import java.util.stream.Collectors;
 public class DefaultGetFinancialDashboardUseCase implements GetFinancialDashboardUseCase {
 
     private final FinancialTransactionRepository financialTransactionRepository;
+    private final com.jettech.api.solutions_clinic.security.TenantContext tenantContext;
 
     @Override
     public FinancialDashboardResponse execute(GetFinancialDashboardRequest request) throws AuthenticationFailedException {
+        tenantContext.requireSameTenant(request.tenantId());
         LocalDate startDate = request.startDate() != null ? request.startDate() : LocalDate.now().withDayOfMonth(1);
         LocalDate endDate = request.endDate() != null ? request.endDate() : LocalDate.now();
 

@@ -11,6 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -18,12 +21,14 @@ public class DefaultCreateRoomUseCase implements CreateRoomUseCase {
 
     private final RoomRepository roomRepository;
     private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public RoomResponse execute(CreateRoomRequest request) throws AuthenticationFailedException {
-        Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
+        UUID tenantId = tenantContext.getRequiredClinicId();
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", tenantId));
 
         Room room = new Room();
         room.setTenant(tenant);

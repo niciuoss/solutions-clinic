@@ -1,5 +1,6 @@
 package com.jettech.api.solutions_clinic.web;
 
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -34,5 +35,5 @@ public interface SubscriptionAPI {
     void handleWebhook(
             @RequestBody String payload,
             @RequestHeader("Stripe-Signature") String signature
-    );
+    ) throws AuthenticationFailedException;
 }

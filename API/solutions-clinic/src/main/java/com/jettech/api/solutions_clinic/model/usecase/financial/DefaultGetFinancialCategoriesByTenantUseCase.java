@@ -15,9 +15,11 @@ import java.util.stream.Collectors;
 public class DefaultGetFinancialCategoriesByTenantUseCase implements GetFinancialCategoriesByTenantUseCase {
 
     private final FinancialCategoryRepository financialCategoryRepository;
+    private final com.jettech.api.solutions_clinic.security.TenantContext tenantContext;
 
     @Override
     public List<FinancialCategoryResponse> execute(GetFinancialCategoriesByTenantRequest request) throws AuthenticationFailedException {
+        tenantContext.requireSameTenant(request.tenantId());
         List<FinancialCategory> categories;
 
         if (request.type() != null && request.active() != null) {

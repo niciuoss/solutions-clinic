@@ -49,7 +49,7 @@ public class AppointmentController implements AppointmentAPI {
     }
 
     @Override
-    public void deleteAppointment(@PathVariable UUID id) {
+    public void deleteAppointment(@PathVariable UUID id) throws AuthenticationFailedException {
         deleteAppointmentUseCase.execute(id);
     }
 

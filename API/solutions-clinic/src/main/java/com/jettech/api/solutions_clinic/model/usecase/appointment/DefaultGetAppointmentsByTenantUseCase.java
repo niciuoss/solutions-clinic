@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
@@ -21,10 +22,11 @@ public class DefaultGetAppointmentsByTenantUseCase implements GetAppointmentsByT
 
     private final AppointmentRepository appointmentRepository;
     private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
 
     @Override
     public List<AppointmentResponse> execute(GetAppointmentsByTenantRequest request) throws AuthenticationFailedException {
-        // Validar se o tenant existe
+        tenantContext.requireSameTenant(request.tenantId());
         tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 

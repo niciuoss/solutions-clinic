@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.ForbiddenException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.util.UUID;
 
 @Service
@@ -15,12 +17,15 @@ import java.util.UUID;
 public class DefaultGetAppointmentByIdUseCase implements GetAppointmentByIdUseCase {
 
     private final AppointmentRepository appointmentRepository;
+    private final TenantContext tenantContext;
 
     @Override
     public AppointmentResponse execute(UUID id) throws AuthenticationFailedException {
         Appointment appointment = appointmentRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Agendamento", id));
-
+        if (!appointment.getTenant().getId().equals(tenantContext.getRequiredClinicId())) {
+            throw new ForbiddenException();
+        }
         return toResponse(appointment);
     }
 

@@ -1,5 +1,6 @@
 package com.jettech.api.solutions_clinic.web;
 
+import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.ProcessStripeWebhookUseCase;
 import com.jettech.api.solutions_clinic.model.usecase.subscription.ProcessStripeWebhookRequest;
 import lombok.AccessLevel;
@@ -26,7 +27,7 @@ public class SubscriptionController implements SubscriptionAPI {
     public void handleWebhook(
             @RequestBody String payload,
             @RequestHeader("Stripe-Signature") String signature
-    ) {
+    ) throws AuthenticationFailedException {
         log.info("Recebendo webhook do Stripe");
         ProcessStripeWebhookRequest request = new ProcessStripeWebhookRequest(payload, signature, webhookSecret);
         processStripeWebhookUseCase.execute(request);

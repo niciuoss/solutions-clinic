@@ -29,19 +29,12 @@ public class DefaultCreateProfessionalWithUserUseCase implements CreateProfessio
     private final TenantRepository tenantRepository;
     private final UserTenantRoleRepository userTenantRoleRepository;
     private final CreateUserUseCase createUserUseCase;
+    private final com.jettech.api.solutions_clinic.security.TenantContext tenantContext;
 
     @Override
     @Transactional
     public ProfessionalResponse execute(CreateProfessionalWithUserRequest request) throws AuthenticationFailedException {
-        // Obter o tenantId do contexto de segurança (JWT token)
-        // Por enquanto, vamos obter do token do usuário autenticado
-        UUID tenantId = getTenantIdFromContext();
-        
-        if (tenantId == null) {
-            throw new EntityNotFoundException(ApiError.ENTITY_NOT_FOUND_CLINIC);
-        }
-
-        // Validar se o tenant/clínica existe
+        UUID tenantId = tenantContext.getRequiredClinicId();
         Tenant tenant = tenantRepository.findById(tenantId)
                 .orElseThrow(() -> new EntityNotFoundException("Clínica", tenantId));
 
@@ -109,25 +102,5 @@ public class DefaultCreateProfessionalWithUserUseCase implements CreateProfessio
                 professional.getCreatedAt(),
                 professional.getUpdatedAt()
         );
-    }
-
-    private UUID getTenantIdFromContext() {
-        try {
-            org.springframework.security.core.Authentication authentication = 
-                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-            
-            if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.oauth2.jwt.Jwt) {
-                org.springframework.security.oauth2.jwt.Jwt jwt = 
-                    (org.springframework.security.oauth2.jwt.Jwt) authentication.getPrincipal();
-                // O token JWT usa "clinicId" como claim, não "tenantId"
-                String clinicIdStr = jwt.getClaimAsString("clinicId");
-                if (clinicIdStr != null && !clinicIdStr.isEmpty()) {
-                    return UUID.fromString(clinicIdStr);
-                }
-            }
-        } catch (Exception e) {
-            // Se não conseguir obter do contexto, retorna null
-        }
-        return null;
     }
 }

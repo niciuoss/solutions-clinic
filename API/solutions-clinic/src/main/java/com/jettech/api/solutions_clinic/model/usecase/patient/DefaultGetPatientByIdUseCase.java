@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.ForbiddenException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.util.UUID;
 
 @Service
@@ -16,12 +18,16 @@ import java.util.UUID;
 public class DefaultGetPatientByIdUseCase implements GetPatientByIdUseCase {
 
     private final PatientRepository patientRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional(readOnly = true)
     public PatientResponse execute(UUID id) throws AuthenticationFailedException {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Paciente", id));
+        if (!patient.getTenant().getId().equals(tenantContext.getRequiredClinicId())) {
+            throw new ForbiddenException();
+        }
 
         return new PatientResponse(
                 patient.getId(),

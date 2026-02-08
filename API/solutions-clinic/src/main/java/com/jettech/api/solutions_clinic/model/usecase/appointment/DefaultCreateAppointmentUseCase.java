@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.jettech.api.solutions_clinic.exception.AppointmentConflictException;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,12 +35,14 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
     private final ProfessionalScheduleValidator professionalScheduleValidator;
     private final ProcedureLoader procedureLoader;
     private final AppointmentResponseMapper appointmentResponseMapper;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public AppointmentResponse execute(CreateAppointmentRequest request) throws AuthenticationFailedException {
-        Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
+        UUID tenantId = tenantContext.getRequiredClinicId();
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", tenantId));
 
         Patient patient = patientRepository.findById(request.patientId())
                 .orElseThrow(() -> new EntityNotFoundException("Paciente", request.patientId()));
@@ -61,7 +64,7 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
         BigDecimal calculatedTotalValue = request.totalValue();
 
         if (request.procedureIds() != null && !request.procedureIds().isEmpty()) {
-            ProcedureLoadResult loadResult = procedureLoader.loadAndValidate(request.procedureIds(), request.tenantId());
+            ProcedureLoadResult loadResult = procedureLoader.loadAndValidate(request.procedureIds(), tenantId);
             procedures = loadResult.procedures();
             calculatedDurationMinutes = loadResult.totalDurationMinutes();
             if (request.totalValue() == null || request.totalValue().compareTo(BigDecimal.ZERO) == 0) {

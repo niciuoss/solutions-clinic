@@ -13,7 +13,9 @@ import com.jettech.api.solutions_clinic.exception.AppointmentConflictException;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.InvalidStateException;
+import com.jettech.api.solutions_clinic.exception.ForbiddenException;
 import com.jettech.api.solutions_clinic.exception.ScheduleValidationException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -35,13 +37,16 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
     private final RoomRepository roomRepository;
     private final ProfessionalScheduleRepository professionalScheduleRepository;
     private final FinancialSyncService financialSyncService;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public AppointmentResponse execute(UpdateAppointmentRequest request) throws AuthenticationFailedException {
         Appointment appointment = appointmentRepository.findById(request.id())
                 .orElseThrow(() -> new EntityNotFoundException("Agendamento", request.id()));
-
+        if (!appointment.getTenant().getId().equals(tenantContext.getRequiredClinicId())) {
+            throw new ForbiddenException();
+        }
         // Não permitir atualização de agendamentos cancelados ou finalizados
         if (appointment.getStatus() == AppointmentStatus.CANCELADO || 
             appointment.getStatus() == AppointmentStatus.FINALIZADO) {

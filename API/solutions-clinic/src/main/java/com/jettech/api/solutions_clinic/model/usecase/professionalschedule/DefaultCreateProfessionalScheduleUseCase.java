@@ -14,6 +14,8 @@ import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.ScheduleValidationException;
+import com.jettech.api.solutions_clinic.exception.ForbiddenException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -21,15 +23,16 @@ public class DefaultCreateProfessionalScheduleUseCase implements CreateProfessio
 
     private final ProfessionalScheduleRepository professionalScheduleRepository;
     private final ProfessionalRepository professionalRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public ProfessionalScheduleResponse execute(CreateProfessionalScheduleRequest request) throws AuthenticationFailedException {
-        // Validar se o profissional existe
         Professional professional = professionalRepository.findById(request.professionalId())
                 .orElseThrow(() -> new EntityNotFoundException("Profissional", request.professionalId()));
-
-        // Validar se já existe agenda para este profissional neste dia da semana
+        if (!professional.getTenant().getId().equals(tenantContext.getRequiredClinicId())) {
+            throw new ForbiddenException();
+        }
         professionalScheduleRepository.findByProfessionalIdAndDayOfWeek(
                 request.professionalId(), request.dayOfWeek())
                 .ifPresent(schedule -> {

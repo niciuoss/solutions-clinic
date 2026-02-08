@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,11 +20,12 @@ public class DefaultGetRoomsByTenantUseCase implements GetRoomsByTenantUseCase {
 
     private final RoomRepository roomRepository;
     private final TenantRepository tenantRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional(readOnly = true)
     public List<RoomResponse> execute(GetRoomsByTenantRequest request) throws AuthenticationFailedException {
-        // Validar se o tenant existe
+        tenantContext.requireSameTenant(request.tenantId());
         tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 

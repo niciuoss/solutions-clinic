@@ -16,9 +16,11 @@ import java.util.stream.Collectors;
 public class DefaultGetFinancialTransactionsByTenantUseCase implements GetFinancialTransactionsByTenantUseCase {
 
     private final FinancialTransactionRepository financialTransactionRepository;
+    private final com.jettech.api.solutions_clinic.security.TenantContext tenantContext;
 
     @Override
     public List<FinancialTransactionResponse> execute(GetFinancialTransactionsByTenantRequest request) throws AuthenticationFailedException {
+        tenantContext.requireSameTenant(request.tenantId());
         List<FinancialTransaction> transactions;
 
         if (request.startDate() != null && request.endDate() != null) {

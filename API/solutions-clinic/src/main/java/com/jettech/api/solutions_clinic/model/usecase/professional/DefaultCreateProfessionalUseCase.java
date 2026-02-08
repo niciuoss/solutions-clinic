@@ -18,6 +18,7 @@ import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -27,15 +28,15 @@ public class DefaultCreateProfessionalUseCase implements CreateProfessionalUseCa
     private final UserRepository userRepository;
     private final TenantRepository tenantRepository;
     private final UserTenantRoleRepository userTenantRoleRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public ProfessionalResponse execute(CreateProfessionalRequest request) throws AuthenticationFailedException {
-        // Validar se o usuário existe
+        tenantContext.requireSameTenant(request.tenantId());
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new EntityNotFoundException("Usuário", request.userId()));
 
-        // Validar se o tenant/clínica existe
         Tenant tenant = tenantRepository.findById(request.tenantId())
                 .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
 

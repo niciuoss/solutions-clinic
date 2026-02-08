@@ -11,19 +11,24 @@ import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.ScheduleValidationException;
+import com.jettech.api.solutions_clinic.exception.ForbiddenException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 public class DefaultUpdateProfessionalScheduleUseCase implements UpdateProfessionalScheduleUseCase {
 
     private final ProfessionalScheduleRepository professionalScheduleRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public ProfessionalScheduleResponse execute(UpdateProfessionalScheduleRequest request) throws AuthenticationFailedException {
         ProfessionalSchedule schedule = professionalScheduleRepository.findById(request.id())
                 .orElseThrow(() -> new EntityNotFoundException("Agenda", request.id()));
-
+        if (!schedule.getProfessional().getTenant().getId().equals(tenantContext.getRequiredClinicId())) {
+            throw new ForbiddenException();
+        }
         // Validar horários
         validateTimeRange(request.startTime(), request.endTime(), request.lunchBreakStart(), request.lunchBreakEnd());
 

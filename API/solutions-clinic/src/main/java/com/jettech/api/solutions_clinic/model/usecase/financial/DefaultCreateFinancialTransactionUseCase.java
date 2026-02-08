@@ -11,6 +11,9 @@ import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.InvalidRequestException;
+import com.jettech.api.solutions_clinic.security.TenantContext;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
@@ -21,12 +24,14 @@ public class DefaultCreateFinancialTransactionUseCase implements CreateFinancial
     private final TenantRepository tenantRepository;
     private final AppointmentRepository appointmentRepository;
     private final ProfessionalRepository professionalRepository;
+    private final TenantContext tenantContext;
 
     @Override
     @Transactional
     public FinancialTransactionResponse execute(CreateFinancialTransactionRequest request) throws AuthenticationFailedException {
-        Tenant tenant = tenantRepository.findById(request.tenantId())
-                .orElseThrow(() -> new EntityNotFoundException("Clínica", request.tenantId()));
+        UUID tenantId = tenantContext.getRequiredClinicId();
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new EntityNotFoundException("Clínica", tenantId));
 
         FinancialTransaction transaction = new FinancialTransaction();
         transaction.setTenant(tenant);
@@ -38,30 +43,34 @@ public class DefaultCreateFinancialTransactionUseCase implements CreateFinancial
         transaction.setStatus(request.status());
         transaction.setPaymentMethod(request.paymentMethod());
 
-        // Associar categoria se fornecida
+        // Associar categoria se fornecida (deve ser do mesmo tenant)
         if (request.categoryId() != null) {
             FinancialCategory category = financialCategoryRepository.findById(request.categoryId())
                     .orElseThrow(() -> new EntityNotFoundException("Categoria", request.categoryId()));
-            
-            // Validar se o tipo da categoria corresponde ao tipo da transação
+            if (!category.getTenant().getId().equals(tenantId)) {
+                throw new com.jettech.api.solutions_clinic.exception.ForbiddenException();
+            }
             if (category.getType() != request.type()) {
                 throw new InvalidRequestException(ApiError.CATEGORY_TYPE_MISMATCH);
             }
-            
             transaction.setCategory(category);
         }
 
-        // Associar appointment se fornecido
         if (request.appointmentId() != null) {
             Appointment appointment = appointmentRepository.findById(request.appointmentId())
                     .orElseThrow(() -> new EntityNotFoundException("Agendamento", request.appointmentId()));
+            if (!appointment.getTenant().getId().equals(tenantId)) {
+                throw new com.jettech.api.solutions_clinic.exception.ForbiddenException();
+            }
             transaction.setAppointment(appointment);
         }
 
-        // Associar professional se fornecido
         if (request.professionalId() != null) {
             Professional professional = professionalRepository.findById(request.professionalId())
                     .orElseThrow(() -> new EntityNotFoundException("Profissional", request.professionalId()));
+            if (!professional.getTenant().getId().equals(tenantId)) {
+                throw new com.jettech.api.solutions_clinic.exception.ForbiddenException();
+            }
             transaction.setProfessional(professional);
         }
 
