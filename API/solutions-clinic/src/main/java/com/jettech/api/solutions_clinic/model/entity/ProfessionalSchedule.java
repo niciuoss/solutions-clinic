@@ -1,7 +1,9 @@
 package com.jettech.api.solutions_clinic.model.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -10,7 +12,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(of = "id")
 @Entity(name = "professional_schedules")
 @Table(uniqueConstraints = {
     @UniqueConstraint(name = "uk_professional_schedule_day", columnNames = {"professional_id", "day_of_week"})

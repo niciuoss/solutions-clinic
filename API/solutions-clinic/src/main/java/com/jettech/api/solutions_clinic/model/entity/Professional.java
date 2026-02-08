@@ -1,14 +1,18 @@
 package com.jettech.api.solutions_clinic.model.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(of = "id")
 @Entity(name = "professionals")
 @Table(uniqueConstraints = {
     @UniqueConstraint(name = "uk_professional_user_tenant", columnNames = {"user_id", "tenant_id"})
