@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
@@ -29,7 +30,7 @@ public class DefaultCreatePatientUseCase implements CreatePatientUseCase {
         if (request.cpf() != null && !request.cpf().isEmpty()) {
             patientRepository.findByCpfAndTenantId(request.cpf(), request.tenantId())
                     .ifPresent(patient -> {
-                        throw new DuplicateEntityException("Paciente já existe com este CPF nesta clínica");
+                        throw new DuplicateEntityException(ApiError.DUPLICATE_PATIENT_CPF);
                     });
         }
 

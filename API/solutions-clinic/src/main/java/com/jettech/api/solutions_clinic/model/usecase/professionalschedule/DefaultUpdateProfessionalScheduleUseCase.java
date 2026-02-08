@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.ScheduleValidationException;
@@ -52,15 +53,15 @@ public class DefaultUpdateProfessionalScheduleUseCase implements UpdateProfessio
     private void validateTimeRange(java.time.LocalTime startTime, java.time.LocalTime endTime,
                                    java.time.LocalTime lunchBreakStart, java.time.LocalTime lunchBreakEnd) {
         if (startTime.isAfter(endTime) || startTime.equals(endTime)) {
-            throw new ScheduleValidationException("O horário de início deve ser anterior ao horário de término");
+            throw new ScheduleValidationException(ApiError.SCHEDULE_START_BEFORE_END);
         }
 
         if (lunchBreakStart.isAfter(lunchBreakEnd) || lunchBreakStart.equals(lunchBreakEnd)) {
-            throw new ScheduleValidationException("O horário de início do almoço deve ser anterior ao horário de término");
+            throw new ScheduleValidationException(ApiError.SCHEDULE_LUNCH_ORDER);
         }
 
         if (lunchBreakStart.isBefore(startTime) || lunchBreakEnd.isAfter(endTime)) {
-            throw new ScheduleValidationException("O horário de almoço deve estar dentro do horário de trabalho");
+            throw new ScheduleValidationException(ApiError.SCHEDULE_LUNCH_WITHIN_WORK);
         }
     }
 }

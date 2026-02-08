@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
@@ -39,7 +40,7 @@ public class DefaultUpdateUserUseCase implements UpdateUserUseCase {
             userRepository.findByCpf(request.cpf())
                     .ifPresent((existingUser) -> {
                         if (!existingUser.getId().equals(finalUser.getId())) {
-                            throw new DuplicateEntityException("CPF já está cadastrado: " + request.cpf());
+                            throw new DuplicateEntityException(ApiError.DUPLICATE_CPF);
                         }
                     });
             user.setCpf(request.cpf());
@@ -56,7 +57,7 @@ public class DefaultUpdateUserUseCase implements UpdateUserUseCase {
             userRepository.findByEmail(request.email())
                     .ifPresent((existingUser) -> {
                         if (!existingUser.getId().equals(finalUser.getId())) {
-                            throw new DuplicateEntityException("Email já está em uso: " + request.email());
+                            throw new DuplicateEntityException(ApiError.DUPLICATE_EMAIL);
                         }
                     });
             user.setEmail(request.email());

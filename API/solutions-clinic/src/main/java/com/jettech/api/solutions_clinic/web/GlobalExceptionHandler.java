@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    // --- Resposta padronizada ---
-
     private static Map<String, Object> errorBody(String error, String message, int status) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now());
@@ -27,17 +25,25 @@ public class GlobalExceptionHandler {
         return body;
     }
 
-    private static String messageOrDefault(String exceptionMessage, String defaultMessage) {
-        return (exceptionMessage != null && !exceptionMessage.isBlank()) ? exceptionMessage : defaultMessage;
+    /**
+     * Resolve mensagem de resposta: se a exceção implementar HasApiError e tiver ApiError definido,
+     * usa a mensagem padronizada (formatada com args); caso contrário usa o default do tipo.
+     * Nunca usa ex.getMessage() na resposta ao cliente.
+     */
+    private static String resolveMessage(HasApiError ex, ApiError defaultError) {
+        if (ex != null && ex.getApiError() != null) {
+            return ex.getApiError().formatMessage(ex.getArgs());
+        }
+        return defaultError.getDefaultMessage();
     }
 
     // --- 400 Bad Request ---
 
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidRequest(InvalidRequestException ex) {
-        String message = messageOrDefault(ex.getMessage(), ApiError.INVALID_REQUEST.getDefaultMessage());
+        String message = resolveMessage(ex, ApiError.INVALID_REQUEST);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorBody(ApiError.INVALID_REQUEST.getError(), message, HttpStatus.BAD_REQUEST.value()));
+                .body(errorBody(ApiError.INVALID_REQUEST.getErrorLabel(), message, HttpStatus.BAD_REQUEST.value()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -45,66 +51,66 @@ public class GlobalExceptionHandler {
         String details = ex.getBindingResult().getFieldErrors().stream()
                 .map(fe -> fe.getField() + ": " + (fe.getDefaultMessage() != null ? fe.getDefaultMessage() : "inválido"))
                 .collect(Collectors.joining("; "));
-        String message = messageOrDefault(details, ApiError.VALIDATION_FAILED.getDefaultMessage());
+        String message = (details != null && !details.isBlank()) ? details : ApiError.VALIDATION_FAILED.getDefaultMessage();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorBody(ApiError.VALIDATION_FAILED.getError(), message, HttpStatus.BAD_REQUEST.value()));
+                .body(errorBody(ApiError.VALIDATION_FAILED.getErrorLabel(), message, HttpStatus.BAD_REQUEST.value()));
     }
 
     // --- 401 Unauthorized ---
 
     @ExceptionHandler(AuthenticationFailedException.class)
     public ResponseEntity<Map<String, Object>> handleAuthenticationFailed(AuthenticationFailedException ex) {
-        String message = messageOrDefault(ex.getMessage(), ApiError.AUTHENTICATION_FAILED.getDefaultMessage());
+        String message = resolveMessage(ex, ApiError.AUTHENTICATION_FAILED);
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorBody(ApiError.AUTHENTICATION_FAILED.getError(), message, HttpStatus.UNAUTHORIZED.value()));
+                .body(errorBody(ApiError.AUTHENTICATION_FAILED.getErrorLabel(), message, HttpStatus.UNAUTHORIZED.value()));
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleUsernameNotFound(UsernameNotFoundException ex) {
-        String message = messageOrDefault(ex.getMessage(), ApiError.AUTHENTICATION_FAILED.getDefaultMessage());
+        String message = ApiError.AUTHENTICATION_FAILED.getDefaultMessage();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(errorBody(ApiError.AUTHENTICATION_FAILED.getError(), message, HttpStatus.UNAUTHORIZED.value()));
+                .body(errorBody(ApiError.AUTHENTICATION_FAILED.getErrorLabel(), message, HttpStatus.UNAUTHORIZED.value()));
     }
 
     // --- 404 Not Found ---
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleEntityNotFound(EntityNotFoundException ex) {
-        String message = messageOrDefault(ex.getMessage(), ApiError.NOT_FOUND.getDefaultMessage());
+        String message = resolveMessage(ex, ApiError.NOT_FOUND);
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(errorBody(ApiError.NOT_FOUND.getError(), message, HttpStatus.NOT_FOUND.value()));
+                .body(errorBody(ApiError.NOT_FOUND.getErrorLabel(), message, HttpStatus.NOT_FOUND.value()));
     }
 
     // --- 409 Conflict ---
 
     @ExceptionHandler(AppointmentConflictException.class)
     public ResponseEntity<Map<String, Object>> handleAppointmentConflict(AppointmentConflictException ex) {
-        String message = messageOrDefault(ex.getMessage(), ApiError.APPOINTMENT_CONFLICT.getDefaultMessage());
+        String message = resolveMessage(ex, ApiError.APPOINTMENT_CONFLICT);
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(errorBody(ApiError.APPOINTMENT_CONFLICT.getError(), message, HttpStatus.CONFLICT.value()));
+                .body(errorBody(ApiError.APPOINTMENT_CONFLICT.getErrorLabel(), message, HttpStatus.CONFLICT.value()));
     }
 
     @ExceptionHandler(DuplicateEntityException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicateEntity(DuplicateEntityException ex) {
-        String message = messageOrDefault(ex.getMessage(), ApiError.DUPLICATE_ENTITY.getDefaultMessage());
+        String message = resolveMessage(ex, ApiError.DUPLICATE_ENTITY);
         return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(errorBody(ApiError.DUPLICATE_ENTITY.getError(), message, HttpStatus.CONFLICT.value()));
+                .body(errorBody(ApiError.DUPLICATE_ENTITY.getErrorLabel(), message, HttpStatus.CONFLICT.value()));
     }
 
     // --- 422 Unprocessable Entity ---
 
     @ExceptionHandler(InvalidStateException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidState(InvalidStateException ex) {
-        String message = messageOrDefault(ex.getMessage(), ApiError.INVALID_STATE.getDefaultMessage());
+        String message = resolveMessage(ex, ApiError.INVALID_STATE);
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(errorBody(ApiError.INVALID_STATE.getError(), message, HttpStatus.UNPROCESSABLE_ENTITY.value()));
+                .body(errorBody(ApiError.INVALID_STATE.getErrorLabel(), message, HttpStatus.UNPROCESSABLE_ENTITY.value()));
     }
 
     @ExceptionHandler(ScheduleValidationException.class)
     public ResponseEntity<Map<String, Object>> handleScheduleValidation(ScheduleValidationException ex) {
-        String message = messageOrDefault(ex.getMessage(), ApiError.SCHEDULE_VALIDATION.getDefaultMessage());
+        String message = resolveMessage(ex, ApiError.SCHEDULE_VALIDATION);
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(errorBody(ApiError.SCHEDULE_VALIDATION.getError(), message, HttpStatus.UNPROCESSABLE_ENTITY.value()));
+                .body(errorBody(ApiError.SCHEDULE_VALIDATION.getErrorLabel(), message, HttpStatus.UNPROCESSABLE_ENTITY.value()));
     }
 
     // --- 500 Internal Server Error (fallback) ---
@@ -113,35 +119,6 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
         String message = ApiError.INTERNAL_SERVER_ERROR.getDefaultMessage();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(errorBody(ApiError.INTERNAL_SERVER_ERROR.getError(), message, HttpStatus.INTERNAL_SERVER_ERROR.value()));
-    }
-
-    /**
-     * Mapeamento: tipo de exceção → status HTTP e mensagem padronizada.
-     */
-    private enum ApiError {
-        INVALID_REQUEST(HttpStatus.BAD_REQUEST, "Bad Request", "Requisição inválida."),
-        VALIDATION_FAILED(HttpStatus.BAD_REQUEST, "Bad Request", "Erro de validação nos dados enviados."),
-        AUTHENTICATION_FAILED(HttpStatus.UNAUTHORIZED, "Unauthorized", "Falha de autenticação."),
-        NOT_FOUND(HttpStatus.NOT_FOUND, "Not Found", "Recurso não encontrado."),
-        APPOINTMENT_CONFLICT(HttpStatus.CONFLICT, "Conflict", "Conflito de agendamento."),
-        DUPLICATE_ENTITY(HttpStatus.CONFLICT, "Conflict", "Registro duplicado."),
-        INVALID_STATE(HttpStatus.UNPROCESSABLE_ENTITY, "Unprocessable Entity", "Estado inválido para esta operação."),
-        SCHEDULE_VALIDATION(HttpStatus.UNPROCESSABLE_ENTITY, "Unprocessable Entity", "Horário ou agenda inválida."),
-        INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "Erro interno do servidor.");
-
-        private final HttpStatus status;
-        private final String error;
-        private final String defaultMessage;
-
-        ApiError(HttpStatus status, String error, String defaultMessage) {
-            this.status = status;
-            this.error = error;
-            this.defaultMessage = defaultMessage;
-        }
-
-        HttpStatus getStatus() { return status; }
-        String getError() { return error; }
-        String getDefaultMessage() { return defaultMessage; }
+                .body(errorBody(ApiError.INTERNAL_SERVER_ERROR.getErrorLabel(), message, HttpStatus.INTERNAL_SERVER_ERROR.value()));
     }
 }

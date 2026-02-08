@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
@@ -28,7 +29,7 @@ public class DefaultCreateFinancialCategoryUseCase implements CreateFinancialCat
 
         // Verificar se já existe categoria com o mesmo nome
         if (financialCategoryRepository.existsByNameAndTenantId(request.name(), request.tenantId())) {
-            throw new DuplicateEntityException("Já existe uma categoria com o nome '" + request.name() + "' para esta clínica");
+            throw new DuplicateEntityException(ApiError.DUPLICATE_CATEGORY_NAME);
         }
 
         FinancialCategory category = new FinancialCategory();

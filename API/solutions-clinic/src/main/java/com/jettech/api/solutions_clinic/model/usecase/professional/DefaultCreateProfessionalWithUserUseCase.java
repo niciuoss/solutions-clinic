@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
@@ -37,7 +38,7 @@ public class DefaultCreateProfessionalWithUserUseCase implements CreateProfessio
         UUID tenantId = getTenantIdFromContext();
         
         if (tenantId == null) {
-            throw new EntityNotFoundException("Clínica não identificada. Faça login novamente.");
+            throw new EntityNotFoundException(ApiError.ENTITY_NOT_FOUND_CLINIC);
         }
 
         // Validar se o tenant/clínica existe
@@ -61,7 +62,7 @@ public class DefaultCreateProfessionalWithUserUseCase implements CreateProfessio
         // Validar se já existe profissional com mesmo user e tenant
         professionalRepository.findByUserIdAndTenantId(user.getId(), tenantId)
                 .ifPresent(professional -> {
-                    throw new DuplicateEntityException("Profissional já existe para este usuário e clínica");
+                    throw new DuplicateEntityException(ApiError.DUPLICATE_PROFESSIONAL);
                 });
 
         // Criar Professional

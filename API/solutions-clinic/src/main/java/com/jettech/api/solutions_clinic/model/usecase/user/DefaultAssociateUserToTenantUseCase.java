@@ -6,8 +6,7 @@ import com.jettech.api.solutions_clinic.model.entity.UserTenantRole;
 import com.jettech.api.solutions_clinic.model.repository.TenantRepository;
 import com.jettech.api.solutions_clinic.model.repository.UserRepository;
 import com.jettech.api.solutions_clinic.model.repository.UserTenantRoleRepository;
-import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
-import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import lombok.AccessLevel;
@@ -36,9 +35,7 @@ public class DefaultAssociateUserToTenantUseCase implements AssociateUserToTenan
 
         // Validar se a associação já existe
         if (userTenantRoleRepository.existsByUserAndTenantAndRole(user, tenant, request.role())) {
-            throw new DuplicateEntityException(
-                    "Usuário já está associado à clínica com o papel " + request.role() + "."
-            );
+            throw new DuplicateEntityException(ApiError.DUPLICATE_USER_TENANT_ROLE);
         }
 
         // Criar a associação

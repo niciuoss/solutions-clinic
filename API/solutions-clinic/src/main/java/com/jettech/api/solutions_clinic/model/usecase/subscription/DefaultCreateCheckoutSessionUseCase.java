@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.DuplicateEntityException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
@@ -58,7 +59,7 @@ public class DefaultCreateCheckoutSessionUseCase implements CreateCheckoutSessio
 
         // Validar plano
         if (request.planType() == PlanType.CUSTOM) {
-            throw new InvalidRequestException("Plano personalizado não pode ser pago via checkout. Entre em contato com vendas.");
+            throw new InvalidRequestException(ApiError.CUSTOM_PLAN_NO_CHECKOUT);
         }
 
         // Buscar tenant
@@ -68,13 +69,13 @@ public class DefaultCreateCheckoutSessionUseCase implements CreateCheckoutSessio
         // Verificar se já existe assinatura ativa
         subscriptionRepository.findByTenantIdAndStatus(request.tenantId(), SubscriptionStatus.ACTIVE)
                 .ifPresent(sub -> {
-                    throw new DuplicateEntityException("Já existe uma assinatura ativa para este tenant");
+                    throw new DuplicateEntityException(ApiError.DUPLICATE_SUBSCRIPTION);
                 });
 
         // Obter preço do plano
         BigDecimal amount = PLAN_PRICES.get(request.planType());
         if (amount == null) {
-            throw new InvalidRequestException("Plano não suportado: " + request.planType());
+            throw new InvalidRequestException(ApiError.PLAN_NOT_SUPPORTED);
         }
 
         String planName = PLAN_NAMES.get(request.planType());

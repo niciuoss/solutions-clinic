@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AppointmentConflictException;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
@@ -44,7 +45,7 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
         // Não permitir atualização de agendamentos cancelados ou finalizados
         if (appointment.getStatus() == AppointmentStatus.CANCELADO || 
             appointment.getStatus() == AppointmentStatus.FINALIZADO) {
-            throw new InvalidStateException("Não é possível atualizar um agendamento " + appointment.getStatus());
+            throw new InvalidStateException(ApiError.INVALID_STATE_APPOINTMENT_STATUS);
         }
 
         // Atualizar paciente se fornecido
@@ -161,24 +162,24 @@ public class DefaultUpdateAppointmentUseCase implements UpdateAppointmentUseCase
         // Buscar agenda do profissional para o dia da semana
         ProfessionalSchedule schedule = professionalScheduleRepository
                 .findByProfessionalIdAndDayOfWeek(professionalId, dayOfWeek)
-                .orElseThrow(() -> new EntityNotFoundException("O profissional não possui agenda cadastrada para " + dayOfWeek));
+                .orElseThrow(() -> new EntityNotFoundException(ApiError.ENTITY_NOT_FOUND_SCHEDULE));
 
         // Verificar se o horário está dentro do horário de trabalho
         if (scheduledTime.isBefore(schedule.getStartTime()) || 
             endTime.toLocalTime().isAfter(schedule.getEndTime())) {
-            throw new ScheduleValidationException("O horário agendado está fora do horário de trabalho do profissional");
+            throw new ScheduleValidationException(ApiError.SCHEDULE_OUTSIDE_WORK_HOURS);
         }
 
         // Verificar se o horário não está no intervalo de almoço
         if ((scheduledTime.isAfter(schedule.getLunchBreakStart()) && scheduledTime.isBefore(schedule.getLunchBreakEnd())) ||
             (endTime.toLocalTime().isAfter(schedule.getLunchBreakStart()) && endTime.toLocalTime().isBefore(schedule.getLunchBreakEnd())) ||
             (scheduledTime.isBefore(schedule.getLunchBreakStart()) && endTime.toLocalTime().isAfter(schedule.getLunchBreakEnd()))) {
-            throw new ScheduleValidationException("O horário agendado está no intervalo de almoço do profissional");
+            throw new ScheduleValidationException(ApiError.SCHEDULE_IN_LUNCH_BREAK);
         }
 
         // Verificar se a duração é compatível com o slotDurationMinutes
         if (durationMinutes % schedule.getSlotDurationMinutes() != 0) {
-            throw new ScheduleValidationException("A duração do agendamento deve ser múltipla de " + schedule.getSlotDurationMinutes() + " minutos");
+            throw new ScheduleValidationException(ApiError.SCHEDULE_DURATION_MULTIPLE, schedule.getSlotDurationMinutes());
         }
     }
 

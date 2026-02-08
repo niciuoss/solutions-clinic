@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.InvalidRequestException;
@@ -44,7 +45,7 @@ public class DefaultCreateFinancialTransactionUseCase implements CreateFinancial
             
             // Validar se o tipo da categoria corresponde ao tipo da transação
             if (category.getType() != request.type()) {
-                throw new InvalidRequestException("O tipo da categoria não corresponde ao tipo da transação");
+                throw new InvalidRequestException(ApiError.CATEGORY_TYPE_MISMATCH);
             }
             
             transaction.setCategory(category);

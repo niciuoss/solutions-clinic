@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.InvalidStateException;
@@ -39,12 +40,12 @@ public class DefaultStartTrialUseCase implements StartTrialUseCase {
 
         // Verificar se já tem um plano ativo ou está em trial
         if (tenant.getStatus() == TenantStatus.ACTIVE || tenant.getStatus() == TenantStatus.TRIAL) {
-            throw new InvalidStateException("A clínica já possui um plano ativo ou está em período de teste");
+            throw new InvalidStateException(ApiError.INVALID_STATE_ALREADY_ACTIVE);
         }
 
         // Verificar se já teve trial anteriormente (opcional - pode remover se permitir múltiplos trials)
         if (tenant.getTrialEndsAt() != null && tenant.getTrialEndsAt().isAfter(LocalDate.now())) {
-            throw new InvalidStateException("A clínica já está em período de teste");
+            throw new InvalidStateException(ApiError.INVALID_STATE_ALREADY_TRIAL);
         }
 
         // Definir data de término do trial

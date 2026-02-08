@@ -14,6 +14,7 @@ import com.jettech.api.solutions_clinic.model.usecase.tenant.StartTrialRequest;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.TenantResponse;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanBody;
 import com.jettech.api.solutions_clinic.model.usecase.tenant.UpdateTenantPlanRequest;
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.InvalidRequestException;
 import com.jettech.api.solutions_clinic.model.usecase.user.AssociateUserToTenantRequest;
 import com.jettech.api.solutions_clinic.model.usecase.user.AssociateUserToTenantUseCase;
@@ -75,7 +76,7 @@ public class TenantController implements TenantAPI {
         try {
             roleEnum = Role.valueOf(role.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new InvalidRequestException("Papel inválido: " + role + ". Papéis válidos: OWNER, ADMIN, RECEPTION, SPECIALIST, FINANCE, READONLY");
+            throw new InvalidRequestException(ApiError.INVALID_ROLE);
         }
         
         AssociateUserToTenantRequest request = new AssociateUserToTenantRequest(userId, tenantId, roleEnum);

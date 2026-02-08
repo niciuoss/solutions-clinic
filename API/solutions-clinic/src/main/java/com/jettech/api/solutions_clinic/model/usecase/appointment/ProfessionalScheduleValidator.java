@@ -1,5 +1,6 @@
 package com.jettech.api.solutions_clinic.model.usecase.appointment;
 
+import com.jettech.api.solutions_clinic.exception.ApiError;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.ScheduleValidationException;
 import com.jettech.api.solutions_clinic.model.entity.ProfessionalSchedule;
@@ -26,21 +27,21 @@ public class ProfessionalScheduleValidator {
 
         ProfessionalSchedule professionalSchedule = professionalScheduleRepository
                 .findByProfessionalIdAndDayOfWeek(professionalId, dayOfWeek)
-                .orElseThrow(() -> new EntityNotFoundException("O profissional não possui agenda cadastrada para " + dayOfWeek));
+                .orElseThrow(() -> new EntityNotFoundException(ApiError.ENTITY_NOT_FOUND_SCHEDULE));
 
         if (scheduledTime.isBefore(professionalSchedule.getStartTime()) ||
                 endTime.toLocalTime().isAfter(professionalSchedule.getEndTime())) {
-            throw new ScheduleValidationException("O horário agendado está fora do horário de trabalho do profissional");
+            throw new ScheduleValidationException(ApiError.SCHEDULE_OUTSIDE_WORK_HOURS);
         }
 
         if ((scheduledTime.isAfter(professionalSchedule.getLunchBreakStart()) && scheduledTime.isBefore(professionalSchedule.getLunchBreakEnd())) ||
                 (endTime.toLocalTime().isAfter(professionalSchedule.getLunchBreakStart()) && endTime.toLocalTime().isBefore(professionalSchedule.getLunchBreakEnd())) ||
                 (scheduledTime.isBefore(professionalSchedule.getLunchBreakStart()) && endTime.toLocalTime().isAfter(professionalSchedule.getLunchBreakEnd()))) {
-            throw new ScheduleValidationException("O horário agendado está no intervalo de almoço do profissional");
+            throw new ScheduleValidationException(ApiError.SCHEDULE_IN_LUNCH_BREAK);
         }
 
         if (durationMinutes % professionalSchedule.getSlotDurationMinutes() != 0) {
-            throw new ScheduleValidationException("A duração do agendamento deve ser múltipla de " + professionalSchedule.getSlotDurationMinutes() + " minutos");
+            throw new ScheduleValidationException(ApiError.SCHEDULE_DURATION_MULTIPLE, professionalSchedule.getSlotDurationMinutes());
         }
     }
 }
