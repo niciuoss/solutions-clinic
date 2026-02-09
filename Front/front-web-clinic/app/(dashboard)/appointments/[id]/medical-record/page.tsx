@@ -9,9 +9,6 @@ export default function MedicalRecordRoute() {
   const params = useParams();
   const appointmentId = params?.id as string;
 
-  console.log('MedicalRecordRoute - params:', params);
-  console.log('MedicalRecordRoute - appointmentId:', appointmentId);
-
   if (!appointmentId) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">

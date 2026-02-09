@@ -1,67 +1,57 @@
+// ========== Sinais vitais (compatível com JSONB vital_signs) ==========
 export interface VitalSigns {
-  bloodPressure?: string; 
-  heartRate?: number; 
-  temperature?: number; 
-  oxygenSaturation?: number; 
-  weight?: number; 
-  height?: number; 
-  imc?: number; 
+  bloodPressure?: string;
+  heartRate?: number;
+  temperature?: number;
+  oxygenSaturation?: number;
+  weight?: number;
+  height?: number;
+  imc?: number;
 }
 
-export interface MedicalRecord {
+// ========== Schema do template (campo do formulário) ==========
+export interface MedicalRecordTemplateField {
   id: string;
-  appointmentId: string;
-  patientId: string;
-  professionalId: string;
+  label: string;
+  type: 'text' | 'textarea' | 'number' | 'date' | string;
+  placeholder?: string;
+}
 
-  content: Record<string, unknown>;
-
-  chiefComplaint?: string; 
-  historyOfPresentIllness?: string; 
-  physicalExamination?: string; 
-  diagnosticHypothesis?: string; 
-  treatmentPlan?: string; 
-  prescriptions?: string; 
-  examsRequested?: string;
-  procedures?: string; 
-  observations?: string; 
-
-  vitalSigns?: VitalSigns;
-
-  professionalSignature?: string;
-  patientSignature?: string;
-  signedAt?: string;
-
+// ========== Modelo de prontuário (global ou da clínica) ==========
+export interface MedicalRecordTemplate {
+  id: string;
+  tenantId: string | null; // null = template global (sistema)
+  name: string;
+  professionalType: string | null;
+  schema: MedicalRecordTemplateField[];
+  readOnly: boolean; // true = template padrão do sistema
+  active: boolean;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateMedicalRecordRequest {
-  content: Record<string, unknown>;
-  appointmentId: string;
-  chiefComplaint?: string;
-  historyOfPresentIllness?: string;
-  physicalExamination?: string;
-  diagnosticHypothesis?: string;
-  treatmentPlan?: string;
-  prescriptions?: string;
-  examsRequested?: string;
-  procedures?: string;
-  observations?: string;
-  vitalSigns?: VitalSigns;
+export interface CreateMedicalRecordTemplateRequest {
+  tenantId: string;
+  name: string;
+  professionalType?: string;
+  schema: MedicalRecordTemplateField[];
 }
 
-export interface SignMedicalRecordRequest {
-  professionalSignature?: string;
-  patientSignature?: string;
-  chiefComplaint?: string;
-  historyOfPresentIllness?: string;
-  physicalExamination?: string;
-  diagnosticHypothesis?: string;
-  treatmentPlan?: string;
-  prescriptions?: string;
-  examsRequested?: string;
-  procedures?: string;
-  observations?: string;
-  vitalSigns?: VitalSigns;
+// ========== Prontuário (respostas conforme template) ==========
+export interface MedicalRecord {
+  id: string;
+  appointmentId: string;
+  templateId: string;
+  content: Record<string, unknown>;
+  vitalSigns: VitalSigns | null;
+  signedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateOrUpdateMedicalRecordRequest {
+  appointmentId: string;
+  templateId: string;
+  content: Record<string, unknown>;
+  vitalSigns?: VitalSigns | null;
 }

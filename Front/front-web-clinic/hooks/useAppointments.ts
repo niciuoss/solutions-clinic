@@ -158,6 +158,7 @@ export function useAppointment(appointmentId: string | null) {
       return result.success ? result.data : null;
     },
     enabled: !!appointmentId,
+    staleTime: 60_000, // 1 min — evita refetch a cada foco/montagem
   });
 }
 

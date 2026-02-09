@@ -61,25 +61,17 @@ export async function signUpClinicOwnerAction(
       data: response,
     };
   } catch (error) {
-    // Captura erros específicos da API
-    if (error instanceof Error) {
-      // Se a mensagem contém "sessão expirada" mas requireAuth é false, 
-      // provavelmente é um erro de validação do backend
-      if (error.message.includes('Sessão expirada') || error.message.includes('sessão expirada')) {
-        return {
-          success: false,
-          error: 'Erro ao processar cadastro. Verifique os dados informados.',
-        };
-      }
-      return {
-        success: false,
-        error: error.message,
-      };
+    // apiRequest lança objeto { message, status }, não Error — tratar ambos para exibir a mensagem real da API
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string'
+          ? (error as { message: string }).message
+          : 'Erro ao cadastrar clínica';
+    if (message.includes('Sessão expirada') || message.includes('sessão expirada')) {
+      return { success: false, error: 'Erro ao processar cadastro. Verifique os dados informados.' };
     }
-    return {
-      success: false,
-      error: 'Erro ao cadastrar clínica',
-    };
+    return { success: false, error: message };
   }
 }
 
@@ -120,25 +112,15 @@ export async function signUpSoloAction(
       data: response,
     };
   } catch (error) {
-    console.log("🚀 ~ signUpSoloAction ~ error:", error)
-    // Captura erros específicos da API
-    if (error instanceof Error) {
-      // Se a mensagem contém "sessão expirada" mas requireAuth é false, 
-      // provavelmente é um erro de validação do backend
-      if (error.message.includes('Sessão expirada') || error.message.includes('sessão expirada')) {
-        return {
-          success: false,
-          error: 'Erro ao processar cadastro. Verifique os dados informados.',
-        };
-      }
-      return {
-        success: false,
-        error: error.message,
-      };
+    const message =
+      error instanceof Error
+        ? error.message
+        : typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message: unknown }).message === 'string'
+          ? (error as { message: string }).message
+          : 'Erro ao cadastrar profissional';
+    if (message.includes('Sessão expirada') || message.includes('sessão expirada')) {
+      return { success: false, error: 'Erro ao processar cadastro. Verifique os dados informados.' };
     }
-    return {
-      success: false,
-      error: 'Erro ao cadastrar profissional',
-    };
+    return { success: false, error: message };
   }
 }

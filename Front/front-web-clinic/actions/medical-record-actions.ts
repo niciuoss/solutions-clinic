@@ -1,29 +1,37 @@
 'use server';
 
 import { apiRequest } from './_helpers';
-import type { 
+import type {
   MedicalRecord,
-  PaginatedResponse,
+  CreateOrUpdateMedicalRecordRequest,
+  VitalSigns,
   ActionResult,
 } from '@/types';
 
+/**
+ * Cria ou atualiza prontuário do agendamento.
+ * Backend: POST /v1/medical-records
+ * Body: { appointmentId, templateId, content, vitalSigns? }
+ */
 export async function saveMedicalRecordAction(
   appointmentId: string,
-  content: Record<string, any>
+  templateId: string,
+  content: Record<string, unknown>,
+  vitalSigns?: VitalSigns | null
 ): Promise<ActionResult<MedicalRecord>> {
   try {
-    const record = await apiRequest<MedicalRecord>(
-      `/medical-records/appointment/${appointmentId}`,
-      {
-        method: 'POST',
-        body: content,
-      }
-    );
-
-    return {
-      success: true,
-      data: record,
+    const body: CreateOrUpdateMedicalRecordRequest = {
+      appointmentId,
+      templateId,
+      content,
     };
+    if (vitalSigns != null) body.vitalSigns = vitalSigns;
+
+    const record = await apiRequest<MedicalRecord>('/medical-records', {
+      method: 'POST',
+      body,
+    });
+    return { success: true, data: record };
   } catch (error) {
     return {
       success: false,
@@ -32,27 +40,19 @@ export async function saveMedicalRecordAction(
   }
 }
 
+/**
+ * Assina o prontuário (define signed_at).
+ * Backend: POST /v1/medical-records/:id/sign
+ */
 export async function signMedicalRecordAction(
-  recordId: string,
-  professionalSignature?: string,
-  patientSignature?: string
+  recordId: string
 ): Promise<ActionResult<MedicalRecord>> {
   try {
     const record = await apiRequest<MedicalRecord>(
       `/medical-records/${recordId}/sign`,
-      {
-        method: 'POST',
-        params: {
-          ...(professionalSignature && { professionalSignature }),
-          ...(patientSignature && { patientSignature }),
-        },
-      }
+      { method: 'POST' }
     );
-
-    return {
-      success: true,
-      data: record,
-    };
+    return { success: true, data: record };
   } catch (error) {
     return {
       success: false,
@@ -61,20 +61,22 @@ export async function signMedicalRecordAction(
   }
 }
 
+/**
+ * Busca prontuário por agendamento.
+ * Backend: GET /v1/medical-records/appointment/:appointmentId
+ * Retorna 200 com body ou 204 No Content (sem prontuário ainda).
+ */
 export async function getMedicalRecordByAppointmentAction(
   appointmentId: string
-): Promise<ActionResult<MedicalRecord>> {
+): Promise<ActionResult<MedicalRecord | null>> {
   try {
-    const record = await apiRequest<MedicalRecord>(
+    const record = await apiRequest<MedicalRecord | null>(
       `/medical-records/appointment/${appointmentId}`,
-      {
-        method: 'GET',
-      }
+      { method: 'GET' }
     );
-
     return {
       success: true,
-      data: record,
+      data: record && typeof record === 'object' && 'id' in record ? record : null,
     };
   } catch (error) {
     return {
@@ -84,54 +86,22 @@ export async function getMedicalRecordByAppointmentAction(
   }
 }
 
-export async function getMedicalRecordsByPatientAction(
-  patientId: string,
-  page: number = 0,
-  size: number = 20
-): Promise<ActionResult<PaginatedResponse<MedicalRecord>>> {
+/**
+ * Busca prontuário por ID.
+ * Backend: GET /v1/medical-records/:id
+ */
+export async function getMedicalRecordByIdAction(
+  id: string
+): Promise<ActionResult<MedicalRecord>> {
   try {
-    const records = await apiRequest<PaginatedResponse<MedicalRecord>>(
-      `/medical-records/patient/${patientId}`,
-      {
-        method: 'GET',
-        params: { page, size },
-      }
-    );
-
-    return {
-      success: true,
-      data: records,
-    };
+    const record = await apiRequest<MedicalRecord>(`/medical-records/${id}`, {
+      method: 'GET',
+    });
+    return { success: true, data: record };
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Erro ao buscar prontuários do paciente',
-    };
-  }
-}
-
-export async function getMedicalRecordsByProfessionalAction(
-  professionalId: string,
-  page: number = 0,
-  size: number = 20
-): Promise<ActionResult<PaginatedResponse<MedicalRecord>>> {
-  try {
-    const records = await apiRequest<PaginatedResponse<MedicalRecord>>(
-      `/medical-records/professional/${professionalId}`,
-      {
-        method: 'GET',
-        params: { page, size },
-      }
-    );
-
-    return {
-      success: true,
-      data: records,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Erro ao buscar prontuários do profissional',
+      error: error instanceof Error ? error.message : 'Erro ao buscar prontuário',
     };
   }
 }

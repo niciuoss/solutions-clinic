@@ -1,186 +1,272 @@
-'use client'
+'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Mic, Save } from 'lucide-react';
+import { Mic, Save, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getMedicalRecordTemplatesAction } from '@/actions/medical-record-template-actions';
+import {
+  getMedicalRecordByAppointmentAction,
+  saveMedicalRecordAction,
+} from '@/actions/medical-record-actions';
+import type {
+  MedicalRecordTemplate,
+  MedicalRecordTemplateField,
+  VitalSigns,
+  MedicalRecord,
+} from '@/types';
 
 interface MedicalRecordFormProps {
   appointmentId: string;
+  tenantId: string | null;
+  professionalType?: string | null;
+  vitalSigns?: VitalSigns | null;
+  /** Chamado quando um prontuário existente é carregado (ex.: para preencher sinais vitais na página) */
+  onRecordLoaded?: (record: MedicalRecord) => void;
 }
 
-export function MedicalRecordForm({ appointmentId }: MedicalRecordFormProps) {
-  const [formData, setFormData] = useState({
-    chiefComplaint: '',
-    historyOfPresentIllness: '',
-    physicalExamination: '',
-    diagnosticHypothesis: '',
-    treatmentPlan: '',
-    prescriptions: '',
-    observations: '',
-  });
+export function MedicalRecordForm({
+  appointmentId,
+  tenantId,
+  professionalType,
+  vitalSigns,
+  onRecordLoaded,
+}: MedicalRecordFormProps) {
+  const [templates, setTemplates] = useState<MedicalRecordTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [content, setContent] = useState<Record<string, unknown>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [templatesError, setTemplatesError] = useState<string | null>(null);
+  const onRecordLoadedRef = useRef(onRecordLoaded);
+  onRecordLoadedRef.current = onRecordLoaded;
 
-  const handleSave = () => {
-    // TODO: Implementar salvamento
-    toast.success('Prontuário salvo com sucesso!');
+  // Uma única carga por appointmentId + tenantId (evita 11+ requisições)
+  useEffect(() => {
+    if (!tenantId || !appointmentId) {
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setTemplatesError(null);
+
+    async function init() {
+      setLoading(true);
+      try {
+        const [templatesResult, recordResult] = await Promise.all([
+          getMedicalRecordTemplatesAction(tenantId, true, professionalType ?? undefined),
+          getMedicalRecordByAppointmentAction(appointmentId),
+        ]);
+
+        if (cancelled) return;
+
+        if (templatesResult.success && templatesResult.data) {
+          const list = Array.isArray(templatesResult.data) ? templatesResult.data : [];
+          setTemplates(list);
+          if (list.length > 0) {
+            setSelectedTemplateId((prev) => prev || list[0].id);
+          }
+        } else {
+          setTemplates([]);
+          setTemplatesError(templatesResult.error ?? 'Erro ao carregar modelos');
+        }
+
+        if (recordResult.success && recordResult.data) {
+          const record = recordResult.data;
+          setSelectedTemplateId(record.templateId);
+          setContent(
+            record.content && typeof record.content === 'object'
+              ? (record.content as Record<string, unknown>)
+              : {}
+          );
+          onRecordLoadedRef.current?.(record);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    init();
+    return () => {
+      cancelled = true;
+    };
+  }, [appointmentId, tenantId]); // professionalType usado dentro do init, sem ser dep para evitar re-runs
+
+  const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
+
+  const handleSave = async () => {
+    if (!selectedTemplateId) {
+      toast.error('Selecione um modelo de prontuário');
+      return;
+    }
+    setSaving(true);
+    try {
+      const result = await saveMedicalRecordAction(
+        appointmentId,
+        selectedTemplateId,
+        content,
+        vitalSigns ?? undefined
+      );
+      if (result.success) {
+        toast.success('Prontuário salvo com sucesso!');
+      } else {
+        toast.error(result.error ?? 'Erro ao salvar');
+      }
+    } catch {
+      toast.error('Erro ao salvar prontuário');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDictate = () => {
-    // TODO: Implementar ditado por voz
     toast.info('Função de ditado em desenvolvimento');
   };
 
+  const updateField = (fieldId: string, value: unknown) => {
+    setContent((prev) => ({ ...prev, [fieldId]: value }));
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!tenantId) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center text-muted-foreground">
+          Clínica não identificada. Faça login novamente.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (templates.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-8 text-center space-y-2">
+          {templatesError && (
+            <p className="text-sm text-destructive">{templatesError}</p>
+          )}
+          <p className="text-muted-foreground">
+            Nenhum modelo de prontuário disponível. Cadastre um modelo na clínica ou use os padrões do sistema.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle>Prontuário</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0">
+        <div className="space-y-2">
+          <CardTitle>Prontuário</CardTitle>
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-muted-foreground">Modelo</Label>
+            <Select
+              value={selectedTemplateId}
+              onValueChange={(v) => {
+                setSelectedTemplateId(v);
+                setContent({});
+              }}
+            >
+              <SelectTrigger className="w-[280px]">
+                <SelectValue placeholder="Selecione o modelo" />
+              </SelectTrigger>
+              <SelectContent>
+                {templates.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>
+                    {t.name}
+                    {t.tenantId == null && (
+                      <span className="ml-2 text-xs text-muted-foreground">(padrão)</span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={handleDictate}>
             <Mic className="mr-2 h-4 w-4" />
             Ditar
           </Button>
-          <Button size="sm" onClick={handleSave}>
-            <Save className="mr-2 h-4 w-4" />
+          <Button size="sm" onClick={handleSave} disabled={saving}>
+            {saving ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Save className="mr-2 h-4 w-4" />
+            )}
             Salvar
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Accordion type="multiple" className="space-y-4" defaultValue={['item-1']}>
-          {/* Queixa Principal */}
-          <AccordionItem value="item-1" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              Queixa Principal
-            </AccordionTrigger>
-            <AccordionContent>
-              <Textarea
-                placeholder="Descreva a queixa principal do paciente..."
-                rows={4}
-                value={formData.chiefComplaint}
-                onChange={(e) =>
-                  setFormData({ ...formData, chiefComplaint: e.target.value })
-                }
-                className="resize-none"
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* História da Doença Atual */}
-          <AccordionItem value="item-2" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              História da Doença Atual
-            </AccordionTrigger>
-            <AccordionContent>
-              <Textarea
-                placeholder="Descreva a evolução dos sintomas, fatores de melhora/piora..."
-                rows={4}
-                value={formData.historyOfPresentIllness}
-                onChange={(e) =>
-                  setFormData({ ...formData, historyOfPresentIllness: e.target.value })
-                }
-                className="resize-none"
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Exame Físico */}
-          <AccordionItem value="item-3" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              Exame Físico
-            </AccordionTrigger>
-            <AccordionContent>
-              <Textarea
-                placeholder="Registre os achados do exame físico..."
-                rows={4}
-                value={formData.physicalExamination}
-                onChange={(e) =>
-                  setFormData({ ...formData, physicalExamination: e.target.value })
-                }
-                className="resize-none"
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Hipótese Diagnóstica */}
-          <AccordionItem value="item-4" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              Hipótese Diagnóstica
-            </AccordionTrigger>
-            <AccordionContent>
-              <Textarea
-                placeholder="Descreva as hipóteses diagnósticas..."
-                rows={4}
-                value={formData.diagnosticHypothesis}
-                onChange={(e) =>
-                  setFormData({ ...formData, diagnosticHypothesis: e.target.value })
-                }
-                className="resize-none"
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Plano de Tratamento */}
-          <AccordionItem value="item-5" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              Plano de Tratamento
-            </AccordionTrigger>
-            <AccordionContent>
-              <Textarea
-                placeholder="Descreva o plano terapêutico..."
-                rows={4}
-                value={formData.treatmentPlan}
-                onChange={(e) =>
-                  setFormData({ ...formData, treatmentPlan: e.target.value })
-                }
-                className="resize-none"
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Prescrições */}
-          <AccordionItem value="item-6" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              Prescrições
-            </AccordionTrigger>
-            <AccordionContent>
-              <Textarea
-                placeholder="Liste os medicamentos prescritos..."
-                rows={4}
-                value={formData.prescriptions}
-                onChange={(e) =>
-                  setFormData({ ...formData, prescriptions: e.target.value })
-                }
-                className="resize-none"
-              />
-            </AccordionContent>
-          </AccordionItem>
-
-          {/* Observações */}
-          <AccordionItem value="item-7" className="border rounded-lg px-4">
-            <AccordionTrigger className="hover:no-underline">
-              Observações
-            </AccordionTrigger>
-            <AccordionContent>
-              <Textarea
-                placeholder="Observações gerais..."
-                rows={4}
-                value={formData.observations}
-                onChange={(e) =>
-                  setFormData({ ...formData, observations: e.target.value })
-                }
-                className="resize-none"
-              />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+        {selectedTemplate?.schema?.length ? (
+          <Accordion type="multiple" className="space-y-4" defaultValue={['item-0']}>
+            {selectedTemplate.schema.map((field: MedicalRecordTemplateField, index: number) => (
+              <AccordionItem
+                key={field.id}
+                value={`item-${index}`}
+                className="border rounded-lg px-4"
+              >
+                <AccordionTrigger className="hover:no-underline">
+                  {field.label}
+                </AccordionTrigger>
+                <AccordionContent>
+                  {field.type === 'textarea' ? (
+                    <Textarea
+                      placeholder={field.placeholder}
+                      rows={4}
+                      value={(content[field.id] as string) ?? ''}
+                      onChange={(e) => updateField(field.id, e.target.value)}
+                      className="resize-none"
+                    />
+                  ) : (
+                    <Input
+                      type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'}
+                      placeholder={field.placeholder}
+                      value={(content[field.id] as string) ?? ''}
+                      onChange={(e) =>
+                        updateField(
+                          field.id,
+                          field.type === 'number' ? Number(e.target.value) : e.target.value
+                        )
+                      }
+                    />
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <p className="text-sm text-muted-foreground py-4">
+            Este modelo não possui campos definidos.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

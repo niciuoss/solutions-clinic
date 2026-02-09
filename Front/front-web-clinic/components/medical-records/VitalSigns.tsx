@@ -15,20 +15,34 @@ import {
 import { Activity, Heart, Thermometer, Wind, Weight, Edit } from 'lucide-react';
 import type { VitalSigns as VitalSignsType } from '@/types';
 
+const defaultVitalSigns: VitalSignsType = {
+  bloodPressure: '120/80',
+  heartRate: 72,
+  temperature: 36.5,
+  oxygenSaturation: 98,
+  weight: 68,
+  height: 165,
+};
+
 interface VitalSignsProps {
   appointmentId: string;
+  /** Modo controlado: valor e callback para persistir no prontuário */
+  value?: VitalSignsType | null;
+  onChange?: (v: VitalSignsType) => void;
 }
 
-export function VitalSigns({ appointmentId }: VitalSignsProps) {
+export function VitalSigns({ appointmentId, value, onChange }: VitalSignsProps) {
   const [open, setOpen] = useState(false);
-  const [vitalSigns, setVitalSigns] = useState<VitalSignsType>({
-    bloodPressure: '120/80',
-    heartRate: 72,
-    temperature: 36.5,
-    oxygenSaturation: 98,
-    weight: 68,
-    height: 165,
-  });
+  const isControlled = value !== undefined && onChange != null;
+  const [internalVitalSigns, setInternalVitalSigns] = useState<VitalSignsType>(defaultVitalSigns);
+
+  const vitalSigns = isControlled ? (value ?? defaultVitalSigns) : internalVitalSigns;
+  const setVitalSigns = isControlled
+    ? (v: VitalSignsType | ((prev: VitalSignsType) => VitalSignsType)) => {
+        const next = typeof v === 'function' ? v(vitalSigns) : v;
+        onChange(next);
+      }
+    : setInternalVitalSigns;
 
   // Calcular IMC
   const calculateIMC = () => {
