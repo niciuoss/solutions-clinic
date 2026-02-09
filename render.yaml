@@ -1,0 +1,31 @@
+# Render Blueprint - Solutions Clinic Backend
+# Documentação: https://render.com/docs/blueprint-spec
+#
+# Uso: conecte este repositório no Render e use "Apply Blueprint" ou
+# crie um Web Service manualmente com Root Directory = (vazio ou repo root)
+# e configure rootDir/dockerfilePath no dashboard.
+
+services:
+  - type: web
+    name: solutions-clinic-api
+    runtime: docker
+    region: oregon
+
+    # Monorepo: backend está em API/solutions-clinic (dockerfilePath é relativo à raiz do repo)
+    rootDir: API/solutions-clinic
+    dockerfilePath: API/solutions-clinic/Dockerfile.backend
+
+    # Deploy automático a cada push na branch padrão
+    autoDeployTrigger: commit
+
+    # Conecte o banco solutions-clinic-db ao serviço no Dashboard e defina as
+    # variáveis de ambiente (Environment). Veja RENDER.md para a lista completa.
+    # O Render injeta PORT automaticamente; para Postgres use as credenciais
+    # do banco (Internal Connection String ou variáveis individuais).
+
+databases:
+  - name: solutions-clinic-db
+    plan: free
+    region: oregon
+    databaseName: solutions_clinic
+    user: solutions_clinic
