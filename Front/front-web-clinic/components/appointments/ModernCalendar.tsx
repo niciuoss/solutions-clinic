@@ -19,10 +19,11 @@ import {
   parseISO,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Users } from 'lucide-react';
 import type { Appointment } from '@/types';
 import { AppointmentSheet } from './AppointmentSheet';
 import { AppointmentDetailsSheet } from './AppointmentDetailsSheet';
+import { AppointmentListSheet } from './AppointmentListSheet';
 
 // ✅ CORES MAIS VIBRANTES E VIVAS
 const statusConfig: Record<string, { label: string; bg: string; border: string }> = {
@@ -62,6 +63,44 @@ const HOUR_HEIGHT = 80;
 const START_HOUR = 7;
 const END_HOUR = 20;
 
+type AppointmentGroup = Appointment | Appointment[];
+
+function groupOverlappingAppointments(appointments: Appointment[]): AppointmentGroup[] {
+  if (appointments.length === 0) return [];
+
+  const sorted = [...appointments].sort(
+    (a, b) => new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+  );
+
+  const groups: Appointment[][] = [];
+
+  for (const apt of sorted) {
+    const aptStart = new Date(apt.scheduledAt).getTime();
+    const aptEnd = aptStart + apt.durationMinutes * 60_000;
+
+    let placed = false;
+    for (const group of groups) {
+      const groupOverlaps = group.some(g => {
+        const gStart = new Date(g.scheduledAt).getTime();
+        const gEnd = gStart + g.durationMinutes * 60_000;
+        return aptStart < gEnd && gStart < aptEnd;
+      });
+
+      if (groupOverlaps) {
+        group.push(apt);
+        placed = true;
+        break;
+      }
+    }
+
+    if (!placed) {
+      groups.push([apt]);
+    }
+  }
+
+  return groups.map(group => (group.length === 1 ? group[0] : group));
+}
+
 export function ModernCalendar() {
   const { user } = useAuth();
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -75,6 +114,10 @@ export function ModernCalendar() {
   // State para o sheet de detalhes do agendamento
   const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+
+  // State para o sheet de lista de agendamentos agrupados
+  const [groupedAppointments, setGroupedAppointments] = useState<Appointment[]>([]);
+  const [listSheetOpen, setListSheetOpen] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 60000);
@@ -116,6 +159,17 @@ export function ModernCalendar() {
   const handleToday = () => setCurrentWeek(new Date());
 
   const handleAppointmentClick = (appointment: Appointment) => {
+    setSelectedAppointment(appointment);
+    setDetailsSheetOpen(true);
+  };
+
+  const handleGroupClick = (group: Appointment[]) => {
+    setGroupedAppointments(group);
+    setListSheetOpen(true);
+  };
+
+  const handleSelectFromList = (appointment: Appointment) => {
+    setListSheetOpen(false);
     setSelectedAppointment(appointment);
     setDetailsSheetOpen(true);
   };
@@ -275,44 +329,116 @@ export function ModernCalendar() {
                         />
                       ))}
 
-                      {/* Agendamentos */}
-                      {dayAppointments.map(appointment => {
-                        const { top, height } = getAppointmentStyle(appointment);
-                        const config = statusConfig[appointment.status];
+                      {/* Agendamentos (agrupados quando sobrepostos) */}
+                      {groupOverlappingAppointments(dayAppointments).map((item, groupIndex) => {
+                        if (!Array.isArray(item)) {
+                          // Agendamento único - renderiza como antes
+                          const appointment = item;
+                          const { top, height } = getAppointmentStyle(appointment);
+                          const config = statusConfig[appointment.status];
+
+                          return (
+                            <div
+                              key={appointment.id}
+                              className={`absolute left-1 right-1 rounded-lg border-2 p-2 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] ${config.bg} ${config.border}`}
+                              style={{
+                                top: `${top}px`,
+                                height: `${Math.max(height, 40)}px`,
+                                zIndex: 10,
+                              }}
+                              onClick={() => handleAppointmentClick(appointment)}
+                            >
+                              <div className="flex flex-col h-full overflow-hidden text-white">
+                                <div className="flex items-center gap-1 mb-1">
+                                  <Clock className="h-3 w-3 flex-shrink-0" />
+                                  <span className="text-xs font-bold">
+                                    {format(parseISO(appointment.scheduledAt), 'HH:mm')}
+                                  </span>
+                                </div>
+                                <p className="font-bold text-sm line-clamp-1">
+                                  {appointment.patient.fullName}
+                                </p>
+                                {height > 60 && (
+                                  <p className="text-xs font-medium opacity-90 line-clamp-1">
+                                    {appointment.professional.user.fullName}
+                                  </p>
+                                )}
+                                {height > 80 && appointment.room?.name && (
+                                  <Badge
+                                    variant="secondary"
+                                    className="mt-auto w-fit text-xs bg-white/20 text-white border-white/30"
+                                  >
+                                    {appointment.room.name}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Grupo de agendamentos sobrepostos
+                        const group = item;
+                        const earliestStart = Math.min(
+                          ...group.map(a => new Date(a.scheduledAt).getTime())
+                        );
+                        const latestEnd = Math.max(
+                          ...group.map(a => new Date(a.scheduledAt).getTime() + a.durationMinutes * 60_000)
+                        );
+
+                        const startDate = new Date(earliestStart);
+                        const hourOffset = startDate.getHours() - START_HOUR;
+                        const minuteOffset = (startDate.getMinutes() / 60) * HOUR_HEIGHT;
+                        const top = hourOffset * HOUR_HEIGHT + minuteOffset;
+
+                        const durationMs = latestEnd - earliestStart;
+                        const durationMinutes = durationMs / 60_000;
+                        const height = (durationMinutes / 60) * HOUR_HEIGHT;
 
                         return (
                           <div
-                            key={appointment.id}
-                            className={`absolute left-1 right-1 rounded-lg border-2 p-2 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] ${config.bg} ${config.border}`}
+                            key={`group-${groupIndex}`}
+                            className="absolute left-1 right-1 rounded-lg border-2 p-2 cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] bg-violet-100 border-violet-300 dark:bg-violet-950 dark:border-violet-700"
                             style={{
                               top: `${top}px`,
                               height: `${Math.max(height, 40)}px`,
                               zIndex: 10,
                             }}
-                            onClick={() => handleAppointmentClick(appointment)}
+                            onClick={() => handleGroupClick(group)}
                           >
-                            <div className="flex flex-col h-full overflow-hidden text-white">
+                            <div className="flex flex-col h-full overflow-hidden">
                               <div className="flex items-center gap-1 mb-1">
-                                <Clock className="h-3 w-3 flex-shrink-0" />
-                                <span className="text-xs font-bold">
-                                  {format(parseISO(appointment.scheduledAt), 'HH:mm')}
+                                <Clock className="h-3 w-3 flex-shrink-0 text-violet-600 dark:text-violet-400" />
+                                <span className="text-xs font-bold text-violet-700 dark:text-violet-300">
+                                  {format(startDate, 'HH:mm')}
                                 </span>
                               </div>
-                              <p className="font-bold text-sm line-clamp-1">
-                                {appointment.patient.fullName}
-                              </p>
-                              {height > 60 && (
-                                <p className="text-xs font-medium opacity-90 line-clamp-1">
-                                  {appointment.professional.user.fullName}
+
+                              <div className="flex items-center gap-1 mb-1">
+                                <div className="flex -space-x-1">
+                                  {group.map(apt => {
+                                    const c = statusConfig[apt.status];
+                                    return (
+                                      <div
+                                        key={apt.id}
+                                        className={`h-3 w-3 rounded-full border border-white ${c.bg}`}
+                                        title={`${apt.professional.user.fullName} - ${c.label}`}
+                                      />
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <Users className="h-3 w-3 flex-shrink-0 text-violet-600 dark:text-violet-400" />
+                                <p className="font-bold text-xs text-violet-700 dark:text-violet-300 line-clamp-1">
+                                  {group.length} agendamentos
                                 </p>
-                              )}
-                              {height > 80 && appointment.room?.name && (
-                                <Badge 
-                                  variant="secondary" 
-                                  className="mt-auto w-fit text-xs bg-white/20 text-white border-white/30"
-                                >
-                                  {appointment.room.name}
-                                </Badge>
+                              </div>
+
+                              {height > 70 && (
+                                <p className="text-xs text-violet-600 dark:text-violet-400 line-clamp-2 mt-0.5">
+                                  {group.map(a => a.professional.user.fullName.split(' ')[0]).join(', ')}
+                                </p>
                               )}
                             </div>
                           </div>
@@ -354,6 +480,14 @@ export function ModernCalendar() {
         onOpenChange={setDetailsSheetOpen}
         appointment={selectedAppointment}
         onSuccess={handleSheetSuccess}
+      />
+
+      {/* Sheet para lista de agendamentos agrupados */}
+      <AppointmentListSheet
+        open={listSheetOpen}
+        onOpenChange={setListSheetOpen}
+        appointments={groupedAppointments}
+        onSelectAppointment={handleSelectFromList}
       />
     </div>
   );

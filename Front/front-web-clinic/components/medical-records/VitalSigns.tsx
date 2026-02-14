@@ -16,12 +16,12 @@ import { Activity, Heart, Thermometer, Wind, Weight, Edit } from 'lucide-react';
 import type { VitalSigns as VitalSignsType } from '@/types';
 
 const defaultVitalSigns: VitalSignsType = {
-  bloodPressure: '120/80',
-  heartRate: 72,
-  temperature: 36.5,
-  oxygenSaturation: 98,
-  weight: 68,
-  height: 165,
+  bloodPressure: '',
+  heartRate: 0,
+  temperature: 0,
+  oxygenSaturation: 0,
+  weight: 0,
+  height: 0,
 };
 
 interface VitalSignsProps {
@@ -92,7 +92,7 @@ export function VitalSigns({ appointmentId, value, onChange }: VitalSignsProps) 
       icon: Weight,
       label: 'IMC',
       value: imc,
-      unit: `kg/m² (${vitalSigns.weight}kg)`,
+      unit: imc ? `kg/m² (${vitalSigns.weight}kg)` : '',
       color: 'text-green-600',
       bgColor: 'bg-green-50',
     },
@@ -209,10 +209,10 @@ export function VitalSigns({ appointmentId, value, onChange }: VitalSignsProps) 
               >
                 <Icon className={`h-5 w-5 mx-auto mb-2 ${sign.color}`} />
                 <div className="text-xs text-muted-foreground mb-1">{sign.label}</div>
-                <div className={`text-2xl font-bold ${sign.color}`}>
-                  {sign.value}
+                <div className={`text-2xl font-bold ${sign.value && sign.value !== 0 ? sign.color : 'text-muted-foreground'}`}>
+                  {sign.value && sign.value !== 0 ? sign.value : '--'}
                 </div>
-                <div className="text-xs text-muted-foreground">{sign.unit}</div>
+                <div className="text-xs text-muted-foreground">{sign.value && sign.value !== 0 ? sign.unit : ''}</div>
               </div>
             );
           })}

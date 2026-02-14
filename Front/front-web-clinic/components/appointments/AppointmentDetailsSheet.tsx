@@ -44,7 +44,8 @@ import {
 import { toast } from 'sonner';
 import { cancelAppointmentAction } from '@/actions/appointment-actions';
 import { formatCurrency } from '@/lib/utils';
-import type { Appointment, AppointmentStatus } from '@/types';
+import { TriageDialog } from './TriageDialog';
+import type { Appointment, AppointmentStatus, VitalSigns } from '@/types';
 
 interface AppointmentDetailsSheetProps {
   open: boolean;
@@ -80,6 +81,7 @@ export function AppointmentDetailsSheet({
   const queryClient = useQueryClient();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
+  const [triageDialogOpen, setTriageDialogOpen] = useState(false);
 
   const cancelMutation = useMutation({
     mutationFn: async ({ appointmentId, reason }: { appointmentId: string; reason?: string }) => {
@@ -104,9 +106,17 @@ export function AppointmentDetailsSheet({
 
   const handleStartAppointmentNavigation = () => {
     if (appointment) {
-      onOpenChange(false);
-      router.push(`/appointments/${appointment.id}/medical-record`);
+      setTriageDialogOpen(true);
     }
+  };
+
+  const handleTriageConfirm = (data: VitalSigns | null) => {
+    if (!appointment) return;
+    if (data) {
+      sessionStorage.setItem(`triage-${appointment.id}`, JSON.stringify(data));
+    }
+    onOpenChange(false);
+    router.push(`/appointments/${appointment.id}/medical-record`);
   };
 
   if (!appointment) {
@@ -382,6 +392,13 @@ export function AppointmentDetailsSheet({
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      {/* Dialog de triagem */}
+      <TriageDialog
+        open={triageDialogOpen}
+        onOpenChange={setTriageDialogOpen}
+        onConfirm={handleTriageConfirm}
+      />
 
       {/* Dialog de confirmacao de cancelamento */}
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>

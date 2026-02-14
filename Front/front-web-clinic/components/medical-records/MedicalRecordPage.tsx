@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useAppointment } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import { PatientHeader } from './PatientHeader';
@@ -22,6 +22,20 @@ export function MedicalRecordPage({ appointmentId }: MedicalRecordPageProps) {
   const tenantId = user?.clinicId ?? null;
 
   const [vitalSigns, setVitalSigns] = useState<VitalSignsType | null>(null);
+
+  useEffect(() => {
+    const key = `triage-${appointmentId}`;
+    const stored = sessionStorage.getItem(key);
+    if (stored) {
+      try {
+        const data = JSON.parse(stored) as VitalSignsType;
+        setVitalSigns(data);
+      } catch {
+        // ignore invalid data
+      }
+      sessionStorage.removeItem(key);
+    }
+  }, [appointmentId]);
 
   const handleRecordLoaded = useCallback((record: MedicalRecord) => {
     if (record.vitalSigns && typeof record.vitalSigns === 'object' && Object.keys(record.vitalSigns).length > 0) {

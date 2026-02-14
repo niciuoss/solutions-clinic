@@ -158,7 +158,7 @@ export function useAppointment(appointmentId: string | null) {
       return result.success ? result.data : null;
     },
     enabled: !!appointmentId,
-    staleTime: 60_000, // 1 min — evita refetch a cada foco/montagem
+    staleTime: 60_000, 
   });
 }
 
@@ -212,6 +212,6 @@ export function useAppointmentsByTenant(
       return result.success ? result.data : [];
     },
     enabled: !!tenantId,
-    refetchInterval: 30000, // Atualiza a cada 30 segundos
+    refetchInterval: 30000, 
   });
 }
