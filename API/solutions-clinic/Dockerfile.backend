@@ -4,10 +4,10 @@ FROM eclipse-temurin:24-jdk AS builder
 WORKDIR /app
 
 # Copia arquivos de build
-COPY API/solutions-clinic/gradlew .
-COPY API/solutions-clinic/gradle gradle
-COPY API/solutions-clinic/build.gradle .
-COPY API/solutions-clinic/settings.gradle .
+COPY gradlew .
+COPY gradle gradle
+COPY build.gradle .
+COPY settings.gradle .
 
 # Dá permissão de execução ao gradlew
 RUN chmod +x ./gradlew
@@ -16,7 +16,7 @@ RUN chmod +x ./gradlew
 RUN ./gradlew dependencies --no-daemon || true
 
 # Copia código fonte
-COPY API/solutions-clinic/src src
+COPY src src
 
 # Build da aplicação
 RUN ./gradlew bootJar --no-daemon -x test

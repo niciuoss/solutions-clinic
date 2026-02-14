@@ -6,6 +6,7 @@ import com.jettech.api.solutions_clinic.model.entity.Tenant;
 import com.jettech.api.solutions_clinic.model.entity.TenantStatus;
 import com.jettech.api.solutions_clinic.model.repository.SubscriptionRepository;
 import com.jettech.api.solutions_clinic.model.repository.TenantRepository;
+import com.stripe.exception.EventDataObjectDeserializationException;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Event;
@@ -67,16 +68,30 @@ public class DefaultProcessStripeWebhookUseCase implements ProcessStripeWebhookU
     private void handleCheckoutSessionCompleted(Event event) {
         EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
         Session session = null;
-        
+
         if (dataObjectDeserializer.getObject().isPresent()) {
             Object object = dataObjectDeserializer.getObject().get();
             if (object instanceof Session) {
                 session = (Session) object;
             }
         }
-        
+
+        // Fallback: deserialização "unsafe" quando há mismatch de API version entre
+        // o evento (Event.getApiVersion()) e a lib (Stripe.API_VERSION). getObject() retorna vazio nesse caso.
         if (session == null) {
-            log.error("Sessão não encontrada no evento checkout.session.completed");
+            try {
+                Object unsafe = dataObjectDeserializer.deserializeUnsafe();
+                if (unsafe instanceof Session) {
+                    session = (Session) unsafe;
+                }
+            } catch (EventDataObjectDeserializationException e) {
+                log.warn("Falha ao deserializar objeto do evento (raw json disponível na exceção): {}", e.getMessage());
+            }
+        }
+
+        if (session == null) {
+            log.error("Sessão não encontrada no evento checkout.session.completed (event.apiVersion={}). " +
+                    "Considere configurar o webhook no Stripe com api_versions alinhada à biblioteca.", event.getApiVersion());
             return;
         }
 
@@ -168,16 +183,26 @@ public class DefaultProcessStripeWebhookUseCase implements ProcessStripeWebhookU
     private void handleSubscriptionUpdated(Event event) {
         EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
         com.stripe.model.Subscription stripeSubscription = null;
-        
+
         if (dataObjectDeserializer.getObject().isPresent()) {
             Object object = dataObjectDeserializer.getObject().get();
             if (object instanceof com.stripe.model.Subscription) {
                 stripeSubscription = (com.stripe.model.Subscription) object;
             }
         }
-        
         if (stripeSubscription == null) {
-            log.error("Subscription não encontrada no evento customer.subscription.updated");
+            try {
+                Object unsafe = dataObjectDeserializer.deserializeUnsafe();
+                if (unsafe instanceof com.stripe.model.Subscription) {
+                    stripeSubscription = (com.stripe.model.Subscription) unsafe;
+                }
+            } catch (EventDataObjectDeserializationException e) {
+                log.warn("Falha ao deserializar objeto do evento customer.subscription.updated: {}", e.getMessage());
+            }
+        }
+
+        if (stripeSubscription == null) {
+            log.error("Subscription não encontrada no evento customer.subscription.updated (event.apiVersion={})", event.getApiVersion());
             return;
         }
 
@@ -265,16 +290,26 @@ public class DefaultProcessStripeWebhookUseCase implements ProcessStripeWebhookU
     private void handleSubscriptionDeleted(Event event) {
         EventDataObjectDeserializer dataObjectDeserializer = event.getDataObjectDeserializer();
         com.stripe.model.Subscription stripeSubscription = null;
-        
+
         if (dataObjectDeserializer.getObject().isPresent()) {
             Object object = dataObjectDeserializer.getObject().get();
             if (object instanceof com.stripe.model.Subscription) {
                 stripeSubscription = (com.stripe.model.Subscription) object;
             }
         }
-        
         if (stripeSubscription == null) {
-            log.error("Subscription não encontrada no evento customer.subscription.deleted");
+            try {
+                Object unsafe = dataObjectDeserializer.deserializeUnsafe();
+                if (unsafe instanceof com.stripe.model.Subscription) {
+                    stripeSubscription = (com.stripe.model.Subscription) unsafe;
+                }
+            } catch (EventDataObjectDeserializationException e) {
+                log.warn("Falha ao deserializar objeto do evento customer.subscription.deleted: {}", e.getMessage());
+            }
+        }
+
+        if (stripeSubscription == null) {
+            log.error("Subscription não encontrada no evento customer.subscription.deleted (event.apiVersion={})", event.getApiVersion());
             return;
         }
 
