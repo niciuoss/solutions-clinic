@@ -71,6 +71,7 @@ import { cn } from '@/lib/utils';
 import { RoomSelect } from './RoomSelect';
 import { ConflictDialog } from './ConflictDialog';
 import type { Professional, Appointment, UpdateAppointmentRequest } from '@/types';
+import { SPECIALTY_LABELS } from '@/types';
 
 interface ProfessionalAppointmentsTableProps {
   professionals: Professional[];
@@ -419,7 +420,7 @@ export function ProfessionalAppointmentsTable({ professionals }: ProfessionalApp
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{professional.specialty}</Badge>
+                      <Badge variant="outline">{SPECIALTY_LABELS[professional.specialty] || professional.specialty}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge variant="secondary">{appts.length}</Badge>
@@ -605,7 +606,7 @@ export function ProfessionalAppointmentsTable({ professionals }: ProfessionalApp
                       {selectedAppointment.professional.user.fullName}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {selectedAppointment.professional.specialty}
+                      {SPECIALTY_LABELS[selectedAppointment.professional.specialty] || selectedAppointment.professional.specialty}
                     </p>
                   </div>
                 </div>
@@ -745,7 +746,7 @@ export function ProfessionalAppointmentsTable({ professionals }: ProfessionalApp
                     ) : allProfessionals && allProfessionals.length > 0 ? (
                       allProfessionals.map((professional) => (
                         <SelectItem key={professional.id} value={professional.id}>
-                          {professional.user.fullName} - {professional.specialty}
+                          {professional.user.fullName} - {SPECIALTY_LABELS[professional.specialty] || professional.specialty}
                         </SelectItem>
                       ))
                     ) : (

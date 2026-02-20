@@ -1,8 +1,9 @@
 package com.jettech.api.solutions_clinic.model.entity;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.jettech.api.solutions_clinic.model.converter.JsonNodeAttributeConverter;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,7 +34,7 @@ public class MedicalRecordTemplate {
     @Column(name = "professional_type", length = 50)
     private String professionalType;
 
-    @Convert(converter = JsonNodeAttributeConverter.class)
+    @JdbcTypeCode(SqlTypes.JSON)
     @Column(nullable = false, columnDefinition = "jsonb")
     private JsonNode schema;
 

@@ -50,8 +50,10 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn, formatCurrency } from '@/lib/utils';
-import type { CreateAppointmentRequest } from '@/types';
+import type { Appointment, CreateAppointmentRequest, UpdateAppointmentRequest } from '@/types';
+import { SPECIALTY_LABELS } from '@/types';
 import type { Procedure as ProcedureType } from '@/types/procedure.types';
+import { parseISO } from 'date-fns';
 
 const appointmentSchema = z.object({
   patientId: z.string().min(1, 'Selecione um paciente'),
@@ -71,6 +73,7 @@ interface AppointmentSheetProps {
   onOpenChange: (open: boolean) => void;
   defaultDate?: Date | null;
   defaultTime?: string | null;
+  editingAppointment?: Appointment | null;
   onSuccess?: () => void;
 }
 
@@ -79,8 +82,10 @@ export function AppointmentSheet({
   onOpenChange,
   defaultDate,
   defaultTime,
+  editingAppointment,
   onSuccess,
 }: AppointmentSheetProps) {
+  const isEditing = !!editingAppointment;
   const { user } = useAuth();
   const { professionals, isLoading: loadingProfessionals } = useProfessionalsByCurrentClinic(0, 100);
   const { procedures: proceduresData, isLoading: loadingProcedures } = useProcedures(
@@ -91,11 +96,14 @@ export function AppointmentSheet({
   );
   const {
     createAppointment,
+    updateAppointment,
     confirmConflict,
     cancelConflict,
     pendingConflict,
-    isCreating
+    isCreating,
+    isUpdating,
   } = useAppointments();
+  const isSaving = isEditing ? isUpdating : isCreating;
   const { checkAvailability, isChecking } = useAvailability();
 
   const [availabilityStatus, setAvailabilityStatus] = useState<{
@@ -129,16 +137,30 @@ export function AppointmentSheet({
   // Reset form and set default values when sheet opens
   useEffect(() => {
     if (open) {
-      reset({
-        durationMinutes: 60,
-        procedureIds: [],
-        date: defaultDate || undefined,
-        time: defaultTime || '',
-      });
+      if (editingAppointment) {
+        const scheduledDate = parseISO(editingAppointment.scheduledAt);
+        reset({
+          patientId: editingAppointment.patient.id,
+          professionalId: editingAppointment.professional.id,
+          roomId: editingAppointment.room?.id,
+          date: scheduledDate,
+          time: format(scheduledDate, 'HH:mm'),
+          durationMinutes: editingAppointment.durationMinutes,
+          observations: editingAppointment.observations || '',
+          procedureIds: editingAppointment.procedures?.map(p => p.id) || [],
+        });
+      } else {
+        reset({
+          durationMinutes: 60,
+          procedureIds: [],
+          date: defaultDate || undefined,
+          time: defaultTime || '',
+        });
+      }
       setAvailabilityStatus(null);
       setSelectedProcedureId('');
     }
-  }, [open, defaultDate, defaultTime, reset]);
+  }, [open, defaultDate, defaultTime, editingAppointment, reset]);
 
   // Verificar disponibilidade em tempo real
   useEffect(() => {
@@ -149,7 +171,8 @@ export function AppointmentSheet({
         const result = await checkAvailability(
           professionalId,
           scheduledAt,
-          durationMinutes
+          durationMinutes,
+          editingAppointment?.id
         );
 
         if (result.success) {
@@ -172,7 +195,7 @@ export function AppointmentSheet({
     } else {
       setAvailabilityStatus(null);
     }
-  }, [professionalId, date, time, durationMinutes, checkAvailability]);
+  }, [professionalId, date, time, durationMinutes, checkAvailability, editingAppointment?.id]);
 
   const handleAddProcedure = () => {
     if (selectedProcedureId && !selectedProcedureIds.includes(selectedProcedureId)) {
@@ -193,22 +216,36 @@ export function AppointmentSheet({
       }
 
       const scheduledAt = `${format(data.date, 'yyyy-MM-dd')}T${data.time}:00`;
-      const totalValue = selectedProcedures.reduce((sum, p) => sum + (p.basePrice ?? 0), 0);
 
-      const requestData: CreateAppointmentRequest = {
-        tenantId: user.clinicId,
-        createdBy: user.id,
-        patientId: data.patientId,
-        professionalId: data.professionalId,
-        roomId: data.roomId,
-        scheduledAt,
-        durationMinutes: data.durationMinutes,
-        observations: data.observations,
-        totalValue,
-        procedureIds: data.procedureIds,
-      };
+      if (isEditing && editingAppointment) {
+        const updateData: UpdateAppointmentRequest = {
+          professionalId: data.professionalId,
+          roomId: data.roomId,
+          scheduledAt,
+          durationMinutes: data.durationMinutes,
+          observations: data.observations,
+        };
 
-      await createAppointment(requestData);
+        await updateAppointment(editingAppointment.id, updateData);
+      } else {
+        const totalValue = selectedProcedures.reduce((sum, p) => sum + (p.basePrice ?? 0), 0);
+
+        const requestData: CreateAppointmentRequest = {
+          tenantId: user.clinicId,
+          createdBy: user.id,
+          patientId: data.patientId,
+          professionalId: data.professionalId,
+          roomId: data.roomId,
+          scheduledAt,
+          durationMinutes: data.durationMinutes,
+          observations: data.observations,
+          totalValue,
+          procedureIds: data.procedureIds,
+        };
+
+        await createAppointment(requestData);
+      }
+
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
@@ -242,9 +279,11 @@ export function AppointmentSheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
           <SheetHeader className="p-6 pb-2 flex-shrink-0">
-            <SheetTitle>Novo Agendamento</SheetTitle>
+            <SheetTitle>{isEditing ? 'Editar Agendamento' : 'Novo Agendamento'}</SheetTitle>
             <SheetDescription>
-              Preencha os dados para criar um novo agendamento.
+              {isEditing
+                ? 'Altere os dados do agendamento.'
+                : 'Preencha os dados para criar um novo agendamento.'}
             </SheetDescription>
           </SheetHeader>
 
@@ -253,10 +292,18 @@ export function AppointmentSheet({
               {/* Paciente */}
               <div className="space-y-2">
                 <Label>Paciente *</Label>
-                <PatientAutocomplete
-                  onSelect={(patient) => setValue('patientId', patient.id)}
-                  error={errors.patientId?.message}
-                />
+                {isEditing && editingAppointment ? (
+                  <Input
+                    value={editingAppointment.patient.fullName}
+                    disabled
+                    className="bg-muted"
+                  />
+                ) : (
+                  <PatientAutocomplete
+                    onSelect={(patient) => setValue('patientId', patient.id)}
+                    error={errors.patientId?.message}
+                  />
+                )}
               </div>
 
               {/* Profissional */}
@@ -277,7 +324,7 @@ export function AppointmentSheet({
                     ) : professionals && professionals.length > 0 ? (
                       professionals.map((professional) => (
                         <SelectItem key={professional.id} value={professional.id}>
-                          {professional.user.fullName} - {professional.specialty}
+                          {professional.user.fullName} - {SPECIALTY_LABELS[professional.specialty] || professional.specialty}
                         </SelectItem>
                       ))
                     ) : (
@@ -521,11 +568,11 @@ export function AppointmentSheet({
               <Button
                 type="submit"
                 form="appointment-sheet-form"
-                disabled={isCreating || !user?.id || !user?.clinicId}
+                disabled={isSaving || !user?.id || !user?.clinicId}
                 className="flex-1"
               >
-                {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Criar Agendamento
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isEditing ? 'Salvar Alterações' : 'Criar Agendamento'}
               </Button>
             </div>
           </SheetFooter>
@@ -538,7 +585,7 @@ export function AppointmentSheet({
         message={pendingConflict?.error || ''}
         onConfirm={confirmConflict}
         onCancel={cancelConflict}
-        isLoading={isCreating}
+        isLoading={isSaving}
       />
     </>
   );

@@ -21,6 +21,7 @@ import { ptBR } from 'date-fns/locale';
 import { Clock, MapPin, User } from 'lucide-react';
 import Link from 'next/link';
 import type { Professional } from '@/types';
+import { SPECIALTY_LABELS } from '@/types';
 
 interface ProfessionalAgendaProps {
   professionals: Professional[];
@@ -64,7 +65,7 @@ export function ProfessionalAgenda({ professionals }: ProfessionalAgendaProps) {
                 </Avatar>
                 <span>{professional.user.fullName}</span>
                 <Badge variant="outline" className="ml-1">
-                  {professional.specialty}
+                  {SPECIALTY_LABELS[professional.specialty] || professional.specialty}
                 </Badge>
               </TabsTrigger>
             );
@@ -139,7 +140,7 @@ function ProfessionalSchedule({
           <h3 className="font-semibold text-sm">Informações</h3>
           <div className="space-y-1 text-sm text-muted-foreground">
             <p>
-              <strong>Especialidade:</strong> {professional.specialty}
+              <strong>Especialidade:</strong> {SPECIALTY_LABELS[professional.specialty] || professional.specialty}
             </p>
             <p>
               <strong>

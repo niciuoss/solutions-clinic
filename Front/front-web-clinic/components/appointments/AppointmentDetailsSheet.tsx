@@ -44,8 +44,10 @@ import {
 import { toast } from 'sonner';
 import { cancelAppointmentAction } from '@/actions/appointment-actions';
 import { formatCurrency } from '@/lib/utils';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { TriageDialog } from './TriageDialog';
 import type { Appointment, AppointmentStatus, VitalSigns } from '@/types';
+import { SPECIALTY_LABELS, UserRole } from '@/types';
 
 interface AppointmentDetailsSheetProps {
   open: boolean;
@@ -79,6 +81,7 @@ export function AppointmentDetailsSheet({
 }: AppointmentDetailsSheetProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { user } = useAuthContext();
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [triageDialogOpen, setTriageDialogOpen] = useState(false);
@@ -146,7 +149,7 @@ export function AppointmentDetailsSheet({
   };
 
   const canCancel = !['CANCELADO', 'FINALIZADO'].includes(appointment.status);
-  const canStart = ['AGENDADO', 'CONFIRMADO'].includes(appointment.status);
+  const canStart = ['AGENDADO', 'CONFIRMADO'].includes(appointment.status) && user?.role === UserRole.PROFISSIONAL_SAUDE;
   const canEdit = !['CANCELADO', 'FINALIZADO'].includes(appointment.status);
 
   return (
@@ -222,7 +225,7 @@ export function AppointmentDetailsSheet({
                 </h3>
                 <div className="space-y-1 pl-6">
                   <p className="font-medium">{appointment.professional.user.fullName}</p>
-                  <p className="text-sm text-muted-foreground">{appointment.professional.specialty}</p>
+                  <p className="text-sm text-muted-foreground">{SPECIALTY_LABELS[appointment.professional.specialty] || appointment.professional.specialty}</p>
                   <p className="text-sm text-muted-foreground">
                     {appointment.professional.documentType}: {appointment.professional.documentNumber}
                   </p>
@@ -426,7 +429,10 @@ export function AppointmentDetailsSheet({
               Voltar
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleCancelAppointment}
+              onClick={(e) => {
+                e.preventDefault();
+                handleCancelAppointment();
+              }}
               disabled={cancelMutation.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAppointmentsByDateRange } from '@/hooks/useAppointments';
+import { useAppointmentsByDateRange, useAppointmentsByProfessional } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import {
   format,
@@ -101,7 +101,11 @@ function groupOverlappingAppointments(appointments: Appointment[]): AppointmentG
   return groups.map(group => (group.length === 1 ? group[0] : group));
 }
 
-export function ModernCalendar() {
+interface ModernCalendarProps {
+  professionalId?: string;
+}
+
+export function ModernCalendar({ professionalId }: ModernCalendarProps) {
   const { user } = useAuth();
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -114,6 +118,9 @@ export function ModernCalendar() {
   // State para o sheet de detalhes do agendamento
   const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+
+  // State para edição de agendamento
+  const [editingAppointment, setEditingAppointment] = useState<Appointment | null>(null);
 
   // State para o sheet de lista de agendamentos agrupados
   const [groupedAppointments, setGroupedAppointments] = useState<Appointment[]>([]);
@@ -131,11 +138,19 @@ export function ModernCalendar() {
   const startDate = format(weekStart, "yyyy-MM-dd'T'00:00:00");
   const endDate = format(weekEnd, "yyyy-MM-dd'T'23:59:59");
 
-  const { data: appointments = [], isLoading } = useAppointmentsByDateRange(
-    user?.clinicId ?? null,
+  const tenantQuery = useAppointmentsByDateRange(
+    !professionalId ? (user?.clinicId ?? null) : null,
     startDate,
     endDate
   );
+
+  const professionalQuery = useAppointmentsByProfessional(
+    professionalId ?? '',
+    startDate,
+    endDate
+  );
+
+  const { data: appointments = [], isLoading } = professionalId ? professionalQuery : tenantQuery;
 
   const appointmentsByDay = useMemo(() => {
     const grouped: Record<string, Appointment[]> = {};
@@ -174,10 +189,16 @@ export function ModernCalendar() {
     setDetailsSheetOpen(true);
   };
 
+  const handleEditAppointment = useCallback((appointment: Appointment) => {
+    setEditingAppointment(appointment);
+    setSheetOpen(true);
+  }, []);
+
   const handleTimeSlotClick = useCallback((day: Date, hour: number) => {
     const slotDate = startOfDay(day);
     const slotTime = `${hour.toString().padStart(2, '0')}:00`;
 
+    setEditingAppointment(null);
     setSelectedSlotDate(slotDate);
     setSelectedSlotTime(slotTime);
     setSheetOpen(true);
@@ -465,12 +486,16 @@ export function ModernCalendar() {
         </div>
       </Card>
 
-      {/* Sheet para novo agendamento */}
+      {/* Sheet para novo/editar agendamento */}
       <AppointmentSheet
         open={sheetOpen}
-        onOpenChange={setSheetOpen}
+        onOpenChange={(open) => {
+          setSheetOpen(open);
+          if (!open) setEditingAppointment(null);
+        }}
         defaultDate={selectedSlotDate}
         defaultTime={selectedSlotTime}
+        editingAppointment={editingAppointment}
         onSuccess={handleSheetSuccess}
       />
 
@@ -479,6 +504,7 @@ export function ModernCalendar() {
         open={detailsSheetOpen}
         onOpenChange={setDetailsSheetOpen}
         appointment={selectedAppointment}
+        onEdit={handleEditAppointment}
         onSuccess={handleSheetSuccess}
       />
 

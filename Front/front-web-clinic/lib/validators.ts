@@ -73,7 +73,12 @@ export const userSchema = z.object({
 // Professional
 export const professionalSchema = z.object({
   userId: z.string().min(1, 'Usuário é obrigatório'),
-  specialty: z.string().min(1, 'Especialidade é obrigatória'),
+  specialty: z.enum([
+    'CARDIOLOGISTA', 'CLINICO_GERAL', 'DENTISTA', 'DERMATOLOGISTA',
+    'ENDOCRINOLOGISTA', 'ENFERMEIRO', 'FISIOTERAPEUTA', 'GASTROENTEROLOGISTA',
+    'GINECOLOGISTA', 'MASTOLOGISTA', 'OBSTETRIACO', 'OFTALMOLOGISTA',
+    'PEDIATRA', 'PSICOLOGO', 'PSICOLOGISTA', 'UROLOGISTA',
+  ], { required_error: 'Especialidade é obrigatória' }),
   documentType: z.enum(['CRM', 'CREFITO', 'CRO', 'CRP', 'CRN', 'COREN', 'OUTRO']),
   documentNumber: z.string().min(1, 'Número do documento é obrigatório'),
   documentState: z.string().max(2).optional(),
@@ -94,7 +99,12 @@ export const professionalWithUserSchema = z.object({
   birthDate: z.string().regex(/^\d{2}\/\d{2}\/\d{4}$/, 'Data de nascimento deve estar no formato DD/MM/YYYY').optional().or(z.literal('')),
   
   // Professional fields
-  specialty: z.string().min(1, 'Especialidade é obrigatória'),
+  specialty: z.enum([
+    'CARDIOLOGISTA', 'CLINICO_GERAL', 'DENTISTA', 'DERMATOLOGISTA',
+    'ENDOCRINOLOGISTA', 'ENFERMEIRO', 'FISIOTERAPEUTA', 'GASTROENTEROLOGISTA',
+    'GINECOLOGISTA', 'MASTOLOGISTA', 'OBSTETRIACO', 'OFTALMOLOGISTA',
+    'PEDIATRA', 'PSICOLOGO', 'PSICOLOGISTA', 'UROLOGISTA',
+  ], { required_error: 'Especialidade é obrigatória' }),
   documentType: z.enum(['CRM', 'CREFITO', 'CRO', 'CRP', 'CRN', 'COREN', 'OUTRO']),
   documentNumber: z.string().min(1, 'Número do documento é obrigatório'),
   documentState: z.string().max(2).optional(),

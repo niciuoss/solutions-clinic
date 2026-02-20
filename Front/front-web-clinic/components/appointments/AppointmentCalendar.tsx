@@ -6,7 +6,11 @@ import { ModernCalendar } from './ModernCalendar';
 import { MonthView } from './MonthView';
 import { Calendar, Grid } from 'lucide-react';
 
-export function AppointmentCalendar() {
+interface AppointmentCalendarProps {
+  professionalId?: string;
+}
+
+export function AppointmentCalendar({ professionalId }: AppointmentCalendarProps) {
   const [view, setView] = useState<'week' | 'month'>('week');
 
   return (
@@ -25,11 +29,11 @@ export function AppointmentCalendar() {
         </TabsList>
 
         <TabsContent value="week" className="mt-4">
-          <ModernCalendar />
+          <ModernCalendar professionalId={professionalId} />
         </TabsContent>
 
         <TabsContent value="month" className="mt-4">
-          <MonthView />
+          <MonthView professionalId={professionalId} />
         </TabsContent>
       </Tabs>
     </div>

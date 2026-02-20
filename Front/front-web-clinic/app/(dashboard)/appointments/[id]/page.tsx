@@ -25,6 +25,7 @@ import { Separator } from '@/components/ui/separator';
 import { useAppointment } from '@/hooks/useAppointments';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import type { Appointment } from '@/types';
+import { SPECIALTY_LABELS } from '@/types';
 
 export default function AppointmentDetailPage() {
   const params = useParams();
@@ -205,7 +206,7 @@ export default function AppointmentDetailPage() {
                   {appointment.professional.user.fullName}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {appointment.professional.specialty}
+                  {SPECIALTY_LABELS[appointment.professional.specialty] || appointment.professional.specialty}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {appointment.professional.documentType}: {appointment.professional.documentNumber}

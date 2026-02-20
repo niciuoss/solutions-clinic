@@ -1,6 +1,7 @@
 package com.jettech.api.solutions_clinic.model.usecase.professional;
 
 import com.jettech.api.solutions_clinic.model.entity.PlanType;
+import com.jettech.api.solutions_clinic.model.entity.Specialty;
 import com.jettech.api.solutions_clinic.model.entity.TenantStatus;
 import com.jettech.api.solutions_clinic.model.entity.TypeTenant;
 
@@ -23,7 +24,7 @@ public record ProfessionalTenantResponse(
         LocalDate trialEndsAt,
         boolean active,
         UUID professionalId,
-        String specialty,
+        Specialty specialty,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
     ) {

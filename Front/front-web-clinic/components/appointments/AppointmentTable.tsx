@@ -20,24 +20,46 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useAppointmentsByTenant } from '@/hooks/useAppointments';
+import { useAppointmentsByTenant, useAppointmentsByProfessional } from '@/hooks/useAppointments';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { SPECIALTY_LABELS } from '@/types';
 import { Search, Eye, Edit, X } from 'lucide-react';
 import Link from 'next/link';
-import { format } from 'date-fns';
+import { format, subMonths, addMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export function AppointmentTable() {
+interface AppointmentTableProps {
+  professionalId?: string;
+}
+
+export function AppointmentTable({ professionalId }: AppointmentTableProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuthContext();
   const tenantId = user?.clinicId || null;
 
-  const { data: appointments = [], isLoading } = useAppointmentsByTenant(
-    tenantId,
+  const now = new Date();
+  const rangeStart = format(subMonths(now, 6), "yyyy-MM-dd'T'00:00:00");
+  const rangeEnd = format(addMonths(now, 6), "yyyy-MM-dd'T'23:59:59");
+
+  const tenantQuery = useAppointmentsByTenant(
+    !professionalId ? tenantId : null,
     undefined,
     statusFilter !== 'all' ? statusFilter : undefined
   );
+
+  const professionalQuery = useAppointmentsByProfessional(
+    professionalId ?? '',
+    rangeStart,
+    rangeEnd
+  );
+
+  const { data: allAppointments = [], isLoading } = professionalId ? professionalQuery : tenantQuery;
+
+  // Apply status filter for professional query (tenant query already filters server-side)
+  const appointments = professionalId && statusFilter !== 'all'
+    ? allAppointments.filter(a => a.status === statusFilter)
+    : allAppointments;
 
   const filteredAppointments = appointments?.filter((appointment) => {
     const matchesSearch =
@@ -142,7 +164,7 @@ export function AppointmentTable() {
                     <div>
                       <p>{appointment.professional.user.fullName}</p>
                       <p className="text-sm text-muted-foreground">
-                        {appointment.professional.specialty}
+                        {SPECIALTY_LABELS[appointment.professional.specialty] || appointment.professional.specialty}
                       </p>
                     </div>
                   </TableCell>

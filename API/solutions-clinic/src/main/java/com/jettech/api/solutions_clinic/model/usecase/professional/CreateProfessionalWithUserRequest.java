@@ -1,6 +1,7 @@
 package com.jettech.api.solutions_clinic.model.usecase.professional;
 
 import com.jettech.api.solutions_clinic.model.entity.DocumentType;
+import com.jettech.api.solutions_clinic.model.entity.Specialty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -35,8 +36,8 @@ public record CreateProfessionalWithUserRequest(
     String birthDate,
     
     // Professional fields
-    @NotBlank(message = "O campo [specialty] é obrigatório")
-    String specialty,
+    @NotNull(message = "O campo [specialty] é obrigatório")
+    Specialty specialty,
     
     @NotNull(message = "O campo [documentType] é obrigatório")
     DocumentType documentType,

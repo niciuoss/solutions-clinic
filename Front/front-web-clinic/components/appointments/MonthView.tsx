@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAppointmentsByDateRange } from '@/hooks/useAppointments';
+import { useAppointmentsByDateRange, useAppointmentsByProfessional } from '@/hooks/useAppointments';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { 
@@ -24,7 +24,11 @@ import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Appointment } from '@/types';
 
-export function MonthView() {
+interface MonthViewProps {
+  professionalId?: string;
+}
+
+export function MonthView({ professionalId }: MonthViewProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -39,11 +43,19 @@ export function MonthView() {
   const startDate = format(calendarStart, "yyyy-MM-dd'T'00:00:00");
   const endDate = format(calendarEnd, "yyyy-MM-dd'T'23:59:59");
 
-  const { data: appointments = [], isLoading } = useAppointmentsByDateRange(
-    user?.clinicId ?? null,
+  const tenantQuery = useAppointmentsByDateRange(
+    !professionalId ? (user?.clinicId ?? null) : null,
     startDate,
     endDate
   );
+
+  const professionalQuery = useAppointmentsByProfessional(
+    professionalId ?? '',
+    startDate,
+    endDate
+  );
+
+  const { data: appointments = [], isLoading } = professionalId ? professionalQuery : tenantQuery;
 
   // Agrupar agendamentos por dia
   const appointmentsByDay = useMemo(() => {

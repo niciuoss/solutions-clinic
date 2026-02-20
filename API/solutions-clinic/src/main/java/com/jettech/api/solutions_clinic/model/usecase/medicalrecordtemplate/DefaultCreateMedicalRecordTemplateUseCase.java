@@ -49,7 +49,7 @@ public class DefaultCreateMedicalRecordTemplateUseCase implements CreateMedicalR
                 template.getTenant() != null ? template.getTenant().getId() : null,
                 template.getName(),
                 template.getProfessionalType(),
-                template.getSchema(),
+                template.getSchema() != null ? template.getSchema().toString() : null,
                 template.isReadOnly(),
                 template.isActive(),
                 template.getCreatedAt(),

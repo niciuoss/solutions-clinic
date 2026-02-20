@@ -23,7 +23,7 @@ import { toast } from 'sonner';
 import { Loader2, GraduationCap, FileText, User, Mail, Lock, Eye, EyeOff, Phone, Calendar } from 'lucide-react';
 import { useState } from 'react';
 import type { Professional } from '@/types';
-import { DocumentType } from '@/types/professional.types';
+import { DocumentType, Specialty, SPECIALTY_LABELS } from '@/types/professional.types';
 import { professionalWithUserSchema, professionalSchema } from '@/lib/validators';
 
 type ProfessionalFormData = z.infer<typeof professionalWithUserSchema>;
@@ -326,12 +326,21 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Label htmlFor="specialty">Especialidade *</Label>
-                <Input
-                  id="specialty"
-                  placeholder="Ex: Cardiologia, Fisioterapia, Odontologia..."
-                  {...form.register('specialty')}
-                  className={form.formState.errors.specialty ? 'border-red-500' : ''}
-                />
+                <Select
+                  value={form.watch('specialty') || ''}
+                  onValueChange={(value) => form.setValue('specialty', value as Specialty, { shouldValidate: true })}
+                >
+                  <SelectTrigger className={form.formState.errors.specialty ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Selecione a especialidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(Specialty).map((specialty) => (
+                      <SelectItem key={specialty} value={specialty}>
+                        {SPECIALTY_LABELS[specialty]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {form.formState.errors.specialty && (
                   <p className="mt-1 text-sm text-red-500">{form.formState.errors.specialty?.message as string}</p>
                 )}
@@ -363,12 +372,21 @@ export function ProfessionalForm({ professional, onSuccess }: ProfessionalFormPr
 
               <div className="sm:col-span-2">
                 <Label htmlFor="specialty">Especialidade *</Label>
-                <Input
-                  id="specialty"
-                  placeholder="Ex: Cardiologia, Fisioterapia, Odontologia..."
-                  {...form.register('specialty')}
-                  className={form.formState.errors.specialty ? 'border-red-500' : ''}
-                />
+                <Select
+                  value={form.watch('specialty') || ''}
+                  onValueChange={(value) => form.setValue('specialty', value as Specialty, { shouldValidate: true })}
+                >
+                  <SelectTrigger className={form.formState.errors.specialty ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Selecione a especialidade" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(Specialty).map((specialty) => (
+                      <SelectItem key={specialty} value={specialty}>
+                        {SPECIALTY_LABELS[specialty]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {form.formState.errors.specialty && (
                   <p className="mt-1 text-sm text-red-500">{form.formState.errors.specialty?.message as string}</p>
                 )}

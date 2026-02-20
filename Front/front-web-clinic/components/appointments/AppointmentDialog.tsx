@@ -51,6 +51,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn, formatCurrency } from '@/lib/utils';
 import type { CreateAppointmentRequest } from '@/types';
+import { SPECIALTY_LABELS } from '@/types';
 import type { Procedure as ProcedureType } from '@/types/procedure.types';
 
 const appointmentSchema = z.object({
@@ -277,7 +278,7 @@ export function AppointmentDialog({
                     ) : professionals && professionals.length > 0 ? (
                       professionals.map((professional) => (
                         <SelectItem key={professional.id} value={professional.id}>
-                          {professional.user.fullName} - {professional.specialty}
+                          {professional.user.fullName} - {SPECIALTY_LABELS[professional.specialty] || professional.specialty}
                         </SelectItem>
                       ))
                     ) : (

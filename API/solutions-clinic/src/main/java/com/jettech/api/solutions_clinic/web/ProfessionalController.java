@@ -1,6 +1,7 @@
 package com.jettech.api.solutions_clinic.web;
 
 import com.jettech.api.solutions_clinic.model.entity.DocumentType;
+import com.jettech.api.solutions_clinic.model.entity.Specialty;
 import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfessionalToClinicBodyRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.AddProfessionalToClinicRequest;
 import com.jettech.api.solutions_clinic.model.usecase.professional.CreateProfessionalRequest;
@@ -27,6 +28,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -40,6 +43,11 @@ public class ProfessionalController implements ProfessionalAPI {
     private final GetProfessionalTenantsUseCase getProfessionalTenantsUseCase;
     private final GetProfessionalsByClinicUseCase getProfessionalsByClinicUseCase;
     private final UpdateProfessionalActiveUseCase updateProfessionalActiveUseCase;
+
+    @Override
+    public List<Specialty> getSpecialties() {
+        return Arrays.asList(Specialty.values());
+    }
 
     @Override
     public ProfessionalResponse createProfessional(@Valid @RequestBody CreateProfessionalRequest request) throws AuthenticationFailedException {

@@ -3,7 +3,7 @@ import { User } from './auth.types';
 export interface Professional {
   id: string;
   user: User;
-  specialty: string;
+  specialty: Specialty;
   documentType: DocumentType;
   documentNumber: string;
   documentState?: string;
@@ -11,6 +11,44 @@ export interface Professional {
   profileImageUrl?: string;
   isActive: boolean;
 }
+
+export enum Specialty {
+  CARDIOLOGISTA = 'CARDIOLOGISTA',
+  CLINICO_GERAL = 'CLINICO_GERAL',
+  DENTISTA = 'DENTISTA',
+  DERMATOLOGISTA = 'DERMATOLOGISTA',
+  ENDOCRINOLOGISTA = 'ENDOCRINOLOGISTA',
+  ENFERMEIRO = 'ENFERMEIRO',
+  FISIOTERAPEUTA = 'FISIOTERAPEUTA',
+  GASTROENTEROLOGISTA = 'GASTROENTEROLOGISTA',
+  GINECOLOGISTA = 'GINECOLOGISTA',
+  MASTOLOGISTA = 'MASTOLOGISTA',
+  OBSTETRIACO = 'OBSTETRIACO',
+  OFTALMOLOGISTA = 'OFTALMOLOGISTA',
+  PEDIATRA = 'PEDIATRA',
+  PSICOLOGO = 'PSICOLOGO',
+  PSICOLOGISTA = 'PSICOLOGISTA',
+  UROLOGISTA = 'UROLOGISTA',
+}
+
+export const SPECIALTY_LABELS: Record<Specialty, string> = {
+  [Specialty.CARDIOLOGISTA]: 'Cardiologista',
+  [Specialty.CLINICO_GERAL]: 'Clínico Geral',
+  [Specialty.DENTISTA]: 'Dentista',
+  [Specialty.DERMATOLOGISTA]: 'Dermatologista',
+  [Specialty.ENDOCRINOLOGISTA]: 'Endocrinologista',
+  [Specialty.ENFERMEIRO]: 'Enfermeiro',
+  [Specialty.FISIOTERAPEUTA]: 'Fisioterapeuta',
+  [Specialty.GASTROENTEROLOGISTA]: 'Gastroenterologista',
+  [Specialty.GINECOLOGISTA]: 'Ginecologista',
+  [Specialty.MASTOLOGISTA]: 'Mastologista',
+  [Specialty.OBSTETRIACO]: 'Obstétrico',
+  [Specialty.OFTALMOLOGISTA]: 'Oftalmologista',
+  [Specialty.PEDIATRA]: 'Pediatra',
+  [Specialty.PSICOLOGO]: 'Psicólogo',
+  [Specialty.PSICOLOGISTA]: 'Psicologista',
+  [Specialty.UROLOGISTA]: 'Urologista',
+};
 
 export enum DocumentType {
   CRM = 'CRM',

@@ -31,6 +31,7 @@ import {
 import Link from 'next/link';
 import { toast } from 'sonner';
 import type { Professional } from '@/types';
+import { SPECIALTY_LABELS } from '@/types';
 import type { Procedure } from '@/types/procedure.types';
 import { DocumentType } from '@/types/professional.types';
 import { ProcedureList } from '@/components/procedures/ProcedureList';
@@ -222,7 +223,7 @@ export default function ProfessionalDetailsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <InfoItem label="Especialidade" value={professional.specialty} />
+              <InfoItem label="Especialidade" value={SPECIALTY_LABELS[professional.specialty] || professional.specialty} />
               <InfoItem
                 label="Tipo de Documento"
                 value={documentTypeLabels[professional.documentType] || professional.documentType}

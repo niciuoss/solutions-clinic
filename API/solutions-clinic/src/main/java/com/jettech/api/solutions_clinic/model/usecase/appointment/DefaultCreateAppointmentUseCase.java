@@ -22,8 +22,6 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
 
     private static final String PROFESSIONAL_CONFLICT_MESSAGE =
             "Já existe um agendamento para este profissional neste horário. Deseja agendar mesmo assim?";
-    private static final String ROOM_CONFLICT_MESSAGE =
-            "Já existe um agendamento para esta sala neste horário. Deseja agendar mesmo assim?";
 
     private final AppointmentRepository appointmentRepository;
     private final AvailabilityConflictChecker availabilityConflictChecker;
@@ -84,21 +82,6 @@ public class DefaultCreateAppointmentUseCase implements CreateAppointmentUseCase
         );
         if (professionalConflict != null && !request.forceSchedule()) {
             throw new AppointmentConflictException(professionalConflict);
-        }
-
-        if (room != null) {
-            final UUID roomId = room.getId();
-            String roomConflict = availabilityConflictChecker.findConflict(
-                    request.scheduledAt(),
-                    calculatedDurationMinutes,
-                    null,
-                    (start, end) -> appointmentRepository.findByRoomIdAndScheduledAtBetweenAndStatusNot(
-                            roomId, start, end, AppointmentStatus.CANCELADO),
-                    ROOM_CONFLICT_MESSAGE
-            );
-            if (roomConflict != null && !request.forceSchedule()) {
-                throw new AppointmentConflictException(roomConflict);
-            }
         }
 
         Appointment appointment = new Appointment();

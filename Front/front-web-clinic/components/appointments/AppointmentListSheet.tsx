@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Clock, ChevronRight, User, Stethoscope, MapPin } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import type { Appointment } from '@/types';
+import { SPECIALTY_LABELS } from '@/types';
 
 interface AppointmentListSheetProps {
   open: boolean;
@@ -78,7 +79,7 @@ export function AppointmentListSheet({
                         </span>
                         {appointment.professional.specialty && (
                           <span className="text-xs text-muted-foreground truncate">
-                            - {appointment.professional.specialty}
+                            - {SPECIALTY_LABELS[appointment.professional.specialty] || appointment.professional.specialty}
                           </span>
                         )}
                       </div>

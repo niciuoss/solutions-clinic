@@ -31,8 +31,9 @@ public class Professional {
     @JoinColumn(name = "user_id", nullable = false) 
     private User user;
 
-    @Column(nullable = false)
-    private String specialty;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private Specialty specialty;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)

@@ -20,11 +20,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.jettech.api.solutions_clinic.model.entity.Specialty;
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
+import java.util.List;
 import java.util.UUID;
 
 @Tag(name = "Profissionais", description = "Endpoints para gerenciamento de profissionais")
 public interface ProfessionalAPI {
+
+    @GetMapping("/specialties")
+    @Operation(summary = "Lista especialidades disponíveis", description = "Retorna a lista de todas as especialidades médicas disponíveis no sistema.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de especialidades retornada com sucesso")
+    })
+    List<Specialty> getSpecialties();
 
     @PostMapping("/professionals")
     @Operation(summary = "Cria um novo profissional", description = "Registra um novo profissional no sistema associado a um usuário e uma clínica. A role SPECIALIST é criada automaticamente para o usuário no tenant.")

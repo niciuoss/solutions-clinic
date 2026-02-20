@@ -34,12 +34,13 @@ public interface MedicalRecordTemplateRepository extends JpaRepository<MedicalRe
 
     /**
      * Mesmo que findAvailableForTenant, filtrado por professional_type.
+     * Inclui também templates genéricos (professional_type IS NULL).
      */
     @Query("""
         SELECT t FROM MedicalRecordTemplate t
         WHERE t.active = true
           AND (t.tenant IS NULL OR t.tenant.id = :tenantId)
-          AND t.professionalType = :professionalType
+          AND (t.professionalType IS NULL OR t.professionalType = :professionalType)
         ORDER BY t.tenant.id NULLS FIRST, t.name
         """)
     List<MedicalRecordTemplate> findAvailableForTenantAndProfessionalType(

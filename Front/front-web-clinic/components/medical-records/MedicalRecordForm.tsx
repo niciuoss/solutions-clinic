@@ -111,6 +111,15 @@ export function MedicalRecordForm({
 
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId);
 
+  const templateFields: MedicalRecordTemplateField[] = (() => {
+    const raw = selectedTemplate?.schema;
+    if (!raw) return [];
+    if (typeof raw === 'string') {
+      try { return JSON.parse(raw); } catch { return []; }
+    }
+    return Array.isArray(raw) ? raw : [];
+  })();
+
   const handleSave = async () => {
     if (!selectedTemplateId) {
       toast.error('Selecione um modelo de prontuário');
@@ -225,9 +234,9 @@ export function MedicalRecordForm({
         </div>
       </CardHeader>
       <CardContent>
-        {selectedTemplate?.schema?.length ? (
-          <Accordion type="multiple" className="space-y-4" defaultValue={['item-0']}>
-            {selectedTemplate.schema.map((field: MedicalRecordTemplateField, index: number) => (
+        {templateFields.length > 0 ? (
+          <Accordion type="multiple" className="space-y-4" defaultValue={templateFields.map((_: MedicalRecordTemplateField, i: number) => `item-${i}`)}>
+            {templateFields.map((field: MedicalRecordTemplateField, index: number) => (
               <AccordionItem
                 key={field.id}
                 value={`item-${index}`}
