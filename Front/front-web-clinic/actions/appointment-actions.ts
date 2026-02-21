@@ -48,10 +48,10 @@ export async function updateAppointmentAction(
 ): Promise<ActionResult<Appointment>> {
   try {
     const appointment = await apiRequest<Appointment>(
-      `/appointments/${appointmentId}`,
+      `/appointments`,
       {
         method: 'PUT',
-        body: { ...data, forceSchedule },
+        body: { id: appointmentId, ...data, forceSchedule },
       }
     );
 
@@ -129,17 +129,16 @@ export async function cancelAppointmentAction(
   reason?: string
 ): Promise<ActionResult<Appointment>> {
   try {
-    const appointment = await apiRequest<Appointment>(
-      `/appointments/${appointmentId}/cancel`,
+    await apiRequest<void>(
+      `/appointments/${appointmentId}`,
       {
-        method: 'POST',
-        params: reason ? { reason } : undefined,
+        method: 'DELETE',
       }
     );
 
     return {
       success: true,
-      data: appointment,
+      data: undefined as any,
     };
   } catch (error: any) {
     return {
