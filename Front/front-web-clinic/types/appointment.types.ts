@@ -2,29 +2,32 @@ import { Patient } from './patient.types';
 import { Professional } from './professional.types';
 import { Room } from './room.types';
 import { PaymentMethod, PaymentStatus } from './financial.types';
+import { VitalSigns } from './medical-record.types';
 
 export interface Appointment {
   id: string;
   patient: Patient;
   professional: Professional;
   room?: Room;
-  
+
   scheduledAt: string;
   durationMinutes: number;
   status: AppointmentStatus;
-  
+
   observations?: string;
   cancellationReason?: string;
-  
+
   startedAt?: string;
   finishedAt?: string;
   durationActualMinutes?: number;
-  
+
   totalValue: number;
   paymentMethod?: PaymentMethod;
   paymentStatus: PaymentStatus;
   paidAt?: string;
-  
+
+  vitalSigns?: VitalSigns | null;
+
   procedures: AppointmentProcedure[];
   createdAt: string;
 }

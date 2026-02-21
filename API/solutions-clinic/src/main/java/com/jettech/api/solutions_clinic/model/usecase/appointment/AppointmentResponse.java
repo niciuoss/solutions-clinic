@@ -1,5 +1,6 @@
 package com.jettech.api.solutions_clinic.model.usecase.appointment;
 
+import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.jettech.api.solutions_clinic.model.entity.AppointmentStatus;
 import com.jettech.api.solutions_clinic.model.entity.PaymentMethod;
 import com.jettech.api.solutions_clinic.model.entity.PaymentStatus;
@@ -28,6 +29,7 @@ public record AppointmentResponse(
     LocalDateTime paidAt,
     UUID createdBy,
     LocalDateTime createdAt,
-    LocalDateTime updatedAt
+    LocalDateTime updatedAt,
+    @JsonRawValue String vitalSigns
 ) {
 }

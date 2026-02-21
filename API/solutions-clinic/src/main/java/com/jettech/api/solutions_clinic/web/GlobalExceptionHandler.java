@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -44,6 +45,13 @@ public class GlobalExceptionHandler {
         String message = resolveMessage(ex, ApiError.INVALID_REQUEST);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorBody(ApiError.INVALID_REQUEST.getErrorLabel(), message, HttpStatus.BAD_REQUEST.value()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        String message = "Parâmetro inválido: " + ex.getName();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorBody("Bad Request", message, HttpStatus.BAD_REQUEST.value()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -126,6 +134,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, Object>> handleRuntimeException(RuntimeException ex) {
+        ex.printStackTrace();
         String message = ApiError.INTERNAL_SERVER_ERROR.getDefaultMessage();
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(errorBody(ApiError.INTERNAL_SERVER_ERROR.getErrorLabel(), message, HttpStatus.INTERNAL_SERVER_ERROR.value()));

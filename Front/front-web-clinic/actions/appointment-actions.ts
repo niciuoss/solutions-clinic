@@ -1,12 +1,13 @@
 'use server';
 
-import { apiRequest } from './_helpers';
-import type { 
+import { apiRequest, getClinicIdFromToken } from './_helpers';
+import type {
   Appointment,
   CreateAppointmentRequest,
   UpdateAppointmentRequest,
   FinishAppointmentRequest,
   ActionResult,
+  VitalSigns,
 } from '@/types';
 
 export async function createAppointmentAction(
@@ -148,6 +149,31 @@ export async function cancelAppointmentAction(
   }
 }
 
+export async function saveTriageAction(
+  appointmentId: string,
+  vitalSigns: VitalSigns
+): Promise<ActionResult<Appointment>> {
+  try {
+    const appointment = await apiRequest<Appointment>(
+      `/appointments/${appointmentId}/triage`,
+      {
+        method: 'PATCH',
+        body: vitalSigns,
+      }
+    );
+
+    return {
+      success: true,
+      data: appointment,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.message || 'Erro ao salvar triagem',
+    };
+  }
+}
+
 export async function getAppointmentByIdAction(
   appointmentId: string
 ): Promise<ActionResult<Appointment>> {
@@ -197,6 +223,7 @@ export async function getAppointmentByIdAction(
           paymentMethod: appt.paymentMethod as any,
           paymentStatus: appt.paymentStatus as any,
           paidAt: appt.paidAt,
+          vitalSigns: appt.vitalSigns ?? null,
           procedures: [],
           createdAt: appt.createdAt,
         } as Appointment,
@@ -221,6 +248,7 @@ export async function getAppointmentByIdAction(
         paymentMethod: appt.paymentMethod as any,
         paymentStatus: appt.paymentStatus as any,
         paidAt: appt.paidAt,
+        vitalSigns: appt.vitalSigns ?? null,
         procedures: [],
         createdAt: appt.createdAt,
       } as Appointment,
@@ -281,6 +309,7 @@ export async function getAppointmentsByDateRangeAction(
             paymentMethod: appt.paymentMethod as any,
             paymentStatus: appt.paymentStatus as any,
             paidAt: appt.paidAt,
+            vitalSigns: appt.vitalSigns ?? null,
             procedures: [],
             createdAt: appt.createdAt,
           } as Appointment;
@@ -301,6 +330,7 @@ export async function getAppointmentsByDateRangeAction(
           paymentMethod: appt.paymentMethod as any,
           paymentStatus: appt.paymentStatus as any,
           paidAt: appt.paidAt,
+          vitalSigns: appt.vitalSigns ?? null,
           procedures: [],
           createdAt: appt.createdAt,
         } as Appointment;
@@ -318,11 +348,80 @@ export async function getAppointmentsByDateRangeAction(
 
 export async function getTodayAppointmentsAction(): Promise<ActionResult<Appointment[]>> {
   try {
-    const appointments = await apiRequest<Appointment[]>(
-      '/appointments/today',
+    const tenantId = await getClinicIdFromToken();
+    if (!tenantId) {
+      return { success: false, error: 'Clínica não identificada' };
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const raw = await apiRequest<AppointmentResponseBackend[]>(
+      `/tenants/${tenantId}/appointments`,
       {
         method: 'GET',
+        params: {
+          date: today,
+          orderBy: 'scheduledAt_asc',
+        },
       }
+    );
+
+    const appointmentsResponse = Array.isArray(raw) ? raw : [];
+
+    const appointments: Appointment[] = await Promise.all(
+      appointmentsResponse.map(async (appt) => {
+        if ('patient' in appt && typeof (appt as any).patient === 'object') {
+          return appt as unknown as Appointment;
+        }
+        const { getPatientByIdAction } = await import('./patient-actions');
+        const { getProfessionalByIdAction } = await import('./professional-actions');
+        const [patientResult, professionalResult] = await Promise.all([
+          getPatientByIdAction(appt.patientId),
+          getProfessionalByIdAction(appt.professionalId),
+        ]);
+        const patient = patientResult.success ? patientResult.data : null;
+        const professional = professionalResult.success ? professionalResult.data : null;
+        if (!patient || !professional) {
+          return {
+            id: appt.id,
+            patient: { id: appt.patientId, fullName: '…' } as any,
+            professional: { id: appt.professionalId, user: { fullName: '…' }, specialty: '' } as any,
+            scheduledAt: appt.scheduledAt,
+            durationMinutes: appt.durationMinutes,
+            status: appt.status as any,
+            observations: appt.observations,
+            startedAt: appt.startedAt,
+            finishedAt: appt.finishedAt,
+            durationActualMinutes: appt.durationActualMinutes,
+            totalValue: appt.totalValue,
+            paymentMethod: appt.paymentMethod as any,
+            paymentStatus: appt.paymentStatus as any,
+            paidAt: appt.paidAt,
+            vitalSigns: appt.vitalSigns ?? null,
+            procedures: [],
+            createdAt: appt.createdAt,
+          } as Appointment;
+        }
+        return {
+          id: appt.id,
+          patient,
+          professional,
+          room: appt.roomId ? { id: appt.roomId } as any : undefined,
+          scheduledAt: appt.scheduledAt,
+          durationMinutes: appt.durationMinutes,
+          status: appt.status as any,
+          observations: appt.observations,
+          startedAt: appt.startedAt,
+          finishedAt: appt.finishedAt,
+          durationActualMinutes: appt.durationActualMinutes,
+          totalValue: appt.totalValue,
+          paymentMethod: appt.paymentMethod as any,
+          paymentStatus: appt.paymentStatus as any,
+          paidAt: appt.paidAt,
+          vitalSigns: appt.vitalSigns ?? null,
+          procedures: [],
+          createdAt: appt.createdAt,
+        } as Appointment;
+      })
     );
 
     return {
@@ -479,6 +578,7 @@ interface AppointmentResponseBackend {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  vitalSigns?: VitalSigns | null;
 }
 
 export async function getAppointmentsByTenantAction(
@@ -545,6 +645,7 @@ export async function getAppointmentsByTenantAction(
             paymentMethod: appt.paymentMethod as any,
             paymentStatus: appt.paymentStatus as any,
             paidAt: appt.paidAt,
+            vitalSigns: appt.vitalSigns ?? null,
             procedures: [],
             createdAt: appt.createdAt,
           } as Appointment;
@@ -566,6 +667,7 @@ export async function getAppointmentsByTenantAction(
           paymentMethod: appt.paymentMethod as any,
           paymentStatus: appt.paymentStatus as any,
           paidAt: appt.paidAt,
+          vitalSigns: appt.vitalSigns ?? null,
           procedures: [],
           createdAt: appt.createdAt,
         } as Appointment;

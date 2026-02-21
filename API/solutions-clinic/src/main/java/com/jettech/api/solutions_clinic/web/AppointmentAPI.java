@@ -18,6 +18,7 @@ import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Tag(name = "Agendamentos", description = "Endpoints para gerenciamento de agendamentos")
@@ -114,4 +115,13 @@ public interface AppointmentAPI {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(defaultValue = "60") int durationMinutes
     ) throws AuthenticationFailedException;
+
+    @PatchMapping("/appointments/{id}/triage")
+    @Operation(summary = "Salva dados de triagem", description = "Salva os sinais vitais (triagem) em um agendamento.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Triagem salva com sucesso",
+                    content = @Content(schema = @Schema(implementation = AppointmentResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Agendamento não encontrado", content = @Content)
+    })
+    AppointmentResponse saveTriage(@PathVariable UUID id, @RequestBody Map<String, Object> vitalSigns) throws AuthenticationFailedException;
 }

@@ -1,35 +1,36 @@
 package com.jettech.api.solutions_clinic.model.usecase.appointment;
 
-import com.jettech.api.solutions_clinic.model.entity.Appointment;
-import com.jettech.api.solutions_clinic.model.repository.AppointmentRepository;
-import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import com.jettech.api.solutions_clinic.exception.EntityNotFoundException;
 import com.jettech.api.solutions_clinic.exception.ForbiddenException;
+import com.jettech.api.solutions_clinic.model.entity.Appointment;
+import com.jettech.api.solutions_clinic.model.repository.AppointmentRepository;
 import com.jettech.api.solutions_clinic.security.TenantContext;
-import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)
-public class DefaultGetAppointmentByIdUseCase implements GetAppointmentByIdUseCase {
+public class DefaultSaveTriageUseCase implements SaveTriageUseCase {
 
     private final AppointmentRepository appointmentRepository;
     private final TenantContext tenantContext;
 
     @Override
-    public AppointmentResponse execute(UUID id) throws AuthenticationFailedException {
-        Appointment appointment = appointmentRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Agendamento", id));
+    @Transactional
+    public AppointmentResponse execute(SaveTriageRequest request) throws AuthenticationFailedException {
+        Appointment appointment = appointmentRepository.findById(request.appointmentId())
+                .orElseThrow(() -> new EntityNotFoundException("Agendamento", request.appointmentId()));
+
         if (!appointment.getTenant().getId().equals(tenantContext.getRequiredClinicId())) {
             throw new ForbiddenException();
         }
-        return toResponse(appointment);
-    }
 
-    private AppointmentResponse toResponse(Appointment appointment) {
+        appointment.setVitalSigns(request.vitalSigns());
+        appointment = appointmentRepository.save(appointment);
+
         return new AppointmentResponse(
                 appointment.getId(),
                 appointment.getTenant().getId(),

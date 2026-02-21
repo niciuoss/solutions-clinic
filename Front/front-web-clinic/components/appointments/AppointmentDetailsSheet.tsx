@@ -40,9 +40,11 @@ import {
   XCircle,
   Play,
   Loader2,
+  ClipboardList,
+  CheckCircle2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { cancelAppointmentAction } from '@/actions/appointment-actions';
+import { cancelAppointmentAction, saveTriageAction } from '@/actions/appointment-actions';
 import { formatCurrency } from '@/lib/utils';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { TriageDialog } from './TriageDialog';
@@ -107,19 +109,35 @@ export function AppointmentDetailsSheet({
     },
   });
 
-  const handleStartAppointmentNavigation = () => {
+  const triageMutation = useMutation({
+    mutationFn: async ({ appointmentId, vitalSigns }: { appointmentId: string; vitalSigns: VitalSigns }) => {
+      const result = await saveTriageAction(appointmentId, vitalSigns);
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      queryClient.invalidateQueries({ queryKey: ['appointment'] });
+      toast.success('Triagem salva com sucesso!');
+      setTriageDialogOpen(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Erro ao salvar triagem');
+    },
+  });
+
+  const handleStartAppointment = () => {
     if (appointment) {
-      setTriageDialogOpen(true);
+      onOpenChange(false);
+      router.push(`/appointments/${appointment.id}/medical-record`);
     }
   };
 
   const handleTriageConfirm = (data: VitalSigns | null) => {
-    if (!appointment) return;
-    if (data) {
-      sessionStorage.setItem(`triage-${appointment.id}`, JSON.stringify(data));
-    }
-    onOpenChange(false);
-    router.push(`/appointments/${appointment.id}/medical-record`);
+    if (!appointment || !data) return;
+    triageMutation.mutate({ appointmentId: appointment.id, vitalSigns: data });
   };
 
   if (!appointment) {
@@ -151,6 +169,8 @@ export function AppointmentDetailsSheet({
   const canCancel = !['CANCELADO', 'FINALIZADO'].includes(appointment.status);
   const canStart = ['AGENDADO', 'CONFIRMADO'].includes(appointment.status) && user?.role === UserRole.PROFISSIONAL_SAUDE;
   const canEdit = !['CANCELADO', 'FINALIZADO'].includes(appointment.status);
+  const canTriage = ['AGENDADO', 'CONFIRMADO'].includes(appointment.status) && user?.role !== UserRole.PROFISSIONAL_SAUDE;
+  const hasVitalSigns = appointment.vitalSigns && Object.keys(appointment.vitalSigns).length > 0;
 
   return (
     <>
@@ -166,6 +186,12 @@ export function AppointmentDetailsSheet({
             <SheetDescription className="flex items-center gap-2 pt-2">
               {getStatusBadge(appointment.status)}
               {getPaymentStatusBadge(appointment.paymentStatus)}
+              {hasVitalSigns && (
+                <Badge variant="outline" className="text-green-600 border-green-600">
+                  <CheckCircle2 className="mr-1 h-3 w-3" />
+                  Triagem
+                </Badge>
+              )}
             </SheetDescription>
           </SheetHeader>
 
@@ -356,15 +382,33 @@ export function AppointmentDetailsSheet({
 
           <SheetFooter className="p-6 pt-4 border-t flex-shrink-0">
             <div className="flex flex-col gap-3 w-full">
-              {/* Botao principal - Iniciar Atendimento */}
+              {/* Botao principal - Iniciar Atendimento (profissional) */}
               {canStart && (
                 <Button
-                  onClick={handleStartAppointmentNavigation}
+                  onClick={handleStartAppointment}
                   className="w-full bg-success hover:bg-success/90 text-success-foreground"
                   size="lg"
                 >
                   <Play className="mr-2 h-5 w-5" />
                   Iniciar Atendimento
+                </Button>
+              )}
+
+              {/* Botao de triagem (nao-profissionais) */}
+              {canTriage && (
+                <Button
+                  onClick={() => setTriageDialogOpen(true)}
+                  variant={hasVitalSigns ? 'outline' : 'default'}
+                  className="w-full"
+                  size="lg"
+                  disabled={triageMutation.isPending}
+                >
+                  {triageMutation.isPending ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <ClipboardList className="mr-2 h-5 w-5" />
+                  )}
+                  {hasVitalSigns ? 'Editar dados de Triagem' : 'Inserir dados de Triagem'}
                 </Button>
               )}
 
@@ -401,6 +445,7 @@ export function AppointmentDetailsSheet({
         open={triageDialogOpen}
         onOpenChange={setTriageDialogOpen}
         onConfirm={handleTriageConfirm}
+        initialData={appointment.vitalSigns ?? undefined}
       />
 
       {/* Dialog de confirmacao de cancelamento */}

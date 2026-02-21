@@ -1,5 +1,9 @@
 package com.jettech.api.solutions_clinic.web;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.jettech.api.solutions_clinic.model.entity.AppointmentStatus;
 import com.jettech.api.solutions_clinic.model.usecase.appointment.*;
 import jakarta.validation.Valid;
@@ -12,6 +16,7 @@ import com.jettech.api.solutions_clinic.exception.AuthenticationFailedException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -27,6 +32,7 @@ public class AppointmentController implements AppointmentAPI {
     private final DeleteAppointmentUseCase deleteAppointmentUseCase;
     private final CheckAvailabilityUseCase checkAvailabilityUseCase;
     private final GetAvailableSlotsUseCase getAvailableSlotsUseCase;
+    private final SaveTriageUseCase saveTriageUseCase;
 
     @Override
     public AppointmentResponse createAppointment(@Valid @RequestBody CreateAppointmentRequest request) throws AuthenticationFailedException {
@@ -79,5 +85,20 @@ public class AppointmentController implements AppointmentAPI {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
             @RequestParam(defaultValue = "60") int durationMinutes) throws AuthenticationFailedException {
         return getAvailableSlotsUseCase.execute(new GetAvailableSlotsRequest(professionalId, date, durationMinutes));
+    }
+
+    @Override
+    public AppointmentResponse saveTriage(@PathVariable UUID id, @RequestBody Map<String, Object> vitalSigns) throws AuthenticationFailedException {
+        ObjectNode node = JsonNodeFactory.instance.objectNode();
+        vitalSigns.forEach((key, value) -> {
+            if (value instanceof String s) node.put(key, s);
+            else if (value instanceof Integer i) node.put(key, i);
+            else if (value instanceof Long l) node.put(key, l);
+            else if (value instanceof Double d) node.put(key, d);
+            else if (value instanceof Boolean b) node.put(key, b);
+            else if (value instanceof Number n) node.put(key, n.doubleValue());
+            else if (value != null) node.put(key, value.toString());
+        });
+        return saveTriageUseCase.execute(new SaveTriageRequest(id, node));
     }
 }

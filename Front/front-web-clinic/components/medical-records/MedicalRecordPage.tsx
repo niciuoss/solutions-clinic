@@ -24,6 +24,13 @@ export function MedicalRecordPage({ appointmentId }: MedicalRecordPageProps) {
   const [vitalSigns, setVitalSigns] = useState<VitalSignsType | null>(null);
 
   useEffect(() => {
+    // Prioridade: dados do appointment (persistidos no backend)
+    if (appointment?.vitalSigns && Object.keys(appointment.vitalSigns).length > 0) {
+      setVitalSigns(appointment.vitalSigns);
+      return;
+    }
+
+    // Fallback: sessionStorage (compatibilidade temporaria)
     const key = `triage-${appointmentId}`;
     const stored = sessionStorage.getItem(key);
     if (stored) {
@@ -33,9 +40,8 @@ export function MedicalRecordPage({ appointmentId }: MedicalRecordPageProps) {
       } catch {
         // ignore invalid data
       }
-      sessionStorage.removeItem(key);
     }
-  }, [appointmentId]);
+  }, [appointmentId, appointment?.vitalSigns]);
 
   const handleRecordLoaded = useCallback((record: MedicalRecord) => {
     if (record.vitalSigns && typeof record.vitalSigns === 'object' && Object.keys(record.vitalSigns).length > 0) {

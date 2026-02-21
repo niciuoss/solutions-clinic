@@ -59,7 +59,8 @@ public class DefaultGetAppointmentsByProfessionalIdUseCase implements GetAppoint
                 appointment.getPaidAt(),
                 appointment.getCreatedBy().getId(),
                 appointment.getCreatedAt(),
-                appointment.getUpdatedAt()
+                appointment.getUpdatedAt(),
+                appointment.getVitalSigns() != null ? appointment.getVitalSigns().toString() : null
         );
     }
 }
